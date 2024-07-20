@@ -1,0 +1,26 @@
+{
+  "name": "nuxt-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@nuxt/eslint": "^0.3.13",
+    "fabric": "^6.0.2",
+    "nanoid": "^5.0.7",
+    "nuxt": "^3.12.4",
+    "perfect-freehand": "^1.2.2",
+    "polygon-clipping": "^0.15.7",
+    "vue": "latest"
+  },
+  "packageManager": "pnpm@9.2.0",
+  "devDependencies": {
+    "@nuxtjs/eslint-module": "^4.1.0",
+    "@nuxtjs/tailwindcss": "^6.12.1"
+  }
+}

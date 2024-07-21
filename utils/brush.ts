@@ -1,26 +1,28 @@
 import simplifyJs from "simplify-js";
 import { getStroke } from "perfect-freehand";
-import { getSmoothPathFromPoints } from "./svg"
-import * as fabric from "fabric"
+import { getSmoothPathFromPoints } from "./svg";
+import * as fabric from "fabric";
 
-export function customizePencilBrush(brushSettings) {
+/**
+ * Trying to get points constantly and converting them to freedraw is not very performant.
+ * This function takes advantage of fabric's drawing mode and customizes the default pencil brush.
+ * It simply converts the brush strokes from the pencil brush to freedraw's stroke after mouse:up.
+ * SimplifyJs is also being used to minify the points.
+ */
+export function customizePencilBrush(brushSettings: any) {
   fabric.PencilBrush.prototype._render = function (
+      // @ts-expect-error expected error
     ctx = this.canvas.contextTop
   ) {
     ctx.save();
 
     const points = simplifyJs(
-      this._points,
+        // @ts-expect-error expected error due to overriding base class
+        this._points.map(point => this.canvas.getViewportPoint(point)),
       brushSettings.tolerance,
       brushSettings.highQuality
     );
-    const formattedPoints = points.map((point) => [
-      point.x,
-      point.y,
-      point.pressure || 0.5,
-    ]);
-
-    const stroke = getStroke(formattedPoints, {
+    const stroke = getStroke(points, {
       size: this.width,
       thinning: brushSettings.thinning,
       streamline: brushSettings.streamline,
@@ -65,6 +67,7 @@ export function customizePencilBrush(brushSettings) {
     }
 
     ctx.restore();
+    // @ts-expect-error expected error
     this._resetShadow();
   };
 
@@ -73,15 +76,12 @@ export function customizePencilBrush(brushSettings) {
     ctx.closePath();
 
     const points = simplifyJs(
+        // @ts-expect-error expected error
       this._points,
       brushSettings.tolerance,
       brushSettings.highQuality
     );
-    const formattedPoints = points.map((point) => [
-      point.x,
-      point.y,
-      point.pressure || 0.5,
-    ]);
+    const formattedPoints = points.map((point) => [point.x, point.y]);
     const stroke = getStroke(formattedPoints, {
       size: this.width,
       thinning: brushSettings.thinning,
@@ -128,8 +128,9 @@ export function customizePencilBrush(brushSettings) {
 
     this.canvas.clearContext(this.canvas.contextTop);
     this.canvas.add(path);
-    this.canvas.requestRenderAll();
     path.setCoords();
+    // @ts-expect-error expected error
     this._resetShadow();
+    this.canvas.requestRenderAll();
   };
 }

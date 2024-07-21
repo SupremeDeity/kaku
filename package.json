@@ -15,7 +15,8 @@
     "nanoid": "^5.0.7",
     "nuxt": "^3.12.4",
     "perfect-freehand": "^1.2.2",
-    "polygon-clipping": "^0.15.7",
+    "roughjs": "^4.6.6",
+    "simplify-js": "^1.2.4",
     "vue": "latest"
   },
   "packageManager": "pnpm@9.2.0",

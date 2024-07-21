@@ -1,141 +1,119 @@
 <template>
-  <div
-    ref="canvasWrapper"
-    tabIndex="1000"
-    class="w-full h-full"
-    @keypress="handleKeyEvent"
-  >
-    <button
-      class="bg-blue-500 p-1 rounded"
-      @click="() => (freedrawMode = !freedrawMode)"
+  <div class="canvas-container">
+    <div
+      ref="canvasWrapper"
+      tabindex="1000"
+      class="w-full h-full"
+      @keydown="handleKeyEvent"
     >
-      {{ freedrawMode ? "Selection Mode" : "Draw Mode" }}
-    </button>
-    <canvas ref="canvas" class="" />
-    <svg>
-      <path v-if="points" d="pathData" />
-    </svg>
+      <button class="bg-blue-500 p-1 rounded" @click="toggleDrawMode">
+        {{ isDrawingMode ? "Selection Mode" : "Draw Mode" }}
+      </button>
+      <button class="bg-red-500 p-1 rounded" @click="clearCanvas">
+        Clear Canvas
+      </button>
+      <canvas ref="canvas" />
+    </div>
   </div>
 </template>
 
-<script lang="js" setup>
+<script setup>
+import { ref, onMounted, onUnmounted } from "vue";
 import * as fabric from "fabric";
-import { getStroke } from "perfect-freehand";
-import { nanoid } from "nanoid";
 
-const MAX_SCALE = 5;
-const MIN_SCALE = 0.1;
+const canvasWrapper = ref(null);
+const canvas = ref(null);
+let fabricCanvas = null;
+const isDrawingMode = ref(true);
 
-const canvas = ref();
-let fabricCanvas;
-const canvasWrapper = ref();
-const freedrawMode = ref(true);
+const easingObj = {
+  linear: (t) => t,
+  easeOutQuint: (t) => 1 + --t * t * t * t * t,
+};
 
-onMounted(() => {
- fabricCanvas = new fabric.Canvas(canvas.value, {
-    selection: !freedrawMode.value,
-    skipTargetFind: freedrawMode.value,
-    width: window.outerWidth,
-    height: window.outerHeight,
-    renderOnAddRemove: false,
+const brushSettings = {
+  cap: false,
+  thinning: 0.38,
+  streamline: 0.5,
+  smoothing: 0.64,
+  taperStart: 49,
+  taperEnd: 69,
+  tolerance: 0.01,
+  highQuality: true,
+  generalEasing: easingObj.linear,
+  easingStart: easingObj.easeOutQuint,
+  easingEnd: easingObj.easeOutQuint,
+};
+
+function initializeCanvas() {
+  fabricCanvas = new fabric.Canvas(canvas.value, {
+    isDrawingMode: isDrawingMode.value,
+    preserveObjectStacking: true,
+    enableRetinaScaling: false,
+    width: window.innerWidth,
+    height: window.innerHeight,
   });
 
-  if (freedrawMode.value) drawFreehand();
+  customizePencilBrush(brushSettings);
 
-  fabricCanvas.on("mouse:wheel", function(opt) {
+  const customBrush = new fabric.PencilBrush(fabricCanvas);
+  fabricCanvas.freeDrawingBrush = customBrush;
+  customBrush.color = "black";
+  customBrush.width = 8;
+  fabricCanvas.freeDrawingBrush.shadow = new fabric.Shadow({
+    blur: 0,
+    offsetX: 0,
+    offsetY: 0,
+    affectStroke: true,
+    color: "black",
+  });
+
+  fabricCanvas.on("mouse:wheel", function (opt) {
     let zoom = fabricCanvas.getZoom();
     zoom *= 0.999 ** opt.e.deltaY;
-    if (zoom > MAX_SCALE) zoom = MAX_SCALE;
-    if (zoom < MIN_SCALE) zoom = MIN_SCALE;
+    if (zoom > 5) zoom = 5;
+    if (zoom < 0.1) zoom = 0.1;
 
     fabricCanvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
-    fabricCanvas.requestRenderAll()
+    fabricCanvas.requestRenderAll();
     opt.e.preventDefault();
     opt.e.stopPropagation();
-  } );
-
-});
-
-watch(freedrawMode, () => {
- fabricCanvas.selection = !freedrawMode.value;
-  fabricCanvas.skipTargetFind = freedrawMode.value;
-});
-
-let points = [];
-function drawFreehand() {
-  let isDrawing = false;
-  let id = "";
-
- fabricCanvas.on("mouse:down", (options) => {
-    if (!freedrawMode.value) return;
-    if (fabricCanvas.getActiveObjects().length > 0)
-     fabricCanvas.discardActiveObject();
-
-    isDrawing = true;
-    id = nanoid();
-    points = [options.absolutePointer];
-  });
-
-  const throttledDrawFreehandPath = throttle(drawFreehandPath, 16);
- fabricCanvas.on("mouse:move", (options) => {
-    if (!isDrawing) return;
-    points.push(options.absolutePointer);
-    throttledDrawFreehandPath(points, id);
-  });
-
-
- fabricCanvas.on("mouse:up", () => {
-    if (!isDrawing) return;
-    isDrawing = false;
-    drawFreehandPath(points, id);
-
-    id = "";
-    points = [];
   });
 }
 
-function drawFreehandPath(points, id) {
-  const stroke = getStroke(points);
-  const pathData = getFlatSvgPathFromStroke(stroke);
+onMounted(() => {
+  initializeCanvas();
+});
 
- fabricCanvas.remove(
-   fabricCanvas.getObjects().find((obj) => obj.id === id)
-  );
+onUnmounted(() => {
+  if (fabricCanvas) {
+    fabricCanvas.dispose();
+  }
+});
 
-  const path = new fabric.Path(pathData, {
-    fill: "black",
-    stroke: "transparent",
-    id: id,
-  });
+function toggleDrawMode() {
+  isDrawingMode.value = !isDrawingMode.value;
+  fabricCanvas.isDrawingMode = isDrawingMode.value;
+}
 
- fabricCanvas.add(path);
- fabricCanvas.requestRenderAll();
+function clearCanvas() {
+  fabricCanvas.clear();
 }
 
 function handleKeyEvent(e) {
-  if (e.key == "Delete") {
-   fabricCanvas.getActiveObjects().forEach((element) => {
-     fabricCanvas.remove(element);
+  if (e.key === "Delete") {
+    fabricCanvas.getActiveObjects().forEach((obj) => {
+      fabricCanvas.remove(obj);
     });
-   fabricCanvas.discardActiveObject()
-   fabricCanvas.requestRenderAll()
-  }
-}
-
-function throttle(func, limit) {
-  let inThrottle;
-  return function(...args) {
-    if (!inThrottle) {
-      func.apply(this, args);
-      inThrottle = true;
-      setTimeout(() => inThrottle = false, limit);
-    }
+    fabricCanvas.discardActiveObject();
+    fabricCanvas.requestRenderAll();
   }
 }
 </script>
 
 <style scoped>
-canvas {
-  border: 1px solid red;
+.canvas-container {
+  width: 100%;
+  height: 100vh;
 }
 </style>

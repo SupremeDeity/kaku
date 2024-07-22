@@ -8,9 +8,11 @@ export class FabricRoughDiamond extends fabric.FabricObject {
         super(options);
         this.points = points || [0, 0, 100, 100];
         this.roughOptions = {
-            stroke: options.stroke || 'black',
-            fill: options.fill || 'transparent',
-            roughness: options.roughness || 1,
+            stroke: 'black',
+            strokeWidth: 4,
+            fill: 'transparent',
+            roughness: 2,
+            seed: Math.random() * 100,
             ...options.roughOptions
         };
         this.minSize = options.minSize || 5; // Minimum size of the diamond
@@ -62,6 +64,13 @@ export class FabricRoughDiamond extends fabric.FabricObject {
     setPoints(points) {
         this.points = points;
         this._updateRoughDiamond();
+    }
+
+    updateRoughOptions(newOptions) {
+        this.roughOptions = { ...this.roughOptions, ...newOptions };
+        this._updateRoughDiamond();
+        this.dirty = true;
+        this.canvas && this.canvas.requestRenderAll();
     }
 
     toObject(propertiesToInclude) {

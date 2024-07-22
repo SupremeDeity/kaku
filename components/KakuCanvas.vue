@@ -172,7 +172,6 @@ function handleMouseUp() {
     fabricCanvas.requestRenderAll();
     currentMode.value = "Select"
   }
-
 }
 
 function handleShapePlacement(o: any) {

@@ -1,16 +1,18 @@
 import * as fabric from 'fabric';
 import rough from 'roughjs';
 
-export class FabricRoughRectangle extends fabric.FabricObject {
+export class FabricRoughRectangle extends fabric.Rect {
     static type = 'FabricRoughRectangle';
 
     constructor(points, options = {}) {
         super(options);
         this.points = points || [0, 0, 100, 100];
         this.roughOptions = {
-            stroke: options.stroke || 'black',
-            fill: options.fill || 'transparent',
-            roughness: options.roughness || 1,
+            stroke: 'black',
+            strokeWidth: 4,
+            fill: 'transparent',
+            roughness: 2,
+            seed: Math.random() * 100,
             ...options.roughOptions
         };
         this.minSize = options.minSize || 5; // Minimum size of the rectangle
@@ -54,6 +56,13 @@ export class FabricRoughRectangle extends fabric.FabricObject {
     setPoints(points) {
         this.points = points;
         this._updateRoughRectangle();
+    }
+
+    updateRoughOptions(newOptions) {
+        this.roughOptions = { ...this.roughOptions, ...newOptions };
+        this._updateRoughRectangle();
+        this.dirty = true;
+        this.canvas && this.canvas.requestRenderAll();
     }
 
     toObject(propertiesToInclude) {

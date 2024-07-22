@@ -1,24 +1,27 @@
 import * as fabric from 'fabric';
 import rough from 'roughjs';
 
-export class FabricRoughCircle extends fabric.FabricObject {
+export class FabricRoughCircle extends fabric.Circle {
     static type = 'FabricRoughCircle';
 
     constructor(points, options = {}) {
         super(options);
         this.points = points || [0, 0, 100, 100];
         this.roughOptions = {
-            stroke: options.stroke || 'black',
-            fill: options.fill || 'transparent',
-            roughness: options.roughness || 1,
+            stroke: 'black',
+            strokeWidth: 4,
+            fill: 'transparent',
+            roughness: 2,
+            seed: Math.random() * 100,
             ...options.roughOptions
         };
         this.minSize = options.minSize || 5; // Minimum size of the circle
-        this.roughGenerator = rough.generator();
+        this.roughGenerator = rough.generator(this.roughOptions);
         this._updateRoughCircle();
     }
 
     _updateRoughCircle() {
+
         let [x1, y1, x2, y2] = this.points;
         let width = Math.abs(x2 - x1);
         let height = Math.abs(y2 - y1);
@@ -54,7 +57,7 @@ export class FabricRoughCircle extends fabric.FabricObject {
         ctx.save();
         ctx.translate(-this.width / 2, -this.height / 2);
 
-        const roughCanvas = rough.canvas(ctx.canvas);
+        const roughCanvas = rough.canvas(ctx.canvas)
         roughCanvas.draw(this.roughCircle);
 
         ctx.restore();
@@ -63,6 +66,13 @@ export class FabricRoughCircle extends fabric.FabricObject {
     setPoints(points) {
         this.points = points;
         this._updateRoughCircle();
+    }
+
+    updateRoughOptions(newOptions) {
+        this.roughOptions = { ...this.roughOptions, ...newOptions };
+        this._updateRoughCircle();
+        this.dirty = true;
+        this.canvas && this.canvas.requestRenderAll();
     }
 
     toObject(propertiesToInclude) {

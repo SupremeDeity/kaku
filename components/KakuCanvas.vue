@@ -26,12 +26,14 @@
 import { ref, onMounted, onUnmounted, watch } from "vue";
 import * as fabric from "fabric";
 import type {FabricObject} from "fabric";
+import FontFaceObserver from "fontfaceobserver";
 
 const canvasWrapper = ref(null);
 const canvas: Ref<HTMLCanvasElement | undefined> = ref();
 let fabricCanvas: fabric.Canvas;
-const drawingModes = ["Select", "Draw", "Circle", "Rectangle", "Diamond", "Line"] as const;
+const drawingModes = ["Select", "Draw", "Circle", "Rectangle", "Diamond", "Text", "Line"] as const;
 const currentMode: Ref<(typeof drawingModes)[number]> = ref("Draw");
+const fonts = ["Kalam"];
 
 const brushSettings = {
   cap: false,
@@ -60,6 +62,11 @@ function initializeCanvas() {
 
   customizePencilBrush(brushSettings);
   setBrush();
+
+  fonts.forEach(async (f) => {
+    const font = new FontFaceObserver(f);
+    await font.load(null,  5000)
+  })
 
   fabricCanvas.on("mouse:wheel", handleZoom);
   fabricCanvas.on("mouse:down:before", handleMouseDown);
@@ -106,10 +113,29 @@ function handleMouseDown(o: any) {
     lastPosY = evt.clientY;
   }
   // SHAPE PLACEMENT MODE
-  else if (currentMode.value !== "Select" && currentMode.value !== "Draw") {
+  else if (currentMode.value !== "Select" && currentMode.value !== "Draw" && currentMode.value !== "Text") {
     shapePlacementMode = true;
     startPoint = fabricCanvas.getScenePoint(o.e);
     handleShapePlacement(o)
+  }
+
+  // TEXT PLACEMENT MODE
+  else if (currentMode.value === "Text") {
+    const pointer = fabricCanvas.getScenePoint(o.e);
+    const text = new fabric.Textbox('Edit text', {
+      left: pointer.x,
+      top: pointer.y,
+      fontFamily: 'Kalam',
+      fontSize: 20,
+      fill: 'black',
+      editable: true,
+      selectable: true,
+      width: 50,
+      height: 50
+    });
+    fabricCanvas.add(text);
+    currentMode.value = "Select";
+    fabricCanvas.requestRenderAll();
   }
 }
 
@@ -144,7 +170,9 @@ function handleMouseUp() {
     shape?.setCoords();
     shape = undefined;
     fabricCanvas.requestRenderAll();
+    currentMode.value = "Select"
   }
+
 }
 
 function handleShapePlacement(o: any) {

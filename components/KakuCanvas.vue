@@ -30,7 +30,7 @@ import type {FabricObject} from "fabric";
 const canvasWrapper = ref(null);
 const canvas: Ref<HTMLCanvasElement | undefined> = ref();
 let fabricCanvas: fabric.Canvas;
-const drawingModes = ["Select", "Draw", "Circle", "Rectangle", "Line"] as const;
+const drawingModes = ["Select", "Draw", "Circle", "Rectangle", "Diamond", "Line"] as const;
 const currentMode: Ref<(typeof drawingModes)[number]> = ref("Draw");
 
 const brushSettings = {
@@ -157,6 +157,12 @@ function handleShapePlacement(o: any) {
     case "Circle":
       shape = drawRoughCircle(startPoint, pointer);
       break;
+    case "Rectangle":
+      shape = drawRoughRectangle(startPoint, pointer);
+      break;
+    case "Diamond":
+      shape = drawRoughDiamond(startPoint, pointer);
+      break;
   }
 }
 
@@ -185,6 +191,32 @@ function drawRoughCircle(start: fabric.Point, end: fabric.Point) {
     originY: 'center' });
   fabricCanvas.add(circle);
   return circle;
+}
+
+function drawRoughRectangle(start: fabric.Point, end: fabric.Point) {
+  if(shape) {
+    // @ts-expect-error type THIS later
+    shape.setPoints([start.x, start.y, end.x, end.y]);
+    fabricCanvas.requestRenderAll();
+    return shape;
+  }
+  const rectangle = new FabricRoughRectangle([start.x, start.y, end.x, end.y], {evented: false, selectable: false, originX: 'center',
+    originY: 'center' });
+  fabricCanvas.add(rectangle);
+  return rectangle;
+}
+
+function drawRoughDiamond(start: fabric.Point, end: fabric.Point) {
+  if(shape) {
+    // @ts-expect-error type THIS later
+    shape.setPoints([start.x, start.y, end.x, end.y]);
+    fabricCanvas.requestRenderAll();
+    return shape;
+  }
+  const diamond = new FabricRoughDiamond([start.x, start.y, end.x, end.y], {evented: false, selectable: false, originX: 'center',
+    originY: 'center' });
+  fabricCanvas.add(diamond);
+  return diamond;
 }
 
 function setMode(mode: (typeof drawingModes)[number]) {

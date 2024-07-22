@@ -1,8 +1,8 @@
 import * as fabric from 'fabric';
 import rough from 'roughjs';
 
-export class FabricRoughRectangle extends fabric.FabricObject {
-    static type = 'FabricRoughRectangle';
+export class FabricRoughDiamond extends fabric.FabricObject {
+    static type = 'FabricRoughDiamond';
 
     constructor(points, options = {}) {
         super(options);
@@ -13,12 +13,12 @@ export class FabricRoughRectangle extends fabric.FabricObject {
             roughness: options.roughness || 1,
             ...options.roughOptions
         };
-        this.minSize = options.minSize || 5; // Minimum size of the rectangle
+        this.minSize = options.minSize || 5; // Minimum size of the diamond
         this.roughGenerator = rough.generator();
-        this._updateRoughRectangle();
+        this._updateRoughDiamond();
     }
 
-    _updateRoughRectangle() {
+    _updateRoughDiamond() {
         const [x1, y1, x2, y2] = this.points;
         let width = Math.abs(x2 - x1);
         let height = Math.abs(y2 - y1);
@@ -37,7 +37,15 @@ export class FabricRoughRectangle extends fabric.FabricObject {
             height: height
         });
 
-        this.roughRectangle = this.roughGenerator.rectangle(0, 0, width, height, this.roughOptions);
+        // Create diamond points
+        const diamondPoints = [
+            [width / 2, 0],
+            [width, height / 2],
+            [width / 2, height],
+            [0, height / 2]
+        ];
+
+        this.roughDiamond = this.roughGenerator.polygon(diamondPoints, this.roughOptions);
         this.setCoords();
     }
 
@@ -46,14 +54,14 @@ export class FabricRoughRectangle extends fabric.FabricObject {
         ctx.translate(-this.width / 2, -this.height / 2);
 
         const roughCanvas = rough.canvas(ctx.canvas);
-        roughCanvas.draw(this.roughRectangle);
+        roughCanvas.draw(this.roughDiamond);
 
         ctx.restore();
     }
 
     setPoints(points) {
         this.points = points;
-        this._updateRoughRectangle();
+        this._updateRoughDiamond();
     }
 
     toObject(propertiesToInclude) {
@@ -66,6 +74,6 @@ export class FabricRoughRectangle extends fabric.FabricObject {
     }
 
     static fromObject(object, callback) {
-        return new FabricRoughRectangle(object.points, object, callback);
+        return new FabricRoughDiamond(object.points, object, callback);
     }
 }

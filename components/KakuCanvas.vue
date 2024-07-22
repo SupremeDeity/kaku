@@ -25,7 +25,7 @@
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted, watch } from "vue";
 import * as fabric from "fabric";
-import rough from "roughjs";
+import type {FabricObject} from "fabric";
 
 const canvasWrapper = ref(null);
 const canvas: Ref<HTMLCanvasElement | undefined> = ref();
@@ -55,6 +55,7 @@ function initializeCanvas() {
     width: window.innerWidth,
     height: window.innerHeight,
     renderOnAddRemove: false,
+    selection: currentMode.value === "Select"
   });
 
   customizePencilBrush(brushSettings);
@@ -85,7 +86,8 @@ function handleZoom(opt: any) {
   opt.e.stopPropagation();
 }
 
-let objectPlacementMode = false;
+let shapePlacementMode = false;
+let shape: FabricObject | undefined;
 let startPoint: any;
 let lastPosX: number;
 let lastPosY: number;
@@ -93,6 +95,7 @@ let lastPosY: number;
 function handleMouseDown(o: any) {
   const evt = o.e;
 
+  // ON DRAGGING
   if (evt.altKey === true) {
     fabricCanvas.isDrawingMode = false;
     // @ts-expect-error custom property added to fabricCanvas
@@ -101,10 +104,12 @@ function handleMouseDown(o: any) {
 
     lastPosX = evt.clientX;
     lastPosY = evt.clientY;
-  } else if (currentMode.value !== "Select" && currentMode.value !== "Draw") {
-    objectPlacementMode = true;
-    // TODO: TAKE A LOOK AT THIS AGAIN
-    startPoint = fabricCanvas.getViewportPoint(o.e);
+  }
+  // SHAPE PLACEMENT MODE
+  else if (currentMode.value !== "Select" && currentMode.value !== "Draw") {
+    shapePlacementMode = true;
+    startPoint = fabricCanvas.getScenePoint(o.e);
+    handleShapePlacement(o)
   }
 }
 
@@ -119,64 +124,67 @@ function handleMouseMove(o: any) {
     lastPosX = e.clientX;
     lastPosY = e.clientY;
     return;
-  } else if (!objectPlacementMode) return;
+  } else if (!shapePlacementMode) return;
 
-  // TODO: TAKE A LOOK AT THIS AGAIN
-  const pointer = fabricCanvas.getViewportPoint(o.e);
+  handleShapePlacement(o);
+}
+
+function handleMouseUp() {
+  // @ts-expect-error custom property added to fabricCanvas
+  if(fabricCanvas.isDragging) {
+    fabricCanvas.setViewportTransform(fabricCanvas.viewportTransform);
+    // @ts-expect-error custom property added to fabricCanvas
+    fabricCanvas.isDragging = false;
+    fabricCanvas.selection = currentMode.value === "Select";
+    fabricCanvas.isDrawingMode = currentMode.value === "Draw";
+  }
+
+  else if(shapePlacementMode) {
+    shapePlacementMode = false;
+    shape?.setCoords();
+    shape = undefined;
+    fabricCanvas.requestRenderAll();
+  }
+}
+
+function handleShapePlacement(o: any) {
+  const pointer = fabricCanvas.getScenePoint(o.e);
 
   switch (currentMode.value) {
-    case "Circle":
-      drawRoughCircle(startPoint, pointer);
-      break;
-    case "Rectangle":
-      drawRoughRectangle(startPoint, pointer);
-      break;
     case "Line":
-      drawRoughLine(startPoint, pointer);
+      shape = drawRoughLine(startPoint, pointer);
+      break;
+    case "Circle":
+      shape = drawRoughCircle(startPoint, pointer);
       break;
   }
 }
 
-function handleMouseUp() {
-  fabricCanvas.setViewportTransform(fabricCanvas.viewportTransform);
-  // @ts-expect-error custom property added to fabricCanvas
-  fabricCanvas.isDragging = false;
-  fabricCanvas.selection = currentMode.value === "Select";
-  fabricCanvas.isDrawingMode = currentMode.value === "Draw";
-
-  objectPlacementMode = false;
-  fabricCanvas.renderAll();
+function drawRoughLine(start: fabric.Point, end: fabric.Point) {
+  if(shape) {
+    // @ts-expect-error type THIS later
+    shape.setPoints([start.x, start.y, end.x, end.y]);
+    fabricCanvas.requestRenderAll();
+    return shape;
+  }
+  const line = new FabricRoughLine([start.x, start.y, end.x, end.y], {
+    roughOptions: { stroke: 'black', roughness: 2 }, evented: false, selectable: false
+  });
+  fabricCanvas.add(line);
+  return line;
 }
 
 function drawRoughCircle(start: fabric.Point, end: fabric.Point) {
-  const activeObject = fabricCanvas.getActiveObject();
-  if (activeObject) fabricCanvas.remove(activeObject);
-  const radius = Math.sqrt((start.x - end.x) ** 2 + (start.y - end.y) ** 2);
-  const roughCanvas = rough.canvas(fabricCanvas.lowerCanvasEl);
-  roughCanvas.circle(start.x, start.y, radius * 2, {
-    stroke: "black",
-    roughness: 2,
-  });
-}
-
-function drawRoughRectangle(start: fabric.Point, end: fabric.Point) {
-  const activeObject = fabricCanvas.getActiveObject();
-  if (activeObject) fabricCanvas.remove(activeObject);
-  const roughCanvas = rough.canvas(fabricCanvas.lowerCanvasEl);
-  roughCanvas.rectangle(start.x, start.y, end.x - start.x, end.y - start.y, {
-    stroke: "black",
-    roughness: 2,
-  });
-}
-
-function drawRoughLine(start: fabric.Point, end: fabric.Point) {
-  const activeObject = fabricCanvas.getActiveObject();
-  if (activeObject) fabricCanvas.remove(activeObject);
-  const roughCanvas = rough.canvas(fabricCanvas.lowerCanvasEl);
-  roughCanvas.line(start.x, start.y, end.x, end.y, {
-    stroke: "black",
-    roughness: 2,
-  });
+  if(shape) {
+    // @ts-expect-error type THIS later
+    shape.setPoints([start.x, start.y, end.x, end.y]);
+    fabricCanvas.requestRenderAll();
+    return shape;
+  }
+  const circle = new FabricRoughCircle([start.x, start.y, end.x, end.y], {evented: false, selectable: false, originX: 'center',
+    originY: 'center' });
+  fabricCanvas.add(circle);
+  return circle;
 }
 
 function setMode(mode: (typeof drawingModes)[number]) {

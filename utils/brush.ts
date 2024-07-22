@@ -38,7 +38,7 @@ export function customizePencilBrush(brushSettings: any) {
         taper: brushSettings.taperEnd,
         easing: brushSettings.easingEnd,
       },
-      simulatePressure: false,
+      simulatePressure: true,
     });
 
     ctx.beginPath();
@@ -98,7 +98,7 @@ export function customizePencilBrush(brushSettings: any) {
         taper: brushSettings.taperEnd,
         easing: brushSettings.easingEnd,
       },
-      simulatePressure: false,
+      simulatePressure: true,
     });
 
     const strokePoints = stroke.map(([x, y]) => ({ x, y }));

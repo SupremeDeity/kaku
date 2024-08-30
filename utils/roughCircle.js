@@ -15,7 +15,7 @@ export class FabricRoughCircle extends fabric.Circle {
             seed: Math.random() * 100,
             ...options.roughOptions
         };
-        this.minSize = options.minSize || 5; // Minimum size of the circle
+        this.minSize = options.minSize || 5;
         this.roughGenerator = rough.generator(this.roughOptions);
         this._updateRoughCircle();
     }
@@ -36,15 +36,12 @@ export class FabricRoughCircle extends fabric.Circle {
             y2 = y1 + (y2 > y1 ? height : -height);
         }
 
-        const left = Math.min(x1, x2);
-        const top = Math.min(y1, y2);
-
         // Use the larger dimension for the circle diameter
         const diameter = Math.max(width, height);
 
         this.set({
-            left: left + width / 2,
-            top: top + height / 2,
+            left: x1,
+            top: y1,
             width: diameter,
             height: diameter
         });

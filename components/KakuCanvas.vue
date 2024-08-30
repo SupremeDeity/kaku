@@ -25,13 +25,20 @@
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted, watch } from "vue";
 import * as fabric from "fabric";
-import type {FabricObject} from "fabric";
+import type { FabricObject } from "fabric";
 import FontFaceObserver from "fontfaceobserver";
-
 const canvasWrapper = ref(null);
 const canvas: Ref<HTMLCanvasElement | undefined> = ref();
 let fabricCanvas: fabric.Canvas;
-const drawingModes = ["Select", "Draw", "Circle", "Rectangle", "Diamond", "Text", "Line"] as const;
+const drawingModes = [
+  "Select",
+  "Draw",
+  "Circle",
+  "Rectangle",
+  "Diamond",
+  "Text",
+  "Line",
+] as const;
 const currentMode: Ref<(typeof drawingModes)[number]> = ref("Draw");
 const fonts = ["Kalam"];
 
@@ -57,16 +64,15 @@ function initializeCanvas() {
     width: window.innerWidth,
     height: window.innerHeight,
     renderOnAddRemove: false,
-    selection: currentMode.value === "Select"
+    selection: currentMode.value === "Select",
   });
-
   customizePencilBrush(brushSettings);
   setBrush();
 
   fonts.forEach(async (f) => {
     const font = new FontFaceObserver(f);
-    await font.load(null,  5000)
-  })
+    await font.load(null, 5000);
+  });
 
   fabricCanvas.on("mouse:wheel", handleZoom);
   fabricCanvas.on("mouse:down:before", handleMouseDown);
@@ -87,7 +93,10 @@ function handleZoom(opt: any) {
   zoom *= 0.999 ** delta;
   if (zoom > 20) zoom = 20;
   if (zoom < 0.01) zoom = 0.01;
-  fabricCanvas.zoomToPoint(new fabric.Point( opt.e.offsetX,  opt.e.offsetY ), zoom);
+  fabricCanvas.zoomToPoint(
+    new fabric.Point(opt.e.offsetX, opt.e.offsetY),
+    zoom
+  );
   fabricCanvas.requestRenderAll();
   opt.e.preventDefault();
   opt.e.stopPropagation();
@@ -113,27 +122,32 @@ function handleMouseDown(o: any) {
     lastPosY = evt.clientY;
   }
   // SHAPE PLACEMENT MODE
-  else if (currentMode.value !== "Select" && currentMode.value !== "Draw" && currentMode.value !== "Text") {
+  else if (
+    currentMode.value !== "Select" &&
+    currentMode.value !== "Draw" &&
+    currentMode.value !== "Text"
+  ) {
     shapePlacementMode = true;
     startPoint = fabricCanvas.getScenePoint(o.e);
-    handleShapePlacement(o)
+    handleShapePlacement(o);
   }
 
   // TEXT PLACEMENT MODE
   else if (currentMode.value === "Text") {
     const pointer = fabricCanvas.getScenePoint(o.e);
-    const text = new fabric.Textbox('Edit text', {
+    const text = new fabric.Textbox("Edit text", {
       left: pointer.x,
       top: pointer.y,
-      fontFamily: 'Kalam',
+      fontFamily: "Kalam",
       fontSize: 20,
-      fill: 'black',
+      fill: "black",
       editable: true,
       selectable: true,
       width: 50,
-      height: 50
+      height: 50,
     });
     fabricCanvas.add(text);
+    text.enterEditing();
     currentMode.value = "Select";
     fabricCanvas.requestRenderAll();
   }
@@ -157,20 +171,18 @@ function handleMouseMove(o: any) {
 
 function handleMouseUp() {
   // @ts-expect-error custom property added to fabricCanvas
-  if(fabricCanvas.isDragging) {
+  if (fabricCanvas.isDragging) {
     fabricCanvas.setViewportTransform(fabricCanvas.viewportTransform);
     // @ts-expect-error custom property added to fabricCanvas
     fabricCanvas.isDragging = false;
     fabricCanvas.selection = currentMode.value === "Select";
     fabricCanvas.isDrawingMode = currentMode.value === "Draw";
-  }
-
-  else if(shapePlacementMode) {
+  } else if (shapePlacementMode) {
     shapePlacementMode = false;
     shape?.setCoords();
     shape = undefined;
     fabricCanvas.requestRenderAll();
-    currentMode.value = "Select"
+    currentMode.value = "Select";
   }
 }
 
@@ -194,54 +206,68 @@ function handleShapePlacement(o: any) {
 }
 
 function drawRoughLine(start: fabric.Point, end: fabric.Point) {
-  if(shape) {
+  if (shape) {
     // @ts-expect-error type THIS later
     shape.setPoints([start.x, start.y, end.x, end.y]);
     fabricCanvas.requestRenderAll();
     return shape;
   }
   const line = new FabricRoughLine([start.x, start.y, end.x, end.y], {
-    roughOptions: { stroke: 'black', roughness: 2 }, evented: false, selectable: false
+    roughOptions: { stroke: "black", roughness: 2 },
+    evented: false,
+    selectable: false,
   });
   fabricCanvas.add(line);
   return line;
 }
 
 function drawRoughCircle(start: fabric.Point, end: fabric.Point) {
-  if(shape) {
+  if (shape) {
     // @ts-expect-error type THIS later
     shape.setPoints([start.x, start.y, end.x, end.y]);
     fabricCanvas.requestRenderAll();
     return shape;
   }
-  const circle = new FabricRoughCircle([start.x, start.y, end.x, end.y], {evented: false, selectable: false, originX: 'center',
-    originY: 'center' });
+  const circle = new FabricRoughCircle([start.x, start.y, end.x, end.y], {
+    evented: false,
+    selectable: false,
+    originX: "center",
+    originY: "center",
+  });
   fabricCanvas.add(circle);
   return circle;
 }
 
 function drawRoughRectangle(start: fabric.Point, end: fabric.Point) {
-  if(shape) {
+  if (shape) {
     // @ts-expect-error type THIS later
     shape.setPoints([start.x, start.y, end.x, end.y]);
     fabricCanvas.requestRenderAll();
     return shape;
   }
-  const rectangle = new FabricRoughRectangle([start.x, start.y, end.x, end.y], {evented: false, selectable: false, originX: 'center',
-    originY: 'center' });
+  const rectangle = new FabricRoughRectangle([start.x, start.y, end.x, end.y], {
+    evented: false,
+    selectable: false,
+    originX: "center",
+    originY: "center",
+  });
   fabricCanvas.add(rectangle);
   return rectangle;
 }
 
 function drawRoughDiamond(start: fabric.Point, end: fabric.Point) {
-  if(shape) {
+  if (shape) {
     // @ts-expect-error type THIS later
     shape.setPoints([start.x, start.y, end.x, end.y]);
     fabricCanvas.requestRenderAll();
     return shape;
   }
-  const diamond = new FabricRoughDiamond([start.x, start.y, end.x, end.y], {evented: false, selectable: false, originX: 'center',
-    originY: 'center' });
+  const diamond = new FabricRoughDiamond([start.x, start.y, end.x, end.y], {
+    evented: false,
+    selectable: false,
+    originX: "center",
+    originY: "center",
+  });
   fabricCanvas.add(diamond);
   return diamond;
 }
@@ -260,13 +286,71 @@ function clearCanvas() {
   fabricCanvas.clear();
 }
 
-function handleKeyEvent(e: any) {
+async function handleKeyEvent(e: any) {
   if (e.key === "Delete" && currentMode.value === "Select") {
     fabricCanvas.getActiveObjects().forEach((obj) => {
       fabricCanvas.remove(obj);
     });
     fabricCanvas.discardActiveObject();
     fabricCanvas.requestRenderAll();
+  } else if (e.key === "Enter" && currentMode.value === "Select") {
+    const activeObject = fabricCanvas.getActiveObjects();
+    if (
+      activeObject.length === 1 &&
+      (activeObject[0] instanceof FabricRoughRectangle ||
+        activeObject[0] instanceof FabricRoughCircle ||
+        activeObject[0] instanceof FabricRoughDiamond)
+    ) {
+      const group = new fabric.Group([], {
+        subTargetCheck: true,
+      });
+      const shape = await activeObject[0].clone();
+      const text = new fabric.Textbox("Edit text", {
+        fontFamily: "Kalam",
+        left: shape.left,
+        top: shape.top,
+        width: shape.width,
+        height: shape.height,
+        originX: shape.originX,
+        originY: shape.originY,
+      });
+      group.add(shape, text);
+
+      // This is a special case where editing text is quite awkward without doing this hack
+      text.on("editing:exited", () => {
+        fabricCanvas.discardActiveObject();
+        fabricCanvas.remove(text);
+        group.add(text);
+        fabricCanvas.requestRenderAll();
+      });
+
+      text.on("changed", () => {
+        // const shape = group.item(0);
+        group.item(0).scaleToHeight(text.height);
+      });
+
+      group.on("scaling", () => {
+        const text = group.item(1);
+        const scaleX = text.width;
+        // const scaleY = text.height;
+        text.scaleToWidth(scaleX);
+        // text.scaleToHeight(scaleY);
+      });
+
+      group.on("mousedblclick", () => {
+        const iText = group.item(1) as fabric.Textbox;
+        group.remove(iText);
+        fabricCanvas.add(iText);
+        fabricCanvas.setActiveObject(iText);
+        iText.enterEditing();
+        iText.selectAll();
+        fabricCanvas.requestRenderAll();
+      });
+      fabricCanvas.add(group);
+      fabricCanvas.remove(activeObject[0]);
+      fabricCanvas.discardActiveObject();
+      fabricCanvas.requestRenderAll();
+    }
   }
 }
 

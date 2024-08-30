@@ -11,10 +11,10 @@
   },
   "dependencies": {
     "@nuxt/eslint": "^0.3.13",
-    "fabric": "^6.0.2",
+    "fabric": "^6.3.0",
     "fontfaceobserver": "^2.3.0",
     "nanoid": "^5.0.7",
-    "nuxt": "^3.12.4",
+    "nuxt": "^3.13.0",
     "perfect-freehand": "^1.2.2",
     "roughjs": "^4.6.6",
     "simplify-js": "^1.2.4",

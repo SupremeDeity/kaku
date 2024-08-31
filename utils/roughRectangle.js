@@ -1,12 +1,12 @@
-import * as fabric from 'fabric';
-import rough from 'roughjs';
+import * as fabric from "fabric";
+import rough from "roughjs";
 
 export class FabricRoughRectangle extends fabric.Rect {
-    static type = 'FabricRoughRectangle';
+    static type = "FabricRoughRectangle";
 
     constructor(points, options = {}) {
         super(options);
-        this.points = points || [0, 0, 100, 100];
+        this.points = points;
         this.minSize = options.minSize || 5; // Minimum size of the rectangle
         this.roughGenerator = rough.generator();
         this._updateRoughRectangle();
@@ -14,8 +14,8 @@ export class FabricRoughRectangle extends fabric.Rect {
 
     _updateRoughRectangle() {
         const [x1, y1, x2, y2] = this.points;
-        let width = Math.abs(x2 - x1);
-        let height = Math.abs(y2 - y1);
+        let width = this.roughOptions.size?.width ?? Math.abs(x2 - x1);
+        let height = this.roughOptions.size?.height ?? Math.abs(y2 - y1);
 
         // Ensure minimum size
         width = Math.max(width, this.minSize);
@@ -25,13 +25,19 @@ export class FabricRoughRectangle extends fabric.Rect {
         const top = Math.min(y1, y2);
 
         this.set({
-            left: left + width / 2,
-            top: top + height / 2,
+            left: this.roughOptions.size ? 0 : left + width / 2,
+            top: this.roughOptions.size ? 0 : top + height / 2,
             width: width,
-            height: height
+            height: height,
         });
 
-        this.roughRectangle = this.roughGenerator.rectangle(0, 0, width, height, this.roughOptions);
+        this.roughRectangle = this.roughGenerator.rectangle(
+            0,
+            0,
+            width,
+            height,
+            this.roughOptions
+        );
         this.setCoords();
     }
 
@@ -62,7 +68,7 @@ export class FabricRoughRectangle extends fabric.Rect {
             ...super.toObject(propertiesToInclude),
             points: this.points,
             roughOptions: this.roughOptions,
-            minSize: this.minSize
+            minSize: this.minSize,
         };
     }
 

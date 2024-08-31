@@ -81,7 +81,6 @@ function initializeCanvas() {
   fabricCanvas = new fabric.Canvas(canvas.value, {
     isDrawingMode: currentMode.value === "Draw",
     preserveObjectStacking: true,
-    enableRetinaScaling: false,
     width: window.innerWidth,
     height: window.innerHeight,
     renderOnAddRemove: false,
@@ -342,19 +341,24 @@ async function handleKeyEvent(e: any) {
       });
 
       text.on("changed", () => {
-        if (group.item(0).height < text.height) {
-          group.item(0).scaleToHeight(text.height);
-          text.scaleToWidth(group.item(0).width);
+        if (
+          group.item(0).height < text.height ||
+          group.item(0).width < text.width
+        ) {
+          group
+            .item(0)
+            // @ts-expect-error custom function
+            .updateRoughOptions({
+              size: { height: text.height, width: text.width },
+            });
         }
       });
 
-      group.on("scaling", () => {
-        const text = group.item(1);
-        const scaleX = text.width;
-        // const scaleY = text.height;
-        text.scaleToWidth(scaleX);
-        // text.scaleToHeight(scaleY);
-      });
+      // group.on("scaling", () => {
+      //   text.set({ width: group.width, dirty: true });
+
+      //   fabricCanvas.requestRenderAll();
+      // });
 
       group.on("mousedblclick", () => {
         const iText = group.item(1) as fabric.Textbox;

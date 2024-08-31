@@ -1,13 +1,13 @@
-import * as fabric from 'fabric';
-import rough from 'roughjs';
+import * as fabric from "fabric";
+import rough from "roughjs";
 
 export class FabricRoughEllipse extends fabric.Ellipse {
-    static type = 'FabricRoughEllipse';
+    static type = "FabricRoughEllipse";
 
     constructor(points, options = {}) {
         super(options);
-        this.points = [100, 100, 200, 300];
-        // this.points = points;
+        // this.points = [100, 100, 200, 300];
+        this.points = points;
         this.minSize = options.minSize || 5;
         this.roughGenerator = rough.generator(this.roughOptions);
         this._updateRoughEllipse();
@@ -15,18 +15,23 @@ export class FabricRoughEllipse extends fabric.Ellipse {
 
     _updateRoughEllipse() {
         let [x1, y1, x2, y2] = this.points;
-        let width = Math.abs(x2 - x1);
-        let height = Math.abs(y2 - y1);
+
+        let w = this.roughOptions.size?.width ?? Math.abs(x2 - x1);
+        let h = this.roughOptions.size?.height ?? Math.abs(y2 - y1);
         this.set({
-            left: x1,
-            top: y1,
-            width: width,
-            height: height
+            left: this.roughOptions.size ? -w / 2 : x1,
+            top: this.roughOptions.size ? -h / 2 : y1,
+            width: w,
+            height: h,
         });
 
-
-        this.roughEllipse = this.roughGenerator.ellipse(Math.abs(width / 2), Math.abs(height / 2), width, height, this.roughOptions);
-        console.log(this.roughEllipse)
+        this.roughEllipse = this.roughGenerator.ellipse(
+            w / 2,
+            h / 2,
+            w,
+            h,
+            this.roughOptions
+        );
         this.setCoords();
     }
 
@@ -34,7 +39,7 @@ export class FabricRoughEllipse extends fabric.Ellipse {
         ctx.save();
         ctx.translate(-this.width / 2, -this.height / 2);
 
-        const roughCanvas = rough.canvas(ctx.canvas)
+        const roughCanvas = rough.canvas(ctx.canvas);
         roughCanvas.draw(this.roughEllipse);
 
         ctx.restore();
@@ -57,7 +62,7 @@ export class FabricRoughEllipse extends fabric.Ellipse {
             ...super.toObject(propertiesToInclude),
             points: this.points,
             roughOptions: this.roughOptions,
-            minSize: this.minSize
+            minSize: this.minSize,
         };
     }
 

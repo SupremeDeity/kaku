@@ -7,17 +7,16 @@ export class FabricRoughDiamond extends fabric.FabricObject {
     constructor(points, options = {}) {
         super(options);
         this.points = points || [0, 0, 100, 100];
-        this.minSize = options.minSize || 5; // Minimum size of the diamond
+        this.minSize = options.minSize || 5;
         this.roughGenerator = rough.generator();
         this._updateRoughDiamond();
     }
 
     _updateRoughDiamond() {
         const [x1, y1, x2, y2] = this.points;
-        let width = Math.abs(x2 - x1);
-        let height = Math.abs(y2 - y1);
+        let width = this.roughOptions.size?.width ?? Math.abs(x2 - x1);
+        let height = this.roughOptions.size?.height ?? Math.abs(y2 - y1);
 
-        // Ensure minimum size
         width = Math.max(width, this.minSize);
         height = Math.max(height, this.minSize);
 
@@ -25,8 +24,8 @@ export class FabricRoughDiamond extends fabric.FabricObject {
         const top = Math.min(y1, y2);
 
         this.set({
-            left: left + width / 2,
-            top: top + height / 2,
+            left: this.roughOptions.size ? 0 : left + width / 2,
+            top: this.roughOptions.size ? 0 : top + height / 2,
             width: width,
             height: height
         });

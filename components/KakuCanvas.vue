@@ -335,8 +335,8 @@ async function handleKeyEvent(e: any) {
       // This is a special case where editing text is quite awkward without doing this hack
       text.on("editing:exited", () => {
         fabricCanvas.discardActiveObject();
-        fabricCanvas.remove(text);
         group.add(text);
+        fabricCanvas.remove(text);
         fabricCanvas.requestRenderAll();
       });
 
@@ -345,6 +345,7 @@ async function handleKeyEvent(e: any) {
           group.item(0).height < text.height ||
           group.item(0).width < text.width
         ) {
+          console.log(text.width, text.height);
           group
             .item(0)
             // @ts-expect-error custom function
@@ -362,8 +363,7 @@ async function handleKeyEvent(e: any) {
 
       group.on("mousedblclick", () => {
         const iText = group.item(1) as fabric.Textbox;
-        group.remove(iText);
-        fabricCanvas.add(iText);
+        fabricCanvas.add(...group.remove(iText));
         fabricCanvas.setActiveObject(iText);
         iText.enterEditing();
         iText.selectAll();

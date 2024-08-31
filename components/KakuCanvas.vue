@@ -27,20 +27,21 @@ import { ref, onMounted, onUnmounted, watch } from "vue";
 import * as fabric from "fabric";
 import type { FabricObject } from "fabric";
 import FontFaceObserver from "fontfaceobserver";
+import type { Options } from "roughjs/bin/core";
 const canvasWrapper = ref(null);
 const canvas: Ref<HTMLCanvasElement | undefined> = ref();
 let fabricCanvas: fabric.Canvas;
 const drawingModes = [
   "Select",
   "Draw",
-  "Circle",
+  "Ellipse",
   "Rectangle",
   "Diamond",
   "Text",
   "Line",
 ] as const;
 const currentMode: Ref<(typeof drawingModes)[number]> = ref("Draw");
-const fonts = ["Kalam"];
+const fonts = ["Kalam", "Itim", "Virgil"];
 
 const brushSettings = {
   cap: false,
@@ -54,6 +55,26 @@ const brushSettings = {
   generalEasing: (t: number) => t,
   easingStart: (t: number) => 1 + --t * t * t * t * t,
   easingEnd: (t: number) => 1 + --t * t * t * t * t,
+};
+interface roughShapeProps {
+  roughOptions: Partial<Options>;
+}
+const defaultShapeSettings: Partial<fabric.FabricObjectProps> &
+  roughShapeProps = {
+  evented: false,
+  selectable: false,
+  originX: "center",
+  originY: "center",
+  stroke: "black",
+  strokeWidth: 2,
+  roughOptions: {
+    stroke: "black",
+    roughness: 2,
+    bowing: 1,
+    strokeWidth: 2,
+    seed: Math.random() * 100,
+    curveFitting: 1,
+  },
 };
 
 function initializeCanvas() {
@@ -112,7 +133,7 @@ function handleMouseDown(o: any) {
   const evt = o.e;
 
   // ON DRAGGING
-  if (evt.altKey === true) {
+  if (evt.shiftKey === true) {
     fabricCanvas.isDrawingMode = false;
     // @ts-expect-error custom property added to fabricCanvas
     fabricCanvas.isDragging = true;
@@ -143,13 +164,14 @@ function handleMouseDown(o: any) {
       fill: "black",
       editable: true,
       selectable: true,
-      width: 50,
-      height: 50,
+      width: 100,
+      activeOn: "up", // fabric@6.3.0 bug: cant edit without this
     });
-    fabricCanvas.add(text);
+    text.selectAll();
     text.enterEditing();
-    currentMode.value = "Select";
+    fabricCanvas.add(text);
     fabricCanvas.requestRenderAll();
+    currentMode.value = "Select";
   }
 }
 
@@ -188,13 +210,12 @@ function handleMouseUp() {
 
 function handleShapePlacement(o: any) {
   const pointer = fabricCanvas.getScenePoint(o.e);
-
   switch (currentMode.value) {
     case "Line":
       shape = drawRoughLine(startPoint, pointer);
       break;
-    case "Circle":
-      shape = drawRoughCircle(startPoint, pointer);
+    case "Ellipse":
+      shape = drawRoughEllipse(startPoint, pointer);
       break;
     case "Rectangle":
       shape = drawRoughRectangle(startPoint, pointer);
@@ -205,37 +226,38 @@ function handleShapePlacement(o: any) {
   }
 }
 
-function drawRoughLine(start: fabric.Point, end: fabric.Point) {
+function drawRoughLine(start: any, end: any) {
   if (shape) {
-    // @ts-expect-error type THIS later
+    // @ts-expect-error Custom function
     shape.setPoints([start.x, start.y, end.x, end.y]);
     fabricCanvas.requestRenderAll();
     return shape;
   }
   const line = new FabricRoughLine([start.x, start.y, end.x, end.y], {
-    roughOptions: { stroke: "black", roughness: 2 },
-    evented: false,
-    selectable: false,
+    ...defaultShapeSettings,
+    originX: 0,
+    originY: 0,
   });
   fabricCanvas.add(line);
+  shape = line;
+  fabricCanvas.requestRenderAll();
   return line;
 }
 
-function drawRoughCircle(start: fabric.Point, end: fabric.Point) {
+function drawRoughEllipse(start: fabric.Point, end: fabric.Point) {
   if (shape) {
     // @ts-expect-error type THIS later
     shape.setPoints([start.x, start.y, end.x, end.y]);
     fabricCanvas.requestRenderAll();
     return shape;
   }
-  const circle = new FabricRoughCircle([start.x, start.y, end.x, end.y], {
-    evented: false,
-    selectable: false,
-    originX: "center",
-    originY: "center",
+  const ellipse = new FabricRoughEllipse([start.x, start.y, end.x, end.y], {
+    ...defaultShapeSettings,
+    originX: 0,
+    originY: 0,
   });
-  fabricCanvas.add(circle);
-  return circle;
+  fabricCanvas.add(ellipse);
+  return ellipse;
 }
 
 function drawRoughRectangle(start: fabric.Point, end: fabric.Point) {
@@ -246,10 +268,7 @@ function drawRoughRectangle(start: fabric.Point, end: fabric.Point) {
     return shape;
   }
   const rectangle = new FabricRoughRectangle([start.x, start.y, end.x, end.y], {
-    evented: false,
-    selectable: false,
-    originX: "center",
-    originY: "center",
+    ...defaultShapeSettings,
   });
   fabricCanvas.add(rectangle);
   return rectangle;
@@ -263,10 +282,7 @@ function drawRoughDiamond(start: fabric.Point, end: fabric.Point) {
     return shape;
   }
   const diamond = new FabricRoughDiamond([start.x, start.y, end.x, end.y], {
-    evented: false,
-    selectable: false,
-    originX: "center",
-    originY: "center",
+    ...defaultShapeSettings,
   });
   fabricCanvas.add(diamond);
   return diamond;
@@ -298,7 +314,7 @@ async function handleKeyEvent(e: any) {
     if (
       activeObject.length === 1 &&
       (activeObject[0] instanceof FabricRoughRectangle ||
-        activeObject[0] instanceof FabricRoughCircle ||
+        activeObject[0] instanceof FabricRoughEllipse ||
         activeObject[0] instanceof FabricRoughDiamond)
     ) {
       const group = new fabric.Group([], {
@@ -309,6 +325,7 @@ async function handleKeyEvent(e: any) {
         fontFamily: "Kalam",
         left: shape.left,
         top: shape.top,
+        textAlign: "center",
         width: shape.width,
         height: shape.height,
         originX: shape.originX,
@@ -325,8 +342,10 @@ async function handleKeyEvent(e: any) {
       });
 
       text.on("changed", () => {
-        // const shape = group.item(0);
-        group.item(0).scaleToHeight(text.height);
+        if (group.item(0).height < text.height) {
+          group.item(0).scaleToHeight(text.height);
+          text.scaleToWidth(group.item(0).width);
+        }
       });
 
       group.on("scaling", () => {

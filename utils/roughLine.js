@@ -6,60 +6,41 @@ export class FabricRoughLine extends fabric.FabricObject {
 
     constructor(points, options = {}) {
         super(options);
-        this.points = points || [0, 0, 100, 100];
-        this.roughOptions = {
-            stroke: options.stroke || 'black',
-            roughness: options.roughness || 1,
-            ...options.roughOptions
-        };
+        this.points = points;
         this.roughGenerator = rough.generator();
         this._updateRoughLine();
     }
 
     _updateRoughLine() {
         const [x1, y1, x2, y2] = this.points;
-        this.roughLine = this.roughGenerator.line(x1, y1, x2, y2, this.roughOptions);
-        this._updateBoundingBox();
+        this.roughLine = this.roughGenerator.line(0, 0, x2 - x1, y2 - y1, this.roughOptions);
+        this._updateDimensions();
     }
 
-    _updateBoundingBox() {
-        const bbox = this._calculateBoundingBox();
+    _updateDimensions() {
+        const [x1, y1, x2, y2] = this.points;
+        const width = x2 - x1;
+        const height = y2 - y1;
+
         this.set({
-            left: bbox.x,
-            top: bbox.y,
-            width: bbox.width,
-            height: bbox.height
+            left: x1,
+            top: y1,
+            width: width,
+            height: Math.abs(height),
         });
+        this.scaleY = height < 0 ? -1 : 1;
         this.setCoords();
     }
 
-    _calculateBoundingBox() {
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        this.roughLine.sets.forEach(set => {
-            set.ops.forEach(op => {
-                const points = op.data;
-                for (let i = 0; i < points.length; i += 2) {
-                    const [x, y] = [points[i], points[i + 1]];
-                    minX = Math.min(minX, x);
-                    minY = Math.min(minY, y);
-                    maxX = Math.max(maxX, x);
-                    maxY = Math.max(maxY, y);
-                }
-            });
-        });
-        return {
-            x: minX,
-            y: minY,
-            width: maxX - minX,
-            height: maxY - minY
-        };
-    }
 
     _render(ctx) {
         ctx.save();
 
-        // Apply object's transformations
+        // Translate to the object's position
         ctx.translate(-this.width / 2, -this.height / 2);
+
+        // Apply scaling
+        ctx.scale(this.scaleX, this.scaleY);
 
         // Draw the rough line
         const roughCanvas = rough.canvas(ctx.canvas);
@@ -81,6 +62,9 @@ export class FabricRoughLine extends fabric.FabricObject {
     }
 
     static fromObject(object, callback) {
-        return new FabricRoughLine(object.points, object).then(callback);
+        return fabric.util.enlivenObjects([object], function () {
+            callback && callback(new FabricRoughLine(object.points, object));
+        });
     }
 }
+

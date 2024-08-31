@@ -20,12 +20,9 @@ export class FabricRoughDiamond extends fabric.FabricObject {
         width = Math.max(width, this.minSize);
         height = Math.max(height, this.minSize);
 
-        const left = Math.min(x1, x2);
-        const top = Math.min(y1, y2);
-
         this.set({
-            left: this.roughOptions.size ? 0 : left + width / 2,
-            top: this.roughOptions.size ? 0 : top + height / 2,
+            left: this.roughOptions.size ? 0 : x1,
+            top: this.roughOptions.size ? 0 : y1,
             width: width,
             height: height
         });

@@ -1,24 +1,32 @@
 <template>
-  <div class="canvas-container">
+  <div
+    ref="canvasWrapper"
+    tabindex="1000"
+    class="w-full h-full bg-gray-900"
+    @keydown="handleKeyEvent"
+  >
     <div
-      ref="canvasWrapper"
-      tabindex="1000"
-      class="w-full h-full"
-      @keydown="handleKeyEvent"
+      class="absolute left-1/2 -translate-x-1/2 z-[1000] top-3 flex gap-1 bg-gray-500 p-2 rounded"
     >
-      <div class="toolbar">
-        <button
-          v-for="mode in drawingModes"
-          :key="mode"
-          :class="['mode-button', { active: currentMode === mode }]"
-          @click="setMode(mode)"
-        >
-          {{ mode }}
-        </button>
-        <button class="clear-button" @click="clearCanvas">Clear Canvas</button>
-      </div>
-      <canvas ref="canvas" />
+      <button
+        v-for="mode in drawingModes"
+        :key="mode"
+        :class="[
+          'flex items-center p-2 bg-gray-900 text-white rounded hover:bg-gray-800/60 transition-colors',
+          mode === currentMode ? 'bg-blue-400 hover:bg-blue-300' : '',
+        ]"
+        @click="setMode(mode)"
+      >
+        <Icon :name="drawingModesIconMap[mode]" />
+      </button>
+      <button
+        class="flex bg-rose-700 text-white rounded p-2 hover:bg-rose-600/80 transition-colors"
+        @click="clearCanvas"
+      >
+        <Icon name="ph:trash-duotone" />
+      </button>
     </div>
+    <canvas ref="canvas" />
   </div>
 </template>
 
@@ -40,21 +48,28 @@ const drawingModes = [
   "Text",
   "Line",
 ] as const;
+
+const drawingModesIconMap = {
+  Select: "ph:cursor-duotone",
+  Draw: "ph:pencil-duotone",
+  Ellipse: "ph:circle-bold",
+  Rectangle: "ph:rectangle-bold",
+  Diamond: "ph:diamond-bold",
+  Text: "ph:text-t-bold",
+  Line: "ph:line-vertical-bold",
+};
+
 const currentMode: Ref<(typeof drawingModes)[number]> = ref("Draw");
 const fonts = ["Kalam", "Itim", "Virgil"];
 
 const brushSettings = {
-  cap: false,
-  thinning: 0.38,
+  color: "white",
+  size: 16,
+  thinning: 0.6,
+  smoothing: 0.5,
   streamline: 0.5,
-  smoothing: 0.64,
-  taperStart: 30,
-  taperEnd: 30,
-  tolerance: 0.01,
-  highQuality: true,
-  generalEasing: (t: number) => t,
-  easingStart: (t: number) => 1 + --t * t * t * t * t,
-  easingEnd: (t: number) => 1 + --t * t * t * t * t,
+  easing: (t: any) => Math.sin((t * Math.PI) / 2),
+  simulatePressure: true,
 };
 interface roughShapeProps {
   roughOptions: Partial<Options>;
@@ -65,10 +80,10 @@ const defaultShapeSettings: Partial<fabric.FabricObjectProps> &
   selectable: false,
   originX: "center",
   originY: "center",
-  stroke: "black",
+  stroke: "white",
   strokeWidth: 2,
   roughOptions: {
-    stroke: "black",
+    stroke: "white",
     roughness: 2,
     bowing: 1,
     strokeWidth: 2,
@@ -85,9 +100,15 @@ function initializeCanvas() {
     height: window.innerHeight,
     renderOnAddRemove: false,
     selection: currentMode.value === "Select",
+    backgroundColor: "#111827",
   });
-  customizePencilBrush(brushSettings);
-  setBrush();
+  // customizePencilBrush(brushSettings);
+  const perfectFreehandBrush = new PerfectFreehandBrush(fabricCanvas);
+  fabricCanvas.freeDrawingBrush = perfectFreehandBrush;
+  perfectFreehandBrush.setOptions(brushSettings);
+  perfectFreehandBrush.color = brushSettings.color;
+  perfectFreehandBrush.width = 8;
+  // setBrush();
 
   fonts.forEach(async (f) => {
     const font = new FontFaceObserver(f);
@@ -98,18 +119,13 @@ function initializeCanvas() {
   fabricCanvas.on("mouse:down:before", handleMouseDown);
   fabricCanvas.on("mouse:move", handleMouseMove);
   fabricCanvas.on("mouse:up", handleMouseUp);
-}
-
-function setBrush() {
-  const customBrush = new fabric.PencilBrush(fabricCanvas);
-  fabricCanvas.freeDrawingBrush = customBrush;
-  customBrush.color = "black";
-  customBrush.width = 8;
+  fabricCanvas.requestRenderAll();
 }
 
 function handleZoom(opt: any) {
   const delta = opt.e.deltaY;
   let zoom = fabricCanvas.getZoom();
+  console.log(zoom);
   zoom *= 0.999 ** delta;
   if (zoom > 20) zoom = 20;
   if (zoom < 0.01) zoom = 0.01;
@@ -236,6 +252,8 @@ function drawRoughLine(start: any, end: any) {
     ...defaultShapeSettings,
     originX: 0,
     originY: 0,
+    lockScalingX: true,
+    lockScalingY: true,
   });
   fabricCanvas.add(line);
   shape = line;
@@ -282,6 +300,8 @@ function drawRoughDiamond(start: fabric.Point, end: fabric.Point) {
   }
   const diamond = new FabricRoughDiamond([start.x, start.y, end.x, end.y], {
     ...defaultShapeSettings,
+    originX: 0,
+    originY: 0,
   });
   fabricCanvas.add(diamond);
   return diamond;
@@ -391,40 +411,3 @@ watch(currentMode, (newMode) => {
   setMode(newMode);
 });
 </script>
-
-<style scoped>
-.canvas-container {
-  width: 100%;
-  height: 100vh;
-}
-
-.toolbar {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 1000;
-}
-
-.mode-button,
-.clear-button {
-  margin-right: 5px;
-  padding: 5px 10px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.mode-button {
-  background-color: #4a5568;
-  color: white;
-}
-
-.mode-button.active {
-  background-color: #2b6cb0;
-}
-
-.clear-button {
-  background-color: #e53e3e;
-  color: white;
-}
-</style>

@@ -44,11 +44,8 @@ export class PerfectFreehandBrush extends fabric.BaseBrush {
 
   _finalizeAndAddPath() {
     if (!this.strokePath) return;
-    console.time("Path data calculate")
     const pathData = this.getSvgPathFromStroke(this.strokePath);
-    console.timeEnd("Path data calculate")
 
-    console.time("path-creation")
     const path = new fabric.Path(pathData, {
       fill: this.color,
       stroke: this.color,
@@ -56,7 +53,6 @@ export class PerfectFreehandBrush extends fabric.BaseBrush {
       strokeLineCap: "round",
       strokeLineJoin: "round",
     });
-    console.timeEnd("path-creation")
 
     this.canvas.add(path);
     this.canvas.clearContext(this.canvas.contextTop);

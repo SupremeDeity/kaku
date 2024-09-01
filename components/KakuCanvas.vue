@@ -27,6 +27,7 @@
       >
         <Icon name="ph:trash-duotone" />
       </button>
+      <button @click="exportJson">Export</button>
     </div>
     <div
       v-if="selectedObjects"
@@ -46,10 +47,13 @@ import type { FabricObject } from "fabric";
 import FontFaceObserver from "fontfaceobserver";
 import { drawingModes, drawingModesIconMap } from "~/utils/constants";
 import * as fabric from "fabric";
+import CanvasHistory from "~/utils/fabric-history";
+
 const canvasWrapper = ref(null);
 const canvas: Ref<HTMLCanvasElement | undefined> = ref();
 const selectedObjects = ref();
 let fabricCanvas: fabric.Canvas;
+let history: CanvasHistory;
 
 const currentMode: Ref<(typeof drawingModes)[number]> = ref("Draw");
 
@@ -89,6 +93,12 @@ function initializeCanvas() {
     selectedObjects.value = null;
   });
   fabricCanvas.requestRenderAll();
+
+  history = new CanvasHistory(fabricCanvas);
+}
+
+function exportJson() {
+  console.log(JSON.stringify(fabricCanvas));
 }
 
 function handleZoom(opt: any) {
@@ -264,6 +274,8 @@ async function handleKeyEvent(e: any) {
       fabricCanvas.discardActiveObject();
       fabricCanvas.requestRenderAll();
     }
+  } else if (e.key === "z") {
+    history.undo();
   }
 }
 

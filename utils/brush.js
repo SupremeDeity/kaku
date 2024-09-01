@@ -5,20 +5,13 @@ export class PerfectFreehandBrush extends fabric.BaseBrush {
   constructor(canvas) {
     super(canvas);
     this.points = [];
-    this.freehandOptions = {
-      size: 16,
-      thinning: 0.5,
-      smoothing: 0.5,
-      streamline: 0.5,
-      easing: (t) => t,
-      start: { taper: 0, easing: (t) => t },
-      end: { taper: 0, easing: (t) => t },
-      simulatePressure: true,
-    };
+    this.viewportTransform = null;
+    this.strokePath = null;
   }
 
   onMouseDown(pointer) {
     this.points = [pointer];
+    this.viewportTransform = this.canvas.viewportTransform;
     this._render();
   }
 
@@ -33,6 +26,8 @@ export class PerfectFreehandBrush extends fabric.BaseBrush {
 
   _render() {
     const ctx = this.canvas.contextTop;
+    ctx.save();
+    ctx.transform(...this.viewportTransform);
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     const stroke = getStroke(this.points, this.freehandOptions);
@@ -43,36 +38,43 @@ export class PerfectFreehandBrush extends fabric.BaseBrush {
       ctx.lineTo(x, y);
     }
     ctx.fill();
+    ctx.restore();
+    this.strokePath = stroke;
   }
 
   _finalizeAndAddPath() {
-    if (this.points.length < 2) return;
+    if (!this.strokePath) return;
+    console.time("Path data calculate")
+    const pathData = this.getSvgPathFromStroke(this.strokePath);
+    console.timeEnd("Path data calculate")
 
-    const stroke = getStroke(this.points, this.freehandOptions);
-    const path = new fabric.Path(this.getSvgPathFromStroke(stroke), {
+    console.time("path-creation")
+    const path = new fabric.Path(pathData, {
       fill: this.color,
       stroke: this.color,
       strokeWidth: 0,
-      strokeLineCap: 'round',
-      strokeLineJoin: 'round',
+      strokeLineCap: "round",
+      strokeLineJoin: "round",
     });
+    console.timeEnd("path-creation")
 
     this.canvas.add(path);
     this.canvas.clearContext(this.canvas.contextTop);
-    this.canvas.renderAll();
-    this.canvas.fire('path:created', { path: path });
+    this.canvas.requestRenderAll();
+    this.points = [];
+    this.strokePath = null;
   }
 
   med(A, B) {
     return [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2];
   }
-  
   getSvgPathFromStroke(points) {
     if (!points.length) {
       return "";
     }
 
-    const TO_FIXED_PRECISION = /(\s?[A-Z]?,?-?[0-9]*\.[0-9]{0,2})(([0-9]|e|-)*)/g;
+    const TO_FIXED_PRECISION =
+      /(\s?[A-Z]?,?-?[0-9]*\.[0-9]{0,2})(([0-9]|e|-)*)/g;
     const max = points.length - 1;
 
     return points

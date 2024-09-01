@@ -12,8 +12,10 @@
         v-for="mode in drawingModes"
         :key="mode"
         :class="[
-          'flex items-center p-2 bg-gray-900 text-white rounded hover:bg-gray-800/60 transition-colors',
-          mode === currentMode ? 'bg-blue-400 hover:bg-blue-300' : '',
+          'flex items-center p-2  text-white rounded  transition-colors',
+          mode === currentMode
+            ? 'bg-blue-400 hover:bg-blue-300'
+            : 'bg-gray-900 hover:bg-gray-800/60',
         ]"
         @click="setMode(mode)"
       >
@@ -35,62 +37,13 @@ import { ref, onMounted, onUnmounted, watch } from "vue";
 import * as fabric from "fabric";
 import type { FabricObject } from "fabric";
 import FontFaceObserver from "fontfaceobserver";
-import type { Options } from "roughjs/bin/core";
+import { drawingModes, drawingModesIconMap } from "~/utils/constants";
+
 const canvasWrapper = ref(null);
 const canvas: Ref<HTMLCanvasElement | undefined> = ref();
 let fabricCanvas: fabric.Canvas;
-const drawingModes = [
-  "Select",
-  "Draw",
-  "Ellipse",
-  "Rectangle",
-  "Diamond",
-  "Text",
-  "Line",
-] as const;
-
-const drawingModesIconMap = {
-  Select: "ph:cursor-duotone",
-  Draw: "ph:pencil-duotone",
-  Ellipse: "ph:circle-bold",
-  Rectangle: "ph:rectangle-bold",
-  Diamond: "ph:diamond-bold",
-  Text: "ph:text-t-bold",
-  Line: "ph:line-vertical-bold",
-};
 
 const currentMode: Ref<(typeof drawingModes)[number]> = ref("Draw");
-const fonts = ["Kalam", "Itim", "Virgil"];
-
-const brushSettings = {
-  color: "white",
-  size: 16,
-  thinning: 0.6,
-  smoothing: 0.5,
-  streamline: 0.5,
-  easing: (t: any) => Math.sin((t * Math.PI) / 2),
-  simulatePressure: true,
-};
-interface roughShapeProps {
-  roughOptions: Partial<Options>;
-}
-const defaultShapeSettings: Partial<fabric.FabricObjectProps> &
-  roughShapeProps = {
-  evented: false,
-  selectable: false,
-  originX: "center",
-  originY: "center",
-  stroke: "white",
-  strokeWidth: 2,
-  roughOptions: {
-    stroke: "white",
-    roughness: 2,
-    bowing: 1,
-    strokeWidth: 2,
-    seed: Math.random() * 100,
-    curveFitting: 1,
-  },
-};
 
 function initializeCanvas() {
   fabricCanvas = new fabric.Canvas(canvas.value, {
@@ -100,17 +53,16 @@ function initializeCanvas() {
     height: window.innerHeight,
     renderOnAddRemove: false,
     selection: currentMode.value === "Select",
-    backgroundColor: "#111827",
+    enablePointerEvents: true,
   });
-  // customizePencilBrush(brushSettings);
+  fabricCanvas.backgroundColor = "#111827";
   const perfectFreehandBrush = new PerfectFreehandBrush(fabricCanvas);
   fabricCanvas.freeDrawingBrush = perfectFreehandBrush;
-  perfectFreehandBrush.setOptions(brushSettings);
-  perfectFreehandBrush.color = brushSettings.color;
+  perfectFreehandBrush.setOptions(defaultBrushSettings);
+  perfectFreehandBrush.color = defaultBrushSettings.color;
   perfectFreehandBrush.width = 8;
-  // setBrush();
 
-  fonts.forEach(async (f) => {
+  supportedFonts.forEach(async (f) => {
     const font = new FontFaceObserver(f);
     await font.load(null, 5000);
   });
@@ -125,7 +77,6 @@ function initializeCanvas() {
 function handleZoom(opt: any) {
   const delta = opt.e.deltaY;
   let zoom = fabricCanvas.getZoom();
-  console.log(zoom);
   zoom *= 0.999 ** delta;
   if (zoom > 20) zoom = 20;
   if (zoom < 0.01) zoom = 0.01;
@@ -176,7 +127,7 @@ function handleMouseDown(o: any) {
       top: pointer.y,
       fontFamily: "Kalam",
       fontSize: 20,
-      fill: "black",
+      fill: "white",
       editable: true,
       selectable: true,
       width: 100,
@@ -250,6 +201,7 @@ function drawRoughLine(start: any, end: any) {
   }
   const line = new FabricRoughLine([start.x, start.y, end.x, end.y], {
     ...defaultShapeSettings,
+    // ? WARNING: origin is deprecated starting from fabric 6.4
     originX: 0,
     originY: 0,
     lockScalingX: true,
@@ -270,6 +222,7 @@ function drawRoughEllipse(start: fabric.Point, end: fabric.Point) {
   }
   const ellipse = new FabricRoughEllipse([start.x, start.y, end.x, end.y], {
     ...defaultShapeSettings,
+    // ? WARNING: origin is deprecated starting from fabric 6.4
     originX: 0,
     originY: 0,
   });
@@ -300,6 +253,7 @@ function drawRoughDiamond(start: fabric.Point, end: fabric.Point) {
   }
   const diamond = new FabricRoughDiamond([start.x, start.y, end.x, end.y], {
     ...defaultShapeSettings,
+    // ? WARNING: origin is deprecated starting from fabric 6.4
     originX: 0,
     originY: 0,
   });
@@ -318,7 +272,8 @@ function setMode(mode: (typeof drawingModes)[number]) {
 }
 
 function clearCanvas() {
-  fabricCanvas.clear();
+  fabricCanvas.remove(...fabricCanvas.getObjects().concat());
+  fabricCanvas.renderAll();
 }
 
 async function handleKeyEvent(e: any) {
@@ -347,6 +302,7 @@ async function handleKeyEvent(e: any) {
         textAlign: "center",
         width: shape.width,
         height: shape.height,
+        // ? WARNING: origin is deprecated starting from fabric 6.4
         originX: shape.originX,
         originY: shape.originY,
       });
@@ -365,7 +321,6 @@ async function handleKeyEvent(e: any) {
           group.item(0).height < text.height ||
           group.item(0).width < text.width
         ) {
-          console.log(text.width, text.height);
           group
             .item(0)
             // @ts-expect-error custom function

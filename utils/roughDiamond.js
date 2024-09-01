@@ -2,7 +2,7 @@ import * as fabric from 'fabric';
 import rough from 'roughjs';
 
 export class FabricRoughDiamond extends fabric.FabricObject {
-    static type = 'FabricRoughDiamond';
+    static type = 'Diamond';
 
     constructor(points, options = {}) {
         super(options);

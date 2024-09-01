@@ -2,7 +2,7 @@ import * as fabric from "fabric";
 import rough from "roughjs";
 
 export class FabricRoughRectangle extends fabric.Rect {
-    static type = "FabricRoughRectangle";
+    static type = "Rectangle";
 
     constructor(points, options = {}) {
         super(options);

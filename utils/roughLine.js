@@ -2,7 +2,7 @@ import * as fabric from 'fabric';
 import rough from 'roughjs';
 
 export class FabricRoughLine extends fabric.FabricObject {
-    static type = 'FabricRoughLine';
+    static type = 'Line';
 
     constructor(points, options = {}) {
         super(options);

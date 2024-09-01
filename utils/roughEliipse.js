@@ -2,7 +2,7 @@ import * as fabric from "fabric";
 import rough from "roughjs";
 
 export class FabricRoughEllipse extends fabric.Ellipse {
-    static type = "FabricRoughEllipse";
+    static type = "Ellipse";
 
     constructor(points, options = {}) {
         super(options);

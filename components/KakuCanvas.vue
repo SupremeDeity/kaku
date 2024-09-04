@@ -27,14 +27,13 @@
       >
         <Icon name="ph:trash-duotone" />
       </button>
-      <button @click="exportJson">Export</button>
     </div>
     <div
       v-if="selectedObjects"
       class="p-4 absolute left-4 top-3 z-[1000] bg-gray-800 rounded text-white"
     >
       <span class="text-xs bg-cyan-800 text-cyan-400 p-1 rounded">{{
-        selectedObjects.length > 1 ? "group" : selectedObjects[0].type
+        selectedObjects.length > 1 ? "group" : selectedObjects[0].name
       }}</span>
     </div>
     <canvas ref="canvas" />
@@ -84,6 +83,7 @@ function initializeCanvas() {
   fabricCanvas.on("mouse:move", handleMouseMove);
   fabricCanvas.on("mouse:up", handleMouseUp);
   fabricCanvas.on("selection:created", (e) => {
+    console.log(e.selected[0]);
     selectedObjects.value = e.selected;
   });
   fabricCanvas.on("selection:updated", (e) => {
@@ -95,10 +95,6 @@ function initializeCanvas() {
   fabricCanvas.requestRenderAll();
 
   history = new CanvasHistory(fabricCanvas);
-}
-
-function exportJson() {
-  console.log(JSON.stringify(fabricCanvas));
 }
 
 function handleZoom(opt: any) {
@@ -150,6 +146,7 @@ function handleMouseDown(o: any) {
   else if (currentMode.value === "Text") {
     const pointer = fabricCanvas.getScenePoint(o.e);
     const text = new fabric.Textbox("Edit text", {
+      name: "Text",
       left: pointer.x,
       top: pointer.y,
       fontFamily: "Kalam",
@@ -198,6 +195,7 @@ function handleMouseUp() {
     shape = undefined;
     fabricCanvas.requestRenderAll();
     currentMode.value = "Select";
+    fabricCanvas.fire("custom:added")
   }
 }
 
@@ -221,10 +219,12 @@ async function handleKeyEvent(e: any) {
       });
       const shape = await activeObject[0].clone();
       const text = new fabric.Textbox("Edit text", {
+        name: "Text",
         fontFamily: "Kalam",
         left: shape.left,
         top: shape.top,
         textAlign: "center",
+        fill: "white",
         width: shape.width,
         height: shape.height,
         // ? WARNING: origin is deprecated starting from fabric 6.4
@@ -304,8 +304,9 @@ function drawRoughLine(start: any, end: any) {
     fabricCanvas.requestRenderAll();
     return shape;
   }
-  const line = new FabricRoughLine([start.x, start.y, end.x, end.y], {
+  const line = new FabricRoughLine({
     ...defaultShapeSettings,
+    points: [start.x, start.y, end.x, end.y],
     // ? WARNING: origin is deprecated starting from fabric 6.4
     originX: 0,
     originY: 0,
@@ -325,8 +326,9 @@ function drawRoughEllipse(start: fabric.Point, end: fabric.Point) {
     fabricCanvas.requestRenderAll();
     return shape;
   }
-  const ellipse = new FabricRoughEllipse([start.x, start.y, end.x, end.y], {
+  const ellipse = new FabricRoughEllipse( {
     ...defaultShapeSettings,
+    points: [start.x, start.y, end.x, end.y],
     // ? WARNING: origin is deprecated starting from fabric 6.4
     originX: 0,
     originY: 0,
@@ -342,7 +344,8 @@ function drawRoughRectangle(start: fabric.Point, end: fabric.Point) {
     fabricCanvas.requestRenderAll();
     return shape;
   }
-  const rectangle = new FabricRoughRectangle([start.x, start.y, end.x, end.y], {
+  const rectangle = new FabricRoughRectangle({
+    points: [start.x, start.y, end.x, end.y],
     ...defaultShapeSettings,
   });
   fabricCanvas.add(rectangle);
@@ -356,8 +359,9 @@ function drawRoughDiamond(start: fabric.Point, end: fabric.Point) {
     fabricCanvas.requestRenderAll();
     return shape;
   }
-  const diamond = new FabricRoughDiamond([start.x, start.y, end.x, end.y], {
+  const diamond = new FabricRoughDiamond( {
     ...defaultShapeSettings,
+    points: [start.x, start.y, end.x, end.y],
     // ? WARNING: origin is deprecated starting from fabric 6.4
     originX: 0,
     originY: 0,

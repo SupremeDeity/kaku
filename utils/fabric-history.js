@@ -13,19 +13,25 @@ class CanvasHistory {
     this._saveCanvasState(); // Save initial state
 
     // Automatically save canvas state on object addition
-    this.canvas.on("object:added", () => this._saveCanvasState());
+    this.canvas.on("custom:added", () => this._saveCanvasState());
     this.canvas.on("object:modified", () => this._saveCanvasState());
-
+    this.canvas.on("object:removed", () => {
+      if (!this._isClearingCanvas) {
+        this._saveCanvasState();
+      }
+    });
   }
 
   _saveCanvasState() {
-    console.log("Called")
     const jsonCanvas = this.canvas.toObject();
     this.history.push(jsonCanvas);
+    console.log("modified: ", this.history.map(obj => obj.objects)[this.history.length - 1] )
   }
 
   _clearCanvas() {
+    this._isClearingCanvas = true;
     this.canvas.remove(...this.canvas.getObjects());
+    this._isClearingCanvas = false;
   }
 
   async undo() {
@@ -37,11 +43,22 @@ class CanvasHistory {
     const lastState = this.history[this.history.length - 1];
     const objects = await fabric.util.enlivenObjects(lastState.objects);
 
-    this.canvas.off("object:added"); // Temporarily disable event to avoid redundant saves
-    this.canvas.off("object:modified"); // Temporarily disable event to avoid redundant saves
-    objects.forEach((obj) => this.canvas.add(obj));
-    this.canvas.on("object:added", () => this._saveCanvasState()); // Re-enable saving
-    this.canvas.on("object:modified", () => this._saveCanvasState()); // Re-enable saving
+    this.canvas.off("custom:added");
+    this.canvas.off("object:modified");
+    this.canvas.off("object:removed");
+
+    objects.forEach((obj) => {
+      this.canvas.add(obj)
+    });
+
+    // Re-enable event listeners
+    this.canvas.on("custom:added", () => this._saveCanvasState());
+    this.canvas.on("object:modified", () => this._saveCanvasState());
+    this.canvas.on("object:removed", () => {
+      if (!this._isClearingCanvas) {
+        this._saveCanvasState();
+      }
+    });
     this.canvas.renderAll()
   }
 }

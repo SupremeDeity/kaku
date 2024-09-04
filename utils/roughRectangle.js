@@ -2,11 +2,13 @@ import * as fabric from "fabric";
 import rough from "roughjs";
 
 export class FabricRoughRectangle extends fabric.Rect {
-    static type = "Rectangle";
-
-    constructor(points, options = {}) {
+    static get type() {
+        return 'FabricRoughRectangle';
+    }
+    constructor(options = {}) {
         super(options);
-        this.points = points;
+        this.name = "Rectangle";
+        this.points = options.points;
         this.minSize = options.minSize || 5; // Minimum size of the rectangle
         this.roughGenerator = rough.generator();
         this._updateRoughRectangle();
@@ -14,13 +16,12 @@ export class FabricRoughRectangle extends fabric.Rect {
 
     _updateRoughRectangle() {
         const [x1, y1, x2, y2] = this.points;
+
         let width = this.roughOptions.size?.width ?? Math.abs(x2 - x1);
         let height = this.roughOptions.size?.height ?? Math.abs(y2 - y1);
-
         // Ensure minimum size
         width = Math.max(width, this.minSize);
         height = Math.max(height, this.minSize);
-
         const left = Math.min(x1, x2);
         const top = Math.min(y1, y2);
 
@@ -52,15 +53,13 @@ export class FabricRoughRectangle extends fabric.Rect {
     }
 
     setPoints(points) {
-        this.points = points;
+        this.set({points: points, dirty: true})
         this._updateRoughRectangle();
     }
 
     updateRoughOptions(newOptions) {
         this.roughOptions = { ...this.roughOptions, ...newOptions };
         this._updateRoughRectangle();
-        this.dirty = true;
-        this.canvas && this.canvas.requestRenderAll();
     }
 
     toObject(propertiesToInclude) {
@@ -68,11 +67,10 @@ export class FabricRoughRectangle extends fabric.Rect {
             ...super.toObject(propertiesToInclude),
             points: this.points,
             roughOptions: this.roughOptions,
-            minSize: this.minSize,
+            minSize: this.minSize
         };
     }
-
-    static fromObject(object, callback) {
-        return new FabricRoughRectangle(object.points, object, callback);
-    }
 }
+
+fabric.classRegistry.setClass(FabricRoughRectangle);
+fabric.classRegistry.setSVGClass(FabricRoughRectangle);

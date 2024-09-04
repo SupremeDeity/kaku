@@ -2,11 +2,13 @@ import * as fabric from 'fabric';
 import rough from 'roughjs';
 
 export class FabricRoughDiamond extends fabric.FabricObject {
-    static type = 'Diamond';
-
-    constructor(points, options = {}) {
+    static get type() {
+        return 'FabricRoughDiamond';
+    }
+    constructor(options = {}) {
         super(options);
-        this.points = points || [0, 0, 100, 100];
+        this.name = "Diamond";
+        this.points = options.points || [0, 0, 100, 100];
         this.minSize = options.minSize || 5;
         this.roughGenerator = rough.generator();
         this._updateRoughDiamond();
@@ -69,8 +71,7 @@ export class FabricRoughDiamond extends fabric.FabricObject {
             minSize: this.minSize
         };
     }
-
-    static fromObject(object, callback) {
-        return new FabricRoughDiamond(object.points, object, callback);
-    }
 }
+
+fabric.classRegistry.setClass(FabricRoughDiamond);
+fabric.classRegistry.setSVGClass(FabricRoughDiamond);

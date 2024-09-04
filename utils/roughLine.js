@@ -1,12 +1,14 @@
 import * as fabric from 'fabric';
 import rough from 'roughjs';
 
-export class FabricRoughLine extends fabric.FabricObject {
-    static type = 'Line';
-
-    constructor(points, options = {}) {
+export class FabricRoughLine extends fabric.Line {
+    static get type() {
+        return 'FabricRoughLine';
+    }
+    constructor(options = {}) {
         super(options);
-        this.points = points;
+        this.name = "Line";
+        this.points = options.points;
         this.roughGenerator = rough.generator();
         this._updateRoughLine();
     }
@@ -60,11 +62,6 @@ export class FabricRoughLine extends fabric.FabricObject {
             roughOptions: this.roughOptions
         });
     }
-
-    static fromObject(object, callback) {
-        return fabric.util.enlivenObjects([object], function () {
-            callback && callback(new FabricRoughLine(object.points, object));
-        });
-    }
 }
-
+fabric.classRegistry.setClass(FabricRoughLine);
+fabric.classRegistry.setSVGClass(FabricRoughLine);

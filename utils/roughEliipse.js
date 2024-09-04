@@ -2,12 +2,14 @@ import * as fabric from "fabric";
 import rough from "roughjs";
 
 export class FabricRoughEllipse extends fabric.Ellipse {
-    static type = "Ellipse";
-
-    constructor(points, options = {}) {
+    static get type() {
+        return 'FabricRoughEllipse';
+    }
+    constructor(options = {}) {
         super(options);
         // this.points = [100, 100, 200, 300];
-        this.points = points;
+        this.name = "Ellipse"
+        this.points = options.points;
         this.minSize = options.minSize || 5;
         this.roughGenerator = rough.generator(this.roughOptions);
         this._updateRoughEllipse();
@@ -15,7 +17,6 @@ export class FabricRoughEllipse extends fabric.Ellipse {
 
     _updateRoughEllipse() {
         let [x1, y1, x2, y2] = this.points;
-
         let w = this.roughOptions.size?.width ?? Math.abs(x2 - x1);
         let h = this.roughOptions.size?.height ?? Math.abs(y2 - y1);
         this.set({
@@ -65,8 +66,7 @@ export class FabricRoughEllipse extends fabric.Ellipse {
             minSize: this.minSize,
         };
     }
-
-    static fromObject(object, callback) {
-        return new FabricRoughEllipse(object.points, object, callback);
-    }
 }
+
+fabric.classRegistry.setClass(FabricRoughEllipse);
+fabric.classRegistry.setSVGClass(FabricRoughEllipse);

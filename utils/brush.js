@@ -48,13 +48,13 @@ export class PerfectFreehandBrush extends fabric.BaseBrush {
 
     console.time("path-creation")
     const path = new fabric.Path(pathData, {
-      name: "Drawing",
       fill: this.color,
       stroke: this.color,
       strokeWidth: 0,
       strokeLineCap: "round",
       strokeLineJoin: "round",
     });
+    path.name = "Drawing";
     console.timeEnd("path-creation")
 
     this.canvas.add(path);

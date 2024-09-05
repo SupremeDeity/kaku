@@ -146,6 +146,7 @@
         </div>
         <div>
           <span class="font-bold uppercase text-xs text-cyan-200">Opacity</span>
+          <!-- eslint-disable-next-line vue/html-self-closing -->
           <input
             class="block"
             type="range"
@@ -157,7 +158,8 @@
                 updateProperty(
                   selectedObjects[0],
                   'opacity',
-                  event.target.value
+                  // @ts-expect-error it does exist
+                  event.target?.value ?? 1
                 )
             "
           />
@@ -182,11 +184,13 @@ const canvas: Ref<HTMLCanvasElement | undefined> = ref();
 const selectedObjects = ref();
 let fabricCanvas: fabric.Canvas;
 let history: CanvasHistory;
+let _clipboard: any;
 
 const currentMode: Ref<(typeof drawingModes)[number]> = ref("Draw");
 
 function updateProperty(obj: FabricObject, key: string, value: any) {
   lodashSet(obj, key, value);
+  // @ts-expect-error custom function on rough objects
   obj.update && obj.update();
   fabricCanvas.requestRenderAll();
 }
@@ -230,6 +234,40 @@ function initializeCanvas() {
   fabricCanvas.requestRenderAll();
 
   history = new CanvasHistory(fabricCanvas);
+}
+
+function copy() {
+  fabricCanvas
+    ?.getActiveObject()
+    ?.clone(["name"])
+    .then((cloned) => {
+      _clipboard = cloned;
+      console.log("cloned", cloned);
+    });
+}
+
+async function paste() {
+  const clonedObj = await _clipboard.clone(["name"]);
+  fabricCanvas.discardActiveObject();
+  clonedObj.set({
+    left: clonedObj.left + 10,
+    top: clonedObj.top + 10,
+    evented: true,
+  });
+  if (clonedObj instanceof fabric.ActiveSelection) {
+    clonedObj.canvas = fabricCanvas;
+    clonedObj.forEachObject((obj) => {
+      fabricCanvas.add(obj);
+    });
+    // this should solve the unselectability
+    clonedObj.setCoords();
+  } else {
+    fabricCanvas.add(clonedObj);
+  }
+  _clipboard.top += 10;
+  _clipboard.left += 10;
+  fabricCanvas.setActiveObject(clonedObj);
+  fabricCanvas.requestRenderAll();
 }
 
 function handleZoom(opt: any) {
@@ -330,6 +368,8 @@ function handleMouseUp() {
     shape = undefined;
     fabricCanvas.requestRenderAll();
     currentMode.value = "Select";
+    // @ts-expect-error custom event on object add, because we want to fire
+    // on mouse up instead of as soon as its created
     fabricCanvas.fire("custom:added");
   }
 }
@@ -411,6 +451,10 @@ async function handleKeyEvent(e: any) {
     }
   } else if (e.key === "z") {
     history.undo();
+  } else if (e.ctrlKey && e.key === "c") {
+    copy();
+  } else if (e.ctrlKey && e.key === "v") {
+    await paste();
   }
 }
 

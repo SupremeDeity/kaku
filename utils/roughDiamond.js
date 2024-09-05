@@ -10,6 +10,7 @@ export class FabricRoughDiamond extends fabric.FabricObject {
         this.name = "Diamond";
         this.points = options.points || [0, 0, 100, 100];
         this.minSize = options.minSize || 5;
+        this.roughOptions.seed = this.roughOptions.seed ?? Math.random() * 100;
         this.roughGenerator = rough.generator();
         this._updateRoughDiamond();
     }
@@ -56,11 +57,17 @@ export class FabricRoughDiamond extends fabric.FabricObject {
         this._updateRoughDiamond();
     }
 
+    // TODO: REMOVE THIS WHEN Group rework
     updateRoughOptions(newOptions) {
         this.roughOptions = { ...this.roughOptions, ...newOptions };
         this._updateRoughDiamond();
         this.dirty = true;
         this.canvas && this.canvas.requestRenderAll();
+    }
+
+    update() {
+        this._updateRoughDiamond();
+        this.dirty = true;
     }
 
     toObject(propertiesToInclude) {

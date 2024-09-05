@@ -9,6 +9,7 @@ export class FabricRoughRectangle extends fabric.Rect {
         super(options);
         this.name = "Rectangle";
         this.points = options.points;
+        this.roughOptions.seed = this.roughOptions.seed ?? Math.random() * 100;
         this.minSize = options.minSize || 5; // Minimum size of the rectangle
         this.roughGenerator = rough.generator();
         this._updateRoughRectangle();
@@ -53,13 +54,19 @@ export class FabricRoughRectangle extends fabric.Rect {
     }
 
     setPoints(points) {
-        this.set({points: points, dirty: true})
+        this.set({ points: points, dirty: true })
         this._updateRoughRectangle();
     }
 
+    // TODO: REMOVE THIS WHEN Group rework
     updateRoughOptions(newOptions) {
         this.roughOptions = { ...this.roughOptions, ...newOptions };
         this._updateRoughRectangle();
+    }
+
+    update() {
+        this._updateRoughRectangle();
+        this.dirty = true;
     }
 
     toObject(propertiesToInclude) {

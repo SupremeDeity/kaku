@@ -25,7 +25,6 @@ class CanvasHistory {
   _saveCanvasState() {
     const jsonCanvas = this.canvas.toObject();
     this.history.push(jsonCanvas);
-    console.log("modified: ", this.history.map(obj => obj.objects)[this.history.length - 1] )
   }
 
   _clearCanvas() {

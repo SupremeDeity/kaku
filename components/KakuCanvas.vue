@@ -30,11 +30,139 @@
     </div>
     <div
       v-if="selectedObjects"
-      class="p-4 absolute left-4 top-3 z-[1000] bg-gray-800 rounded text-white"
+      class="p-4 absolute left-4 top-16 z-[1000] bg-cyan-950 rounded text-white min-w-52 border border-cyan-800 select-none"
     >
-      <span class="text-xs bg-cyan-800 text-cyan-400 p-1 rounded">{{
-        selectedObjects.length > 1 ? "group" : selectedObjects[0].name
-      }}</span>
+      <span
+        class="text-xs bg-cyan-900 text-cyan-400 p-1 rounded border border-cyan-700"
+        >{{
+          selectedObjects.length > 1 ? "group" : selectedObjects[0].name
+        }}</span
+      >
+      <div
+        v-if="selectedObjects.length === 1 && selectedObjects[0].roughOptions"
+        class="pt-4 flex flex-col gap-2"
+      >
+        <div>
+          <span class="font-bold uppercase text-xs text-cyan-200">Stroke</span>
+          <ColorPicker
+            :value="selectedObjects[0].roughOptions.stroke"
+            @change="
+              (args: string) =>
+                updateProperty(selectedObjects[0], 'roughOptions.stroke', args)
+            "
+          />
+        </div>
+        <div>
+          <span class="font-bold uppercase text-xs text-cyan-200"
+            >Background</span
+          >
+          <ColorPicker
+            :value="selectedObjects[0].roughOptions.fill"
+            @change="
+              (args: string) =>
+                updateProperty(selectedObjects[0], 'roughOptions.fill', args)
+            "
+          />
+        </div>
+        <div
+          v-if="
+            selectedObjects[0].roughOptions.fill &&
+            selectedObjects[0].roughOptions.fill !== 'transparent'
+          "
+        >
+          <span class="font-bold uppercase text-xs text-cyan-200">Fill</span>
+          <RoughMultiPicker
+            :default="selectedObjects[0].roughOptions.fillStyle"
+            :options="['hachure', 'cross-hatch', 'solid']"
+            @change="
+              (value: string) =>
+                updateProperty(
+                  selectedObjects[0],
+                  'roughOptions.fillStyle',
+                  value
+                )
+            "
+          />
+        </div>
+        <div>
+          <span class="font-bold uppercase text-xs text-cyan-200"
+            >Roughness</span
+          >
+          <RoughMultiPicker
+            :default="selectedObjects[0].roughOptions.roughness.toString()"
+            :options="['0', '1', '2']"
+            @change="
+              (value: string) =>
+                updateProperty(
+                  selectedObjects[0],
+                  'roughOptions.roughness',
+                  Number.parseInt(value)
+                )
+            "
+          />
+        </div>
+        <div>
+          <span class="font-bold uppercase text-xs text-cyan-200"
+            >Stroke width</span
+          >
+          <RoughMultiPicker
+            :default="selectedObjects[0].roughOptions.strokeWidth.toString()"
+            :options="['1', '2', '3']"
+            @change="
+              (value: string) =>
+                {
+                  updateProperty(
+                  selectedObjects[0],
+                  'roughOptions.strokeWidth',
+                  Number.parseInt(value)
+                )
+                updateProperty(
+                  selectedObjects[0],
+                  'roughOptions.strokeLineDash',
+                  calculateStrokeStyle(selectedObjects[0].roughOptions.strokeWidth,  getStrokeStyle(selectedObjects[0].roughOptions.strokeLineDash))
+                )
+                }
+            "
+          />
+        </div>
+        <div>
+          <span class="font-bold uppercase text-xs text-cyan-200"
+            >Stroke style</span
+          >
+          <RoughMultiPicker
+            :default="
+              getStrokeStyle(selectedObjects[0].roughOptions.strokeLineDash)
+            "
+            :options="['Solid', '-Dashed', '.Dotted']"
+            @change="
+              (value: string) =>
+                updateProperty(
+                  selectedObjects[0],
+                  'roughOptions.strokeLineDash',
+                  calculateStrokeStyle(selectedObjects[0].roughOptions.strokeWidth, value)
+                )
+            "
+          />
+        </div>
+        <div>
+          <span class="font-bold uppercase text-xs text-cyan-200">Opacity</span>
+          <input
+            class="block"
+            type="range"
+            :max="1"
+            :min="0"
+            :step="0.1"
+            @input="
+              (event) =>
+                updateProperty(
+                  selectedObjects[0],
+                  'opacity',
+                  event.target.value
+                )
+            "
+          />
+        </div>
+      </div>
     </div>
     <canvas ref="canvas" />
   </div>
@@ -46,6 +174,7 @@ import type { FabricObject } from "fabric";
 import FontFaceObserver from "fontfaceobserver";
 import { drawingModes, drawingModesIconMap } from "~/utils/constants";
 import * as fabric from "fabric";
+import lodashSet from "lodash.set";
 import CanvasHistory from "~/utils/fabric-history";
 
 const canvasWrapper = ref(null);
@@ -55,6 +184,12 @@ let fabricCanvas: fabric.Canvas;
 let history: CanvasHistory;
 
 const currentMode: Ref<(typeof drawingModes)[number]> = ref("Draw");
+
+function updateProperty(obj: FabricObject, key: string, value: any) {
+  lodashSet(obj, key, value);
+  obj.update && obj.update();
+  fabricCanvas.requestRenderAll();
+}
 
 function initializeCanvas() {
   fabricCanvas = new fabric.Canvas(canvas.value, {
@@ -195,7 +330,7 @@ function handleMouseUp() {
     shape = undefined;
     fabricCanvas.requestRenderAll();
     currentMode.value = "Select";
-    fabricCanvas.fire("custom:added")
+    fabricCanvas.fire("custom:added");
   }
 }
 
@@ -305,7 +440,7 @@ function drawRoughLine(start: any, end: any) {
     return shape;
   }
   const line = new FabricRoughLine({
-    ...defaultShapeSettings,
+    ...structuredClone(defaultShapeSettings),
     points: [start.x, start.y, end.x, end.y],
     // ? WARNING: origin is deprecated starting from fabric 6.4
     originX: 0,
@@ -314,7 +449,6 @@ function drawRoughLine(start: any, end: any) {
     lockScalingY: true,
   });
   fabricCanvas.add(line);
-  shape = line;
   fabricCanvas.requestRenderAll();
   return line;
 }
@@ -326,8 +460,8 @@ function drawRoughEllipse(start: fabric.Point, end: fabric.Point) {
     fabricCanvas.requestRenderAll();
     return shape;
   }
-  const ellipse = new FabricRoughEllipse( {
-    ...defaultShapeSettings,
+  const ellipse = new FabricRoughEllipse({
+    ...structuredClone(defaultShapeSettings),
     points: [start.x, start.y, end.x, end.y],
     // ? WARNING: origin is deprecated starting from fabric 6.4
     originX: 0,
@@ -345,8 +479,8 @@ function drawRoughRectangle(start: fabric.Point, end: fabric.Point) {
     return shape;
   }
   const rectangle = new FabricRoughRectangle({
+    ...structuredClone(defaultShapeSettings),
     points: [start.x, start.y, end.x, end.y],
-    ...defaultShapeSettings,
   });
   fabricCanvas.add(rectangle);
   return rectangle;
@@ -359,8 +493,8 @@ function drawRoughDiamond(start: fabric.Point, end: fabric.Point) {
     fabricCanvas.requestRenderAll();
     return shape;
   }
-  const diamond = new FabricRoughDiamond( {
-    ...defaultShapeSettings,
+  const diamond = new FabricRoughDiamond({
+    ...structuredClone(defaultShapeSettings),
     points: [start.x, start.y, end.x, end.y],
     // ? WARNING: origin is deprecated starting from fabric 6.4
     originX: 0,

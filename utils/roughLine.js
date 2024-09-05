@@ -1,7 +1,7 @@
 import * as fabric from 'fabric';
 import rough from 'roughjs';
 
-export class FabricRoughLine extends fabric.Line {
+export class FabricRoughLine extends fabric.FabricObject {
     static get type() {
         return 'FabricRoughLine';
     }
@@ -9,6 +9,7 @@ export class FabricRoughLine extends fabric.Line {
         super(options);
         this.name = "Line";
         this.points = options.points;
+        this.roughOptions.seed = this.roughOptions.seed ?? Math.random() * 100;
         this.roughGenerator = rough.generator();
         this._updateRoughLine();
     }
@@ -56,11 +57,17 @@ export class FabricRoughLine extends fabric.Line {
         this._updateRoughLine();
     }
 
+    update() {
+        this._updateRoughLine();
+        this.dirty = true;
+    }
+
     toObject(propertiesToInclude) {
-        return fabric.util.object.extend(super.toObject(propertiesToInclude), {
+        return {
+            ...super.toObject(propertiesToInclude),
             points: this.points,
-            roughOptions: this.roughOptions
-        });
+            roughOptions: this.roughOptions,
+        };
     }
 }
 fabric.classRegistry.setClass(FabricRoughLine);

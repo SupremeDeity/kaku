@@ -11,6 +11,7 @@ export class FabricRoughEllipse extends fabric.Ellipse {
         this.name = "Ellipse"
         this.points = options.points;
         this.minSize = options.minSize || 5;
+        this.roughOptions.seed = this.roughOptions.seed ?? Math.random() * 100;
         this.roughGenerator = rough.generator(this.roughOptions);
         this._updateRoughEllipse();
     }
@@ -51,11 +52,17 @@ export class FabricRoughEllipse extends fabric.Ellipse {
         this._updateRoughEllipse();
     }
 
+    // TODO: REMOVE THIS WHEN Group rework
     updateRoughOptions(newOptions) {
         this.roughOptions = { ...this.roughOptions, ...newOptions };
         this._updateRoughEllipse();
         this.dirty = true;
         this.canvas && this.canvas.requestRenderAll();
+    }
+
+    update() {
+        this._updateRoughEllipse();
+        this.dirty = true;
     }
 
     toObject(propertiesToInclude) {

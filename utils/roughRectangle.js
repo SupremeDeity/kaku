@@ -22,8 +22,8 @@ export class FabricRoughRectangle extends fabric.Rect {
 
         const widthOffset = this.left === x1 ? 0 : this.left - x1;
         const heightOffset = this.top === y1 ? 0 : this.top - y1;
-        let width = Math.max(Math.abs(x2 - this.left + widthOffset), this.minSize);
-        let height = Math.max(Math.abs(y2 - this.top + heightOffset), this.minSize);
+        let width = x2 - this.left + widthOffset;
+        let height = y2 - this.top + heightOffset;
 
         // Gets the top and left based on set origin
         const relativeCenter = this.getRelativeCenterPoint()

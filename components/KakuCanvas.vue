@@ -196,7 +196,7 @@ function updateProperty(obj: FabricObject, key: string, value: any) {
   fabricCanvas.requestRenderAll();
 }
 
-function initializeCanvas() {
+async function initializeCanvas() {
   fabricCanvas = new fabric.Canvas(canvas.value, {
     isDrawingMode: currentMode.value === "Draw",
     preserveObjectStacking: true,
@@ -206,6 +206,7 @@ function initializeCanvas() {
     selection: currentMode.value === "Select",
     enablePointerEvents: true,
   });
+
   fabricCanvas.backgroundColor = "#111827";
   const perfectFreehandBrush = new PerfectFreehandBrush(fabricCanvas);
   fabricCanvas.freeDrawingBrush = perfectFreehandBrush;
@@ -213,10 +214,11 @@ function initializeCanvas() {
   perfectFreehandBrush.color = defaultBrushSettings.color;
   perfectFreehandBrush.width = 8;
 
-  supportedFonts.forEach(async (f) => {
+  await supportedFonts.forEach(async (f) => {
     const font = new FontFaceObserver(f);
     await font.load(null, 5000);
   });
+  await new AutoSave(fabricCanvas).loadCanvasState();
 
   fabricCanvas.on("mouse:wheel", handleZoom);
   fabricCanvas.on("mouse:down:before", handleMouseDown);
@@ -232,7 +234,6 @@ function initializeCanvas() {
   fabricCanvas.on("selection:cleared", () => {
     selectedObjects.value = null;
   });
-  fabricCanvas.requestRenderAll();
 
   history = new CanvasHistory(fabricCanvas);
 }
@@ -322,7 +323,7 @@ function handleMouseDown(o: any) {
       name: "Text",
       left: pointer.x,
       top: pointer.y,
-      fontFamily: "Kalam",
+      fontFamily: "Virgil",
       fontSize: 20,
       fill: "white",
       editable: true,
@@ -333,6 +334,8 @@ function handleMouseDown(o: any) {
     text.selectAll();
     text.enterEditing();
     fabricCanvas.add(text);
+    // @ts-expect-error custom event
+    fabricCanvas.fire("custom:added");
     fabricCanvas.requestRenderAll();
     currentMode.value = "Select";
   }
@@ -395,7 +398,7 @@ async function handleKeyEvent(e: any) {
       const shape = await activeObject[0].clone();
       const text = new fabric.Textbox("Edit text", {
         name: "Text",
-        fontFamily: "Kalam",
+        fontFamily: "Virgil",
         left: shape.left,
         top: shape.top,
         textAlign: "center",
@@ -487,8 +490,6 @@ function drawRoughLine(start: any, end: any) {
     ...structuredClone(defaultShapeSettings),
     points: [start.x, start.y, end.x, end.y],
     // ? WARNING: origin is deprecated starting from fabric 6.4
-    originX: 0,
-    originY: 0,
     lockScalingX: true,
     lockScalingY: true,
   });
@@ -565,7 +566,7 @@ function clearCanvas() {
 }
 
 onMounted(async () => {
-  initializeCanvas();
+  await initializeCanvas();
 });
 
 onUnmounted(() => {

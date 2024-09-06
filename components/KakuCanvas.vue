@@ -454,6 +454,8 @@ async function handleKeyEvent(e: any) {
     }
   } else if (e.key === "z") {
     history.undo();
+  } else if (e.key === "r") {
+    history.redo();
   } else if (e.ctrlKey && e.key === "c") {
     copy();
   } else if (e.ctrlKey && e.key === "v") {

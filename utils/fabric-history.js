@@ -4,6 +4,7 @@ class CanvasHistory {
   constructor(canvas) {
     this.canvas = canvas;
     this.history = [];
+    this.historyRedo = [];
     this._isClearingCanvas = false; // Flag to avoid tracking during canvas clearing
 
     this._init();
@@ -22,7 +23,7 @@ class CanvasHistory {
   }
 
   _saveCanvasState() {
-    const jsonCanvas = structuredClone(this.canvas.toObject())
+    const jsonCanvas = structuredClone(this.canvas.toObject().objects)
     this.history.push(jsonCanvas);
   }
 
@@ -36,11 +37,27 @@ class CanvasHistory {
     if (this.history.length <= 1) return; // Prevent undoing beyond the initial state
 
     this._clearCanvas();
-    this.history.pop(); // Remove the current state
 
+    this.historyRedo.push(this.history.pop()); // Remove the current state
     const lastState = this.history[this.history.length - 1];
-    const objects = await fabric.util.enlivenObjects(lastState.objects);
+    const objects = await fabric.util.enlivenObjects(lastState);
 
+    this._applyState(objects)
+  }
+
+  async redo() {
+    if (this.historyRedo.length === 0) return; // Prevent undoing beyond the initial state
+    console.log(this.historyRedo)
+    this._clearCanvas();
+    const lastState = this.historyRedo.pop();
+    this.history.push(lastState)
+
+    const objects = await fabric.util.enlivenObjects(lastState);
+
+    this._applyState(objects)
+  }
+
+  _applyState(objects) {
     this.canvas.off("custom:added");
     this.canvas.off("object:modified");
     this.canvas.off("object:removed");

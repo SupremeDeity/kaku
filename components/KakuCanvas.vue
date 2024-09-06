@@ -48,7 +48,7 @@
             :value="selectedObjects[0].roughOptions.stroke"
             @change="
               (args: string) =>
-                updateProperty(selectedObjects[0], 'roughOptions.stroke', args)
+                updateProperty(selectedObjects[0], 'roughOptions.stroke', args, )
             "
           />
         </div>
@@ -60,7 +60,7 @@
             :value="selectedObjects[0].roughOptions.fill"
             @change="
               (args: string) =>
-                updateProperty(selectedObjects[0], 'roughOptions.fill', args)
+                updateProperty(selectedObjects[0], 'roughOptions.fill', args, )
             "
           />
         </div>
@@ -79,7 +79,7 @@
                 updateProperty(
                   selectedObjects[0],
                   'roughOptions.fillStyle',
-                  value
+                  value,
                 )
             "
           />
@@ -96,7 +96,7 @@
                 updateProperty(
                   selectedObjects[0],
                   'roughOptions.roughness',
-                  Number.parseInt(value)
+                  Number.parseInt(value),
                 )
             "
           />
@@ -114,7 +114,7 @@
                   updateProperty(
                   selectedObjects[0],
                   'roughOptions.strokeWidth',
-                  Number.parseInt(value)
+                  Number.parseInt(value),
                 )
                 updateProperty(
                   selectedObjects[0],
@@ -139,7 +139,7 @@
                 updateProperty(
                   selectedObjects[0],
                   'roughOptions.strokeLineDash',
-                  calculateStrokeStyle(selectedObjects[0].roughOptions.strokeWidth, value)
+                  calculateStrokeStyle(selectedObjects[0].roughOptions.strokeWidth, value),
                 )
             "
           />
@@ -192,6 +192,7 @@ function updateProperty(obj: FabricObject, key: string, value: any) {
   lodashSet(obj, key, value);
   // @ts-expect-error custom function on rough objects
   obj.update && obj.update();
+  fabricCanvas.fire("object:modified");
   fabricCanvas.requestRenderAll();
 }
 
@@ -242,7 +243,6 @@ function copy() {
     ?.clone(["name"])
     .then((cloned) => {
       _clipboard = cloned;
-      console.log("cloned", cloned);
     });
 }
 

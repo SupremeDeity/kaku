@@ -15,7 +15,7 @@
       class="opacity-0 block size-8 border-0 hover:cursor-pointer"
       type="color"
       :value="props.value"
-      @input="emit('change', $event.target?.value ?? '#ffffff')"
+      @change="emit('change', $event.target?.value ?? '#ffffff')"
     />
   </div>
 </template>
@@ -24,7 +24,6 @@
 const props = defineProps<{
   value?: string;
 }>();
-console.log(props.value);
 const emit = defineEmits(["change"]);
 </script>
 

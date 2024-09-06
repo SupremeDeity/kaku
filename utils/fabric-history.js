@@ -11,7 +11,6 @@ class CanvasHistory {
 
   _init() {
     this._saveCanvasState(); // Save initial state
-
     // Automatically save canvas state on object addition
     this.canvas.on("custom:added", () => this._saveCanvasState());
     this.canvas.on("object:modified", () => this._saveCanvasState());
@@ -23,7 +22,7 @@ class CanvasHistory {
   }
 
   _saveCanvasState() {
-    const jsonCanvas = this.canvas.toObject();
+    const jsonCanvas = structuredClone(this.canvas.toObject())
     this.history.push(jsonCanvas);
   }
 

@@ -508,9 +508,6 @@ function drawRoughEllipse(start: fabric.Point, end: fabric.Point) {
   const ellipse = new FabricRoughEllipse({
     ...structuredClone(defaultShapeSettings),
     points: [start.x, start.y, end.x, end.y],
-    // ? WARNING: origin is deprecated starting from fabric 6.4
-    originX: 0,
-    originY: 0,
   });
   fabricCanvas.add(ellipse);
   return ellipse;
@@ -541,9 +538,6 @@ function drawRoughDiamond(start: fabric.Point, end: fabric.Point) {
   const diamond = new FabricRoughDiamond({
     ...structuredClone(defaultShapeSettings),
     points: [start.x, start.y, end.x, end.y],
-    // ? WARNING: origin is deprecated starting from fabric 6.4
-    originX: 0,
-    originY: 0,
   });
   fabricCanvas.add(diamond);
   return diamond;
@@ -560,9 +554,11 @@ function setMode(mode: (typeof drawingModes)[number]) {
 }
 
 function clearCanvas() {
-  fabricCanvas.remove(...fabricCanvas.getObjects().concat());
-  fabricCanvas.discardActiveObject();
-  fabricCanvas.renderAll();
+  if (confirm("Clear the canvas?") == true) {
+    fabricCanvas.remove(...fabricCanvas.getObjects().concat());
+    fabricCanvas.discardActiveObject();
+    fabricCanvas.renderAll();
+  }
 }
 
 onMounted(async () => {

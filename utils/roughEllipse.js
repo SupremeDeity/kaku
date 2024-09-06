@@ -13,25 +13,40 @@ export class FabricRoughEllipse extends fabric.Ellipse {
         this.minSize = options.minSize || 5;
         this.roughOptions.seed = this.roughOptions.seed ?? Math.random() * 100;
         this.roughGenerator = rough.generator(this.roughOptions);
+        this.left = this.left !== 0 ? this.left : options.points[0];
+        this.top = this.top !== 0 ? this.top : options.points[1];
         this._updateRoughEllipse();
     }
 
     _updateRoughEllipse() {
         let [x1, y1, x2, y2] = this.points;
-        let w = this.roughOptions.size?.width ?? Math.abs(x2 - x1);
-        let h = this.roughOptions.size?.height ?? Math.abs(y2 - y1);
+        const widthOffset = this.left === x1 ? 0 : this.left - x1;
+        const heightOffset = this.top === y1 ? 0 : this.top - y1;
+        let width = x2 - this.left + widthOffset;
+        let height = y2 - this.top + heightOffset;
+
+        // Gets the top and left based on set origin
+        const relativeCenter = this.getRelativeCenterPoint()
+        // Translates the relativeCenter point as if origin = 0,0
+        const constraint = this.translateToOriginPoint(relativeCenter, 'left', 'top')
+
         this.set({
-            left: this.roughOptions.size ? -w / 2 : x1,
-            top: this.roughOptions.size ? -h / 2 : y1,
-            width: w,
-            height: h,
+            width,
+            height,
         });
 
+        // Put shape back in place
+        this.setPositionByOrigin(
+            constraint,
+            'left',
+            'top',
+        );
+
         this.roughEllipse = this.roughGenerator.ellipse(
-            w / 2,
-            h / 2,
-            w,
-            h,
+            width / 2,
+            height / 2,
+            width,
+            height,
             this.roughOptions
         );
         this.setCoords();

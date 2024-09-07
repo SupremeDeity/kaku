@@ -47,6 +47,7 @@ export const defaultShapeSettings: Partial<FabricObjectProps> &
   stroke: "white",
   strokeWidth: 2,
   opacity: 1,
+  padding: 4,
   roughOptions: {
     fillStyle: "solid",
     fill: "transparent",
@@ -62,7 +63,6 @@ export const defaultShapeSettings: Partial<FabricObjectProps> &
     hachureAngle: -41,
     hachureGap: -1,
     dashOffset: -1,
-    dashGap: -1,
     zigzagOffset: -1,
     disableMultiStroke: false,
     disableMultiStrokeFill: false,

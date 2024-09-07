@@ -27,145 +27,18 @@
       >
         <Icon name="ph:trash-duotone" />
       </button>
-    </div>
-    <div
-      v-if="selectedObjects"
-      class="p-4 absolute left-4 top-16 z-[1000] bg-cyan-950 rounded text-white min-w-52 border border-cyan-800 select-none"
-    >
-      <span
-        class="text-xs bg-cyan-900 text-cyan-400 p-1 rounded border border-cyan-700"
-        >{{
-          selectedObjects.length > 1 ? "group" : selectedObjects[0].name
-        }}</span
+      <div class="border border-gray-600"></div>
+      <button
+        class="flex bg-gray-900 text-white rounded p-2 hover:bg-gray-800/60 transition-colors"
+        @click="downloadPNG"
       >
-      <div
-        v-if="selectedObjects.length === 1 && selectedObjects[0].roughOptions"
-        class="pt-4 flex flex-col gap-2"
-      >
-        <div>
-          <span class="font-bold uppercase text-xs text-cyan-200">Stroke</span>
-          <ColorPicker
-            :value="selectedObjects[0].roughOptions.stroke"
-            @change="
-              (args: string) =>
-                updateProperty(selectedObjects[0], 'roughOptions.stroke', args, )
-            "
-          />
-        </div>
-        <div>
-          <span class="font-bold uppercase text-xs text-cyan-200"
-            >Background</span
-          >
-          <ColorPicker
-            :value="selectedObjects[0].roughOptions.fill"
-            @change="
-              (args: string) =>
-                updateProperty(selectedObjects[0], 'roughOptions.fill', args, )
-            "
-          />
-        </div>
-        <div
-          v-if="
-            selectedObjects[0].roughOptions.fill &&
-            selectedObjects[0].roughOptions.fill !== 'transparent'
-          "
-        >
-          <span class="font-bold uppercase text-xs text-cyan-200">Fill</span>
-          <RoughMultiPicker
-            :default="selectedObjects[0].roughOptions.fillStyle"
-            :options="['hachure', 'cross-hatch', 'solid']"
-            @change="
-              (value: string) =>
-                updateProperty(
-                  selectedObjects[0],
-                  'roughOptions.fillStyle',
-                  value,
-                )
-            "
-          />
-        </div>
-        <div>
-          <span class="font-bold uppercase text-xs text-cyan-200"
-            >Roughness</span
-          >
-          <RoughMultiPicker
-            :default="selectedObjects[0].roughOptions.roughness.toString()"
-            :options="['0', '1', '2']"
-            @change="
-              (value: string) =>
-                updateProperty(
-                  selectedObjects[0],
-                  'roughOptions.roughness',
-                  Number.parseInt(value),
-                )
-            "
-          />
-        </div>
-        <div>
-          <span class="font-bold uppercase text-xs text-cyan-200"
-            >Stroke width</span
-          >
-          <RoughMultiPicker
-            :default="selectedObjects[0].roughOptions.strokeWidth.toString()"
-            :options="['1', '2', '3']"
-            @change="
-              (value: string) =>
-                {
-                  updateProperty(
-                  selectedObjects[0],
-                  'roughOptions.strokeWidth',
-                  Number.parseInt(value),
-                )
-                updateProperty(
-                  selectedObjects[0],
-                  'roughOptions.strokeLineDash',
-                  calculateStrokeStyle(selectedObjects[0].roughOptions.strokeWidth,  getStrokeStyle(selectedObjects[0].roughOptions.strokeLineDash))
-                )
-                }
-            "
-          />
-        </div>
-        <div>
-          <span class="font-bold uppercase text-xs text-cyan-200"
-            >Stroke style</span
-          >
-          <RoughMultiPicker
-            :default="
-              getStrokeStyle(selectedObjects[0].roughOptions.strokeLineDash)
-            "
-            :options="['Solid', '-Dashed', '.Dotted']"
-            @change="
-              (value: string) =>
-                updateProperty(
-                  selectedObjects[0],
-                  'roughOptions.strokeLineDash',
-                  calculateStrokeStyle(selectedObjects[0].roughOptions.strokeWidth, value),
-                )
-            "
-          />
-        </div>
-        <div>
-          <span class="font-bold uppercase text-xs text-cyan-200">Opacity</span>
-          <!-- eslint-disable-next-line vue/html-self-closing -->
-          <input
-            class="block"
-            type="range"
-            :max="1"
-            :min="0"
-            :step="0.1"
-            @input="
-              (event) =>
-                updateProperty(
-                  selectedObjects[0],
-                  'opacity',
-                  // @ts-expect-error it does exist
-                  event.target?.value ?? 1
-                )
-            "
-          />
-        </div>
-      </div>
+        <Icon name="ph:download-duotone" />
+      </button>
     </div>
+    <PropertiesPanel
+      :fabric-canvas="fabricCanvas"
+      :selected-objects="selectedObjects"
+    />
     <canvas ref="canvas" />
   </div>
 </template>
@@ -176,8 +49,9 @@ import type { FabricObject } from "fabric";
 import FontFaceObserver from "fontfaceobserver";
 import { drawingModes, drawingModesIconMap } from "~/utils/constants";
 import * as fabric from "fabric";
-import lodashSet from "lodash.set";
+
 import CanvasHistory from "~/utils/fabric-history";
+import PropertiesPanel from "./PropertiesPanel.vue";
 
 const canvasWrapper = ref(null);
 const canvas: Ref<HTMLCanvasElement | undefined> = ref();
@@ -186,15 +60,7 @@ let fabricCanvas: fabric.Canvas;
 let history: CanvasHistory;
 let _clipboard: any;
 
-const currentMode: Ref<(typeof drawingModes)[number]> = ref("Draw");
-
-function updateProperty(obj: FabricObject, key: string, value: any) {
-  lodashSet(obj, key, value);
-  // @ts-expect-error custom function on rough objects
-  obj.update && obj.update();
-  fabricCanvas.fire("object:modified");
-  fabricCanvas.requestRenderAll();
-}
+const currentMode: Ref<(typeof drawingModes)[number]> = ref("Select");
 
 async function initializeCanvas() {
   fabricCanvas = new fabric.Canvas(canvas.value, {
@@ -205,6 +71,9 @@ async function initializeCanvas() {
     renderOnAddRemove: false,
     selection: currentMode.value === "Select",
     enablePointerEvents: true,
+    enableRetinaScaling: true,
+    skipOffscreen: false,
+    selectionKey: "shiftKey",
   });
 
   fabricCanvas.backgroundColor = "#111827";
@@ -223,7 +92,7 @@ async function initializeCanvas() {
   fabricCanvas.on("mouse:wheel", handleZoom);
   fabricCanvas.on("mouse:down:before", handleMouseDown);
   fabricCanvas.on("mouse:move", handleMouseMove);
-  fabricCanvas.on("mouse:up", handleMouseUp);
+  fabricCanvas.on("mouse:up:before", handleMouseUp);
   fabricCanvas.on("selection:created", (e) => {
     console.log(e.selected[0]);
     selectedObjects.value = e.selected;
@@ -236,6 +105,26 @@ async function initializeCanvas() {
   });
 
   history = new CanvasHistory(fabricCanvas);
+}
+
+function downloadPNG() {
+  const sel = new fabric.ActiveSelection(fabricCanvas.getObjects(), {
+    canvas: fabricCanvas,
+  });
+  const dataURL = sel.toDataURL({
+    left: -sel.width / 22,
+    top: -sel.height / 22,
+    width: sel.width * 1.1,
+    height: sel.height * 1.1,
+    format: "png",
+    multiplier: 2,
+  });
+  const link = document.createElement("a");
+  link.download = "image.png";
+  link.href = dataURL;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
 function copy() {
@@ -294,9 +183,8 @@ let lastPosY: number;
 
 function handleMouseDown(o: any) {
   const evt = o.e;
-
   // ON DRAGGING
-  if (evt.shiftKey === true) {
+  if (evt.button === 1) {
     fabricCanvas.isDrawingMode = false;
     // @ts-expect-error custom property added to fabricCanvas
     fabricCanvas.isDragging = true;
@@ -334,9 +222,9 @@ function handleMouseDown(o: any) {
     text.selectAll();
     text.enterEditing();
     fabricCanvas.add(text);
+    fabricCanvas.requestRenderAll();
     // @ts-expect-error custom event
     fabricCanvas.fire("custom:added");
-    fabricCanvas.requestRenderAll();
     currentMode.value = "Select";
   }
 }
@@ -452,10 +340,12 @@ async function handleKeyEvent(e: any) {
       fabricCanvas.discardActiveObject();
       fabricCanvas.requestRenderAll();
     }
-  } else if (e.key === "z") {
+  } else if (e.ctrlKey && e.key === "z") {
     history.undo();
-  } else if (e.key === "r") {
+    e.preventDefault();
+  } else if (e.ctrlKey && e.key === "r") {
     history.redo();
+    e.preventDefault();
   } else if (e.ctrlKey && e.key === "c") {
     copy();
   } else if (e.ctrlKey && e.key === "v") {

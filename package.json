@@ -24,6 +24,7 @@
   },
   "packageManager": "pnpm@9.2.0",
   "devDependencies": {
+    "@iconify-json/ph": "^1.2.0",
     "@nuxt/icon": "^1.5.0",
     "@nuxtjs/eslint-module": "^4.1.0",
     "@nuxtjs/google-fonts": "^3.2.0",

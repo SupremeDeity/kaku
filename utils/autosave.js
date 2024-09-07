@@ -15,7 +15,7 @@ export class AutoSave {
   }
 
   _saveCanvasState() {
-    const jsonCanvas = JSON.stringify(this.canvas.toObject().objects);
+    const jsonCanvas = JSON.stringify(this.canvas.toObject(["name", "padding"]).objects);
     if (localStorage) {
       try {
         localStorage.setItem("canvasState", jsonCanvas)

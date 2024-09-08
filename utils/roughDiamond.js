@@ -1,5 +1,6 @@
 import * as fabric from 'fabric';
 import rough from 'roughjs';
+import { calculateCornerRadius } from './roughutil';
 
 export class FabricRoughDiamond extends fabric.FabricObject {
     static get type() {
@@ -23,32 +24,51 @@ export class FabricRoughDiamond extends fabric.FabricObject {
         const heightOffset = this.top === y1 ? 0 : this.top - y1;
         let width = x2 - this.left + widthOffset;
         let height = y2 - this.top + heightOffset;
-        // Gets the top and left based on set origin
-        const relativeCenter = this.getRelativeCenterPoint()
-        // Translates the relativeCenter point as if origin = 0,0
-        const constraint = this.translateToOriginPoint(relativeCenter, 'left', 'top')
-        this.set({
-            width: width,
-            height: height
-        });
-        // Put shape back in place
-        this.setPositionByOrigin(
-            constraint,
-            'left',
-            'top',
-        );
 
-        // Create diamond points
-        const diamondPoints = [
-            [width / 2, 0],
-            [width, height / 2],
-            [width / 2, height],
-            [0, height / 2]
-        ];
+        const relativeCenter = this.getRelativeCenterPoint();
+        const constraint = this.translateToOriginPoint(relativeCenter, 'left', 'top');
 
-        this.roughDiamond = this.roughGenerator.polygon(diamondPoints, this.roughOptions);
+        this.set({ width: width, height: height });
+        this.setPositionByOrigin(constraint, 'left', 'top');
+
+        this.roughOptions.preserveVertices = this.rounded;
+        if (this.rounded) {
+            const topX = width / 2, topY = 0;
+            const rightX = width, rightY = height / 2;
+            const bottomX = width / 2, bottomY = height;
+            const leftX = 0, leftY = height / 2;
+
+            const verticalRadius = calculateCornerRadius(Math.abs(topX - leftX));
+            const horizontalRadius = calculateCornerRadius(Math.abs(rightY - topY));
+
+            const path = `
+          M ${topX + verticalRadius} ${topY + horizontalRadius} 
+          L ${rightX - verticalRadius} ${rightY - horizontalRadius}
+          C ${rightX} ${rightY}, ${rightX} ${rightY}, ${rightX - verticalRadius} ${rightY + horizontalRadius}
+          L ${bottomX + verticalRadius} ${bottomY - horizontalRadius}
+          C ${bottomX} ${bottomY}, ${bottomX} ${bottomY}, ${bottomX - verticalRadius} ${bottomY - horizontalRadius}
+          L ${leftX + verticalRadius} ${leftY + horizontalRadius}
+          C ${leftX} ${leftY}, ${leftX} ${leftY}, ${leftX + verticalRadius} ${leftY - horizontalRadius}
+          L ${topX - verticalRadius} ${topY + horizontalRadius}
+          C ${topX} ${topY}, ${topX} ${topY}, ${topX + verticalRadius} ${topY + horizontalRadius}
+        `;
+            this.roughDiamond = this.roughGenerator.path(path, this.roughOptions);
+        } else {
+            const diamondPoints = [
+                [width / 2, 0],
+                [width, height / 2],
+                [width / 2, height],
+                [0, height / 2]
+            ];
+
+            this.roughDiamond = this.roughGenerator.polygon(diamondPoints, this.roughOptions);
+        }
+
         this.setCoords();
     }
+
+
+
 
     _render(ctx) {
         ctx.save();
@@ -83,7 +103,8 @@ export class FabricRoughDiamond extends fabric.FabricObject {
             ...super.toObject(propertiesToInclude),
             points: this.points,
             roughOptions: this.roughOptions,
-            minSize: this.minSize
+            minSize: this.minSize,
+            rounded: this.rounded
         };
     }
 }

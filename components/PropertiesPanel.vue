@@ -126,6 +126,21 @@
 	            "
         />
       </div>
+      <div v-if="ROUNDABLES.includes(props.selectedObjects[0].type)">
+        <span class="font-bold uppercase text-xs text-cyan-200">Roundness</span>
+        <RoughMultiPicker
+          :default="props.selectedObjects[0].rounded ? 'Rounded' : 'Edged'"
+          :options="['Edged', 'Rounded']"
+          @change="
+	              (value: string) =>
+	                updateProperty(
+	                  props.selectedObjects[0],
+	                  'rounded',
+	                  value === 'Edged' ? false : true,
+	                )
+	            "
+        />
+      </div>
       <div>
         <span class="font-bold uppercase text-xs text-cyan-200">Opacity</span>
         <!-- eslint-disable-next-line vue/html-self-closing -->
@@ -152,7 +167,6 @@
 <script lang="ts" setup>
 import type { FabricObject } from "fabric";
 import lodashSet from "lodash.set";
-
 const props = defineProps(["selectedObjects", "fabricCanvas"]);
 
 function updateProperty(obj: FabricObject, key: string, value: any) {

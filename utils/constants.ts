@@ -22,6 +22,7 @@ export const drawingModesIconMap = {
 };
 
 export const supportedFonts = ["Kalam", "Itim", "Virgil"];
+export const ROUNDABLES = ["fabricroughrectangle", "fabricroughdiamond"];
 
 export const defaultBrushSettings = {
   color: "white",
@@ -35,6 +36,7 @@ export const defaultBrushSettings = {
 
 interface roughShapeProps {
   roughOptions: Partial<Options>;
+  rounded?: boolean;
 }
 
 export const defaultShapeSettings: Partial<FabricObjectProps> &
@@ -48,13 +50,13 @@ export const defaultShapeSettings: Partial<FabricObjectProps> &
   strokeWidth: 2,
   opacity: 1,
   padding: 4,
+  rounded: false,
   roughOptions: {
     fillStyle: "solid",
     fill: "transparent",
     maxRandomnessOffset: 2,
     stroke: "#ffffff",
     roughness: 2,
-    bowing: 2,
     strokeWidth: 2,
     curveFitting: 1,
     curveTightness: 0,

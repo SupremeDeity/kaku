@@ -1,9 +1,10 @@
 import * as fabric from "fabric";
 import rough from "roughjs";
+import { calculateCornerRadius } from "./roughutil";
 
 export class FabricRoughRectangle extends fabric.Rect {
     static get type() {
-        return 'FabricRoughRectangle';
+        return "FabricRoughRectangle";
     }
     constructor(options = {}) {
         super(options);
@@ -26,35 +27,52 @@ export class FabricRoughRectangle extends fabric.Rect {
         let height = y2 - this.top + heightOffset;
 
         // Gets the top and left based on set origin
-        const relativeCenter = this.getRelativeCenterPoint()
+        const relativeCenter = this.getRelativeCenterPoint();
         // Translates the relativeCenter point as if origin = 0,0
-        const constraint = this.translateToOriginPoint(relativeCenter, 'left', 'top')
+        const constraint = this.translateToOriginPoint(
+            relativeCenter,
+            "left",
+            "top"
+        );
 
         // Shape changing stuff
         this.set({
             width: width,
             height: height,
         });
-
-        this.roughRectangle = this.roughGenerator.rectangle(
-            - this.width / 2,
-            - this.height / 2,
-            width,
-            height,
-            this.roughOptions
-        );
-
+        const x = -this.width / 2;
+        const y = -this.height / 2;
+        this.roughOptions.preserveVertices = this.rounded;
+        if (!this.rounded) {
+            this.roughRectangle = this.roughGenerator.rectangle(
+                x,
+                y,
+                width,
+                height,
+                this.roughOptions
+            );
+        } else {
+            const radius = calculateCornerRadius(Math.min(width, height));
+            const path = `
+      M ${x + radius} ${y}
+      h ${width - 2 * radius}
+      a ${radius} ${radius} 0 0 1 ${radius} ${radius}
+      v ${height - 2 * radius}
+      a ${radius} ${radius} 0 0 1 -${radius} ${radius}
+      h ${-(width - 2 * radius)}
+      a ${radius} ${radius} 0 0 1 -${radius} -${radius}
+      v ${-(height - 2 * radius)}
+      a ${radius} ${radius} 0 0 1 ${radius} -${radius}
+      z
+    `;
+            this.roughRectangle = this.roughGenerator.path(path, this.roughOptions);
+        }
 
         // Put shape back in place
-        this.setPositionByOrigin(
-            constraint,
-            'left',
-            'top',
-        );
+        this.setPositionByOrigin(constraint, "left", "top");
 
         this.setCoords();
     }
-
 
     _render(ctx) {
         ctx.save();
@@ -66,7 +84,7 @@ export class FabricRoughRectangle extends fabric.Rect {
     }
 
     setPoints(points) {
-        this.set({ points: points, dirty: true })
+        this.set({ points: points, dirty: true });
         this._updateRoughRectangle(true);
     }
 
@@ -86,7 +104,8 @@ export class FabricRoughRectangle extends fabric.Rect {
             ...super.toObject(propertiesToInclude),
             points: this.points,
             roughOptions: this.roughOptions,
-            minSize: this.minSize
+            minSize: this.minSize,
+            rounded: this.rounded,
         };
     }
 }

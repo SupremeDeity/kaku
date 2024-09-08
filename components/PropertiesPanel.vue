@@ -84,6 +84,7 @@
             props.selectedObjects[0].roughOptions.strokeWidth.toString()
           "
           :options="['1', '2', '3']"
+          :icons="['ph:minus-thin', 'ph:minus', 'ph:minus-bold']"
           @change="
 	              (value: string) =>
 	                {
@@ -110,6 +111,11 @@
             getStrokeStyle(props.selectedObjects[0].roughOptions.strokeLineDash)
           "
           :options="['Solid', '-Dashed', '.Dotted']"
+          :icons="[
+            'ph:line-vertical-bold',
+            'ph:circle-dashed-bold',
+            'ph:dots-three-outline-vertical-fill',
+          ]"
           @change="
 	              (value: string) =>
 	                updateProperty(

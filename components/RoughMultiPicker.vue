@@ -1,15 +1,22 @@
 <template>
   <div class="flex gap-4">
     <button
-      v-for="option in props.options"
+      v-for="(option, index) in props.options"
       :key="option"
       :class="[
-        'bg-cyan-600 p-1 text-cyan-950 rounded font-bold w-8 h-8',
-        style === option ? 'border-[3px] border-cyan-200' : '',
+        'bg-cyan-600 p-1 text-base text-black font-bold rounded w-8 h-8 flex items-center justify-center',
+        style === option ? 'outline outline-2 outline-cyan-200' : '',
       ]"
       @click="changeOption(option)"
     >
-      {{ option[0].toUpperCase() }}
+      <Icon
+        v-if="props.icons && props.icons[index]"
+        :name="props.icons[index]"
+        class=""
+      />
+      <span v-if="!props.icons || !props.icons[index]">{{
+        option[0].toUpperCase()
+      }}</span>
     </button>
   </div>
 </template>
@@ -19,6 +26,8 @@ const emit = defineEmits(["change"]);
 const props = defineProps({
   options: { type: Array<string>, required: true },
   default: { type: String, required: true },
+  // eslint-disable-next-line vue/require-default-prop
+  icons: { type: Array<string>, required: false },
 });
 const style = ref(props.default);
 

@@ -21,19 +21,15 @@
       >
         <Icon :name="drawingModesIconMap[mode]" />
       </button>
-      <button
-        class="flex bg-rose-700 text-white rounded p-2 hover:bg-rose-600/80 transition-colors"
-        @click="clearCanvas"
-      >
-        <Icon name="ph:trash-duotone" />
-      </button>
-      <div class="border border-gray-600"></div>
-      <button
-        class="flex bg-gray-900 text-white rounded p-2 hover:bg-gray-800/60 transition-colors"
-        @click="downloadPNG"
-      >
-        <Icon name="ph:download-duotone" />
-      </button>
+      <div class="border border-gray-600" />
+
+      <UDropdown :items="dropdownItems" :popper="{ placement: 'bottom-start' }">
+        <button
+          class="flex bg-cyan-900 text-white rounded p-2 hover:bg-cyan-800/60 transition-colors"
+        >
+          <Icon name="heroicons:bars-3-16-solid" />
+        </button>
+      </UDropdown>
     </div>
     <PropertiesPanel
       :fabric-canvas="fabricCanvas"
@@ -52,6 +48,45 @@ import * as fabric from "fabric";
 
 import CanvasHistory from "~/utils/fabric-history";
 import PropertiesPanel from "./PropertiesPanel.vue";
+
+const dropdownItems = [
+  [
+    {
+      label: "Export as PNG",
+      icon: "i-ph-download-duotone",
+      click: async () => {
+        downloadPNG();
+      },
+    },
+  ],
+  [
+    {
+      label: "Undo",
+      icon: "i-ph-arrow-arc-left-duotone",
+      shortcuts: ["⌘", "Z"],
+      click: async () => {
+        await history.undo();
+      },
+    },
+    {
+      label: "Redo",
+      icon: "i-ph-arrow-arc-right-duotone",
+      shortcuts: ["⌘", "Y"],
+      click: async () => {
+        await history.redo();
+      },
+    },
+  ],
+  [
+    {
+      label: "Clear Canvas",
+      icon: "i-ph-trash-duotone",
+      click: async () => {
+        clearCanvas();
+      },
+    },
+  ],
+];
 
 const canvasWrapper = ref(null);
 const canvas: Ref<HTMLCanvasElement | undefined> = ref();
@@ -111,6 +146,7 @@ function downloadPNG() {
   const sel = new fabric.ActiveSelection(fabricCanvas.getObjects(), {
     canvas: fabricCanvas,
   });
+  if (sel.isEmpty()) return;
   const dataURL = sel.toDataURL({
     left: -sel.width / 22,
     top: -sel.height / 22,
@@ -120,7 +156,7 @@ function downloadPNG() {
     multiplier: 2,
   });
   const link = document.createElement("a");
-  link.download = "image.png";
+  link.download = "kaku-" + new Date().toISOString() + ".png";
   link.href = dataURL;
   document.body.appendChild(link);
   link.click();
@@ -219,9 +255,9 @@ function handleMouseDown(o: any) {
       width: 100,
       activeOn: "up", // fabric@6.3.0 bug: cant edit without this
     });
+    fabricCanvas.add(text);
     text.selectAll();
     text.enterEditing();
-    fabricCanvas.add(text);
     fabricCanvas.requestRenderAll();
     // @ts-expect-error custom event
     fabricCanvas.fire("custom:added");
@@ -343,7 +379,7 @@ async function handleKeyEvent(e: any) {
   } else if (e.ctrlKey && e.key === "z") {
     history.undo();
     e.preventDefault();
-  } else if (e.ctrlKey && e.key === "r") {
+  } else if (e.ctrlKey && e.key === "y") {
     history.redo();
     e.preventDefault();
   } else if (e.ctrlKey && e.key === "c") {

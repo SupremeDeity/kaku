@@ -1,75 +1,19 @@
-# Nuxt 3 Minimal Starter
+# Kaku
 
-Look at the [Nuxt 3 documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+A learning venture of creating a diagraming tool with hand-drawn visuals inspired by excallidraw.
 
-## Setup
+<image src="public/kaku.png" />
 
-Make sure to install the dependencies:
+> [!NOTE]
+> This tool is merely supposed to be a learning ventured inspired by excallidraw, not something meant to replace excallidraw.
 
-```bash
-# npm
-npm install
+> [!WARNING]
+> This tool is being developed as a hobby and is in its very early phases. Don't expect quick updates and fixes. There are known bugs which will eventually be ironed out.
 
-# pnpm
-pnpm install
+## Contributing
 
-# yarn
-yarn install
+You can contribute to this repository by bug reporting or feature proposals. If you want to try your hand at improving this tool, you are welcome to send a PR forward of your own. Make sure to follow general guidelines of contributing to an open-source project and:
 
-# bun
-bun install
-```
-
-## Development Server
-
-Start the development server on `http://localhost:3000`:
-
-```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm run dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
-```
-
-## Production
-
-Build the application for production:
-
-```bash
-# npm
-npm run build
-
-# pnpm
-pnpm run build
-
-# yarn
-yarn build
-
-# bun
-bun run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm run preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+1) Fork the repository
+2) Do your magic
+3) Send a PR.

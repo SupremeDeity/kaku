@@ -154,6 +154,53 @@
 	            "
         />
       </div>
+      <!-- ---------- ARROW SPECIFIC THINGS ---------- -->
+      <template v-if="props.selectedObjects[0] instanceof FabricRoughArrow">
+        <div>
+          <span class="font-bold uppercase text-xs text-cyan-200"
+            >End Arrowhead style</span
+          >
+          <RoughMultiPicker
+            :default="
+              ArrowHeadStyle[props.selectedObjects[0].endArrowHeadStyle]
+            "
+            :options="
+              Object.keys(ArrowHeadStyle).filter((k) => isNaN(Number(k)))
+            "
+            @change="
+              (value) =>
+                updateProperty(
+                  props.selectedObjects[0],
+                  'endArrowHeadStyle',
+                  ArrowHeadStyle[value]
+                )
+            "
+          />
+        </div>
+        <div>
+          <span class="font-bold uppercase text-xs text-cyan-200"
+            >Start Arrowhead style</span
+          >
+          <RoughMultiPicker
+            :default="
+              ArrowHeadStyle[props.selectedObjects[0].startArrowHeadStyle]
+            "
+            :options="
+              Object.keys(ArrowHeadStyle).filter((k) => isNaN(Number(k)))
+            "
+            @change="
+              (value) =>
+                updateProperty(
+                  props.selectedObjects[0],
+                  'startArrowHeadStyle',
+                  ArrowHeadStyle[value]
+                )
+            "
+          />
+        </div>
+      </template>
+
+      <!-- ---------- ARROW SPECIFIC THINGS ---------- -->
       <div>
         <span class="font-bold uppercase text-xs text-cyan-200">Opacity</span>
         <!-- eslint-disable-next-line vue/html-self-closing -->
@@ -204,8 +251,8 @@
 <script lang="ts" setup>
 import type { FabricObject } from "fabric";
 import lodashSet from "lodash.set";
+import { ArrowHeadStyle } from "~/utils/constants";
 const props = defineProps(["selectedObjects", "fabricCanvas"]);
-
 function updateProperty(obj: FabricObject, key: string, value: any) {
   lodashSet(obj, key, value);
   // @ts-expect-error custom function on rough objects

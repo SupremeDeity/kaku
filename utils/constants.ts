@@ -36,10 +36,21 @@ export const defaultBrushSettings = {
   simulatePressure: true,
 };
 
+export enum ArrowHeadStyle {
+  "NoHead",
+  "Head",
+  "FilledHead",
+}
+
+
 interface roughShapeProps {
   roughOptions: Partial<Options>;
   rounded?: boolean;
+  endArrowHeadStyle: ArrowHeadStyle
+  startArrowHeadStyle: ArrowHeadStyle
 }
+
+
 
 export const defaultShapeSettings: Partial<FabricObjectProps> &
   roughShapeProps = {
@@ -52,7 +63,10 @@ export const defaultShapeSettings: Partial<FabricObjectProps> &
   strokeWidth: 2,
   opacity: 1,
   padding: 4,
+  // For the "Roundables"
   rounded: false,
+  endArrowHeadStyle: ArrowHeadStyle.Head,
+  startArrowHeadStyle: ArrowHeadStyle.NoHead,
   roughOptions: {
     fillStyle: "solid",
     fill: "transparent",

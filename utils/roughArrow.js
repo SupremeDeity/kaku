@@ -1,5 +1,6 @@
 import * as fabric from "fabric";
 import rough from "roughjs";
+import { ArrowHeadStyle } from "./constants";
 
 export class FabricRoughArrow extends fabric.FabricObject {
     static get type() {
@@ -49,20 +50,36 @@ export class FabricRoughArrow extends fabric.FabricObject {
             this.roughOptions
         );
         const angle = this._getAngle(width, height);
-        const headPath = this._calculateHeadPath(width / 2, height / 2, angle);
-        // const headPath2 = this._calculateHeadPath(-(width) / 2, -height / 2, angle + Math.PI);
-        this.roughArrowhead = this.roughGenerator.path(
-            headPath,
-            this.roughOptions
-        );
-        // this.roughArrowhead2 = this.roughGenerator.path(
-        //     headPath2,
-        //     this.roughOptions
-        // );
+        if (
+            this.endArrowHeadStyle === ArrowHeadStyle.Head ||
+            this.endArrowHeadStyle === ArrowHeadStyle.FilledHead
+        ) {
+            const headPath = this._calculateHeadPath(width / 2, height / 2, angle);
+            this.endArrowHead = this.roughGenerator.path(
+                headPath +
+                (this.endArrowHeadStyle === ArrowHeadStyle.FilledHead ? "Z" : ""),
+                this.roughOptions
+            );
+        }
+        if (
+            this.startArrowHeadStyle === ArrowHeadStyle.Head ||
+            this.startArrowHeadStyle === ArrowHeadStyle.FilledHead
+        ) {
+            const headPath2 = this._calculateHeadPath(
+                -width / 2,
+                -height / 2,
+                angle + Math.PI
+            );
+            this.startArrowHead = this.roughGenerator.path(
+                headPath2 +
+                (this.startArrowHeadStyle === ArrowHeadStyle.FilledHead ? "Z" : ""),
+                this.roughOptions
+            );
+        }
     }
 
     _getAngle(width, height) {
-        return Math.atan2(height / 2 - (-height / 2), width / 2 - (-width / 2));
+        return Math.atan2(height / 2 - -height / 2, width / 2 - -width / 2);
     }
 
     _calculateHeadPath(x, y, angle, headlen = 30) {
@@ -71,15 +88,19 @@ export class FabricRoughArrow extends fabric.FabricObject {
         const x2 = x - headlen * Math.cos(angle + Math.PI / 6);
         const y2 = y - headlen * Math.sin(angle + Math.PI / 6);
 
-        return `M ${x1.toFixed(2)} ${y1.toFixed(2)} L ${x.toFixed(2)} ${y.toFixed(2)} L ${x2.toFixed(2)} ${y2.toFixed(2)}`;
+        return `M ${x1.toFixed(2)} ${y1.toFixed(2)} L ${x.toFixed(2)} ${y.toFixed(
+            2
+        )} L ${x2.toFixed(2)} ${y2.toFixed(2)}`;
     }
 
     _render(ctx) {
         ctx.save();
         const roughCanvas = rough.canvas(ctx.canvas);
         roughCanvas.draw(this.roughArrow);
-        roughCanvas.draw(this.roughArrowhead);
-        // roughCanvas.draw(this.roughArrowhead2);
+        if (this.endArrowHeadStyle !== ArrowHeadStyle.NoHead)
+            roughCanvas.draw(this.endArrowHead);
+        if (this.startArrowHeadStyle !== ArrowHeadStyle.NoHead)
+            roughCanvas.draw(this.startArrowHead);
         ctx.restore();
     }
 
@@ -98,6 +119,8 @@ export class FabricRoughArrow extends fabric.FabricObject {
             ...super.toObject(propertiesToInclude),
             points: this.points,
             roughOptions: this.roughOptions,
+            startArrowHeadStyle: this.startArrowHeadStyle,
+            endArrowHeadStyle: this.endArrowHeadStyle,
         };
     }
 }

@@ -164,7 +164,6 @@ async function initializeCanvas() {
     const font = new FontFaceObserver(f);
     await font.load(null, 5000);
   });
-  await new AutoSave(fabricCanvas).loadCanvasState();
 
   fabricCanvas.on("mouse:wheel", handleZoom);
   fabricCanvas.on("mouse:down:before", handleMouseDown);
@@ -183,6 +182,7 @@ async function initializeCanvas() {
   });
 
   history = new CanvasHistory(fabricCanvas);
+  await history.init();
 }
 
 function downloadPNG() {

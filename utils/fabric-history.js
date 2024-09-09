@@ -6,25 +6,29 @@ class CanvasHistory {
     this.history = [];
     this.historyRedo = [];
     this._isClearingCanvas = false; // Flag to avoid tracking during canvas clearing
-
-    this._init();
   }
 
-  _init() {
+  async init() {
+    await this._loadCanvasState()
     this._saveCanvasState(); // Save initial state
-    // Automatically save canvas state on object addition
-    this.canvas.on("custom:added", () => this._saveCanvasState());
-    this.canvas.on("object:modified", () => this._saveCanvasState());
-    this.canvas.on("object:removed", () => {
-      if (!this._isClearingCanvas) {
-        this._saveCanvasState();
-      }
-    });
   }
 
   _saveCanvasState() {
     const jsonCanvas = structuredClone(this.canvas.toObject(["name", "padding"]).objects)
     this.history.push(jsonCanvas);
+
+    this._saveChangesToLocal(jsonCanvas)
+  }
+
+  _saveChangesToLocal(canvas) {
+    if (localStorage) {
+      try {
+        localStorage.setItem("canvasState", JSON.stringify(canvas))
+      }
+      catch (e) {
+        console.log(e)
+      }
+    }
   }
 
   _clearCanvas() {
@@ -39,7 +43,9 @@ class CanvasHistory {
     this._clearCanvas();
 
     this.historyRedo.push(this.history.pop()); // Remove the current state
+    console.log(this.historyRedo)
     const lastState = this.history[this.history.length - 1];
+    this._saveChangesToLocal(lastState)
     const objects = await fabric.util.enlivenObjects(lastState);
 
     this._applyState(objects)
@@ -51,10 +57,20 @@ class CanvasHistory {
     this._clearCanvas();
     const lastState = this.historyRedo.pop();
     this.history.push(lastState)
-
+    this._saveChangesToLocal(lastState)
     const objects = await fabric.util.enlivenObjects(lastState);
 
     this._applyState(objects)
+  }
+
+  // loads canvas state from localstorage
+  async _loadCanvasState() {
+    if (localStorage) {
+      const canvasState = localStorage.getItem("canvasState");
+      if (!canvasState) return;
+      const objects = await fabric.util.enlivenObjects(JSON.parse(canvasState));
+      this._applyState(objects)
+    }
   }
 
   _applyState(objects) {

@@ -35,6 +35,24 @@
       :fabric-canvas="fabricCanvas"
       :selected-objects="selectedObjects"
     />
+    <div
+      v-if="currentMode === 'Draw'"
+      class="p-4 absolute left-4 top-16 z-[1000] bg-cyan-950 rounded text-white min-w-52 border border-cyan-800 select-none"
+    >
+      <div>
+        <span class="font-bold uppercase text-xs text-cyan-200">Stroke</span>
+        <ColorPicker
+          :value="fabricCanvas.freeDrawingBrush.color"
+          @change="
+            (val) => {
+              fabricCanvas.freeDrawingBrush.color = val;
+              // Neccessary to force pull new value of fabricCanvas.freeDrawingBrush.color
+              $forceUpdate();
+            }
+          "
+        />
+      </div>
+    </div>
     <canvas ref="canvas" />
   </div>
 </template>
@@ -174,7 +192,7 @@ function copy() {
 }
 
 async function paste() {
-  const clonedObj = await _clipboard.clone(["name"]);
+  const clonedObj = await _clipboard.clone(["name", "padding"]);
   fabricCanvas.discardActiveObject();
   clonedObj.set({
     left: clonedObj.left + 10,

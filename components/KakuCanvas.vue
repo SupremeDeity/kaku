@@ -42,12 +42,30 @@
       <div>
         <span class="font-bold uppercase text-xs text-cyan-200">Stroke</span>
         <ColorPicker
-          :value="fabricCanvas.freeDrawingBrush.color"
+          :value="fabricCanvas.freeDrawingBrush?.color"
           @change="
             (val) => {
-              fabricCanvas.freeDrawingBrush.color = val;
-              // Neccessary to force pull new value of fabricCanvas.freeDrawingBrush.color
-              $forceUpdate();
+              if (fabricCanvas.freeDrawingBrush) {
+                fabricCanvas.freeDrawingBrush.color = val;
+                // Neccessary to force pull new value of fabricCanvas.freeDrawingBrush.color
+                $forceUpdate();
+              }
+            }
+          "
+        />
+      </div>
+      <div>
+        <span class="font-bold uppercase text-xs text-cyan-200">Fill</span>
+        <RoughMultiPicker
+          :default="
+            fabricCanvas.freeDrawingBrush?.freehandOptions?.size.toString()
+          "
+          :options="['4', '8', '16']"
+          @change="
+            (val) => {
+              if (fabricCanvas.freeDrawingBrush?.freehandOptions)
+                fabricCanvas.freeDrawingBrush.freehandOptions.size =
+                  Number.parseInt(val);
             }
           "
         />
@@ -115,6 +133,12 @@ let _clipboard: any;
 
 const currentMode: Ref<(typeof drawingModes)[number]> = ref("Select");
 
+declare module "fabric" {
+  interface BaseBrush {
+    freehandOptions: any;
+  }
+}
+
 async function initializeCanvas() {
   fabricCanvas = new fabric.Canvas(canvas.value, {
     isDrawingMode: currentMode.value === "Draw",
@@ -134,7 +158,7 @@ async function initializeCanvas() {
   fabricCanvas.freeDrawingBrush = perfectFreehandBrush;
   perfectFreehandBrush.setOptions(defaultBrushSettings);
   perfectFreehandBrush.color = defaultBrushSettings.color;
-  perfectFreehandBrush.width = 8;
+  console.log(perfectFreehandBrush);
 
   await supportedFonts.forEach(async (f) => {
     const font = new FontFaceObserver(f);

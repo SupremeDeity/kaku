@@ -160,6 +160,7 @@
         <input
           class="block"
           type="range"
+          :value="props.selectedObjects[0].opacity"
           :max="1"
           :min="0"
           :step="0.1"

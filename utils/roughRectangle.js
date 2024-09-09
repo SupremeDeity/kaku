@@ -26,13 +26,18 @@ export class FabricRoughRectangle extends fabric.Rect {
         let width = x2 - this.left + widthOffset;
         let height = y2 - this.top + heightOffset;
 
+        const originX = Math.sign(width) < 0 ? 'right' : 'left';
+        const originY = Math.sign(height) < 0 ? 'bottom' : 'top';
+        width = Math.abs(width)
+        height = Math.abs(height)
+
         // Gets the top and left based on set origin
         const relativeCenter = this.getRelativeCenterPoint();
         // Translates the relativeCenter point as if origin = 0,0
         const constraint = this.translateToOriginPoint(
             relativeCenter,
-            "left",
-            "top"
+            originX,
+            originY
         );
 
         // Shape changing stuff
@@ -69,7 +74,7 @@ export class FabricRoughRectangle extends fabric.Rect {
         }
 
         // Put shape back in place
-        this.setPositionByOrigin(constraint, "left", "top");
+        this.setPositionByOrigin(constraint, originX, originY);
 
         this.setCoords();
     }

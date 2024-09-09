@@ -65,6 +65,11 @@
         <RoughMultiPicker
           :default="props.selectedObjects[0].roughOptions.roughness.toString()"
           :options="['0', '1', '2']"
+          :icons="[
+            'material-symbols:architecture-rounded',
+            'ph:paint-brush-fill',
+            'ph:pencil-fill',
+          ]"
           @change="
 	              (value: string) =>
 	                updateProperty(
@@ -84,7 +89,11 @@
             props.selectedObjects[0].roughOptions.strokeWidth.toString()
           "
           :options="['1', '2', '3']"
-          :icons="['ph:minus-thin', 'ph:minus', 'ph:minus-bold']"
+          :icons="[
+            'material-symbols:pen-size-1',
+            'material-symbols:pen-size-3',
+            'material-symbols:pen-size-4',
+          ]"
           @change="
 	              (value: string) =>
 	                {
@@ -114,7 +123,7 @@
           :icons="[
             'ph:line-vertical-bold',
             'ph:circle-dashed-bold',
-            'ph:dots-three-outline-vertical-fill',
+            'ph:dots-three-vertical-bold',
           ]"
           @change="
 	              (value: string) =>
@@ -131,6 +140,10 @@
         <RoughMultiPicker
           :default="props.selectedObjects[0].rounded ? 'Rounded' : 'Edged'"
           :options="['Edged', 'Rounded']"
+          :icons="[
+            'material-symbols:rectangle-outline',
+            'material-symbols:rounded-corner-rounded',
+          ]"
           @change="
 	              (value: string) =>
 	                updateProperty(
@@ -161,6 +174,29 @@
           "
         />
       </div>
+      <!-- <hr class="border-cyan-800" />
+      <div class="flex gap-4">
+        <UButton
+          color="cyan"
+          icon="i-material-symbols-flip-to-front"
+          @click="
+            () => {
+              props.fabricCanvas.bringObjectForward(props.selectedObjects[0]);
+              props.fabricCanvas.renderAll();
+            }
+          "
+        />
+        <UButton
+          color="cyan"
+          icon="i-material-symbols-flip-to-back"
+          @click="
+            () => {
+              props.fabricCanvas.sendObjectBackwards(props.selectedObjects[0]);
+              props.fabricCanvas.renderAll();
+            }
+          "
+        />
+      </div> -->
     </div>
   </div>
 </template>

@@ -12,13 +12,13 @@ export const drawingModes = [
 ] as const;
 
 export const drawingModesIconMap = {
-  Select: "ph:cursor-duotone",
   Draw: "ph:pencil-duotone",
   Ellipse: "ph:circle-bold",
   Rectangle: "ph:rectangle-bold",
   Diamond: "ph:diamond-bold",
   Text: "ph:text-t-bold",
-  Line: "ph:line-vertical-bold",
+  Select: "ph:cursor-duotone",
+  Line: "material-symbols:pen-size-3",
 };
 
 export const supportedFonts = ["Kalam", "Itim", "Virgil"];

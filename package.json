@@ -24,6 +24,7 @@
   },
   "packageManager": "pnpm@9.2.0",
   "devDependencies": {
+    "@iconify-json/material-symbols": "^1.2.1",
     "@iconify-json/ph": "^1.2.0",
     "@nuxt/ui": "^2.18.4",
     "@nuxtjs/eslint-module": "^4.1.0",

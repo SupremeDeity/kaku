@@ -23,7 +23,7 @@ class CanvasHistory {
   }
 
   _saveCanvasState() {
-    const jsonCanvas = structuredClone(this.canvas.toObject(["name"]).objects)
+    const jsonCanvas = structuredClone(this.canvas.toObject(["name", "padding"]).objects)
     this.history.push(jsonCanvas);
   }
 

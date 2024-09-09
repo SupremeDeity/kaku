@@ -1,10 +1,10 @@
 <template>
-  <div class="flex gap-4">
+  <div class="flex gap-4 text-lg">
     <button
       v-for="(option, index) in props.options"
       :key="option"
       :class="[
-        'bg-cyan-600 p-1 text-base text-black font-bold rounded w-8 h-8 flex items-center justify-center',
+        'bg-cyan-600 p-1 font-bold rounded w-8 h-8 flex items-center justify-center',
         style === option ? 'outline outline-2 outline-cyan-200' : '',
       ]"
       @click="changeOption(option)"

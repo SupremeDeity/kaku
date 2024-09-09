@@ -53,7 +53,7 @@ const dropdownItems = [
   [
     {
       label: "Export as PNG",
-      icon: "i-ph-download-duotone",
+      icon: "i-material-symbols-download-rounded",
       click: async () => {
         downloadPNG();
       },
@@ -80,7 +80,7 @@ const dropdownItems = [
   [
     {
       label: "Clear Canvas",
-      icon: "i-ph-trash-duotone",
+      icon: "i-material-symbols-delete-outline-rounded",
       click: async () => {
         clearCanvas();
       },
@@ -130,6 +130,7 @@ async function initializeCanvas() {
   fabricCanvas.on("mouse:up:before", handleMouseUp);
   fabricCanvas.on("selection:created", (e) => {
     console.log(e.selected[0]);
+    console.log(e);
     selectedObjects.value = e.selected;
   });
   fabricCanvas.on("selection:updated", (e) => {

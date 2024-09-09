@@ -24,7 +24,7 @@
 <script lang="ts" setup>
 const emit = defineEmits(["change"]);
 const props = defineProps({
-  options: { type: Array<string>, required: true },
+  options: { type: Array, required: true },
   default: { type: String, required: true },
   // eslint-disable-next-line vue/require-default-prop
   icons: { type: Array<string>, required: false },

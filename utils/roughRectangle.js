@@ -26,10 +26,10 @@ export class FabricRoughRectangle extends fabric.Rect {
         let width = x2 - this.left + widthOffset;
         let height = y2 - this.top + heightOffset;
 
-        const originX = Math.sign(width) < 0 ? 'right' : 'left';
-        const originY = Math.sign(height) < 0 ? 'bottom' : 'top';
-        width = Math.abs(width)
-        height = Math.abs(height)
+        const originX = Math.sign(width) < 0 ? "right" : "left";
+        const originY = Math.sign(height) < 0 ? "bottom" : "top";
+        width = Math.abs(width);
+        height = Math.abs(height);
 
         // Gets the top and left based on set origin
         const relativeCenter = this.getRelativeCenterPoint();
@@ -45,6 +45,7 @@ export class FabricRoughRectangle extends fabric.Rect {
             width: width,
             height: height,
         });
+
         const x = -this.width / 2;
         const y = -this.height / 2;
         this.roughOptions.preserveVertices = this.rounded;
@@ -70,7 +71,11 @@ export class FabricRoughRectangle extends fabric.Rect {
       a ${radius} ${radius} 0 0 1 ${radius} -${radius}
       z
     `;
-            this.roughRectangle = this.roughGenerator.path(path, this.roughOptions);
+            this.roughRectangle = this.roughGenerator.path(path, {
+                ...this.roughOptions,
+                roughness: (this.roughOptions.roughness < 1 ? 0 : this.roughOptions.roughness + 1)
+                ,
+            });
         }
 
         // Put shape back in place
@@ -90,7 +95,7 @@ export class FabricRoughRectangle extends fabric.Rect {
 
     setPoints(points) {
         this.set({ points: points, dirty: true });
-        this._updateRoughRectangle(true);
+        this._updateRoughRectangle();
     }
 
     // TODO: REMOVE THIS WHEN Group rework

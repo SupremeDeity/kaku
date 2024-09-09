@@ -2,7 +2,7 @@
   <div
     ref="canvasWrapper"
     tabindex="1000"
-    class="w-full h-full bg-gray-900"
+    class="w-full h-full bg-gray-950"
     @keydown="handleKeyEvent"
   >
     <div
@@ -153,7 +153,7 @@ async function initializeCanvas() {
     selectionKey: "shiftKey",
   });
 
-  fabricCanvas.backgroundColor = "#111827";
+  fabricCanvas.backgroundColor = "rgb(3 7 18)";
   const perfectFreehandBrush = new PerfectFreehandBrush(fabricCanvas);
   fabricCanvas.freeDrawingBrush = perfectFreehandBrush;
   perfectFreehandBrush.setOptions(defaultBrushSettings);
@@ -438,6 +438,9 @@ function handleShapePlacement(o: any) {
     case "Line":
       shape = drawRoughLine(startPoint, pointer);
       break;
+    case "Arrow":
+      shape = drawRoughArrow(startPoint, pointer);
+      break;
     case "Ellipse":
       shape = drawRoughEllipse(startPoint, pointer);
       break;
@@ -458,6 +461,25 @@ function drawRoughLine(start: any, end: any) {
     return shape;
   }
   const line = new FabricRoughLine({
+    ...structuredClone(defaultShapeSettings),
+    points: [start.x, start.y, end.x, end.y],
+    // ? WARNING: origin is deprecated starting from fabric 6.4
+    lockScalingX: true,
+    lockScalingY: true,
+  });
+  fabricCanvas.add(line);
+  fabricCanvas.requestRenderAll();
+  return line;
+}
+
+function drawRoughArrow(start: any, end: any) {
+  if (shape) {
+    // @ts-expect-error Custom function
+    shape.setPoints([start.x, start.y, end.x, end.y]);
+    fabricCanvas.requestRenderAll();
+    return shape;
+  }
+  const line = new FabricRoughArrow({
     ...structuredClone(defaultShapeSettings),
     points: [start.x, start.y, end.x, end.y],
     // ? WARNING: origin is deprecated starting from fabric 6.4

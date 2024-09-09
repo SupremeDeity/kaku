@@ -28,7 +28,7 @@
 	            "
         />
       </div>
-      <div>
+      <div v-if="!(props.selectedObjects[0] instanceof FabricRoughArrow)">
         <span class="font-bold uppercase text-xs text-cyan-200"
           >Background</span
         >
@@ -119,7 +119,7 @@
           :default="
             getStrokeStyle(props.selectedObjects[0].roughOptions.strokeLineDash)
           "
-          :options="['Solid', '-Dashed', '.Dotted']"
+          :options="['Solid', 'Dashed', 'Dotted']"
           :icons="[
             'ph:line-vertical-bold',
             'ph:circle-dashed-bold',

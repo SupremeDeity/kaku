@@ -25,11 +25,16 @@ export class FabricRoughDiamond extends fabric.FabricObject {
         let width = x2 - this.left + widthOffset;
         let height = y2 - this.top + heightOffset;
 
+        const originX = Math.sign(width) < 0 ? 'right' : 'left';
+        const originY = Math.sign(height) < 0 ? 'bottom' : 'top';
+        width = Math.abs(width)
+        height = Math.abs(height)
+
         const relativeCenter = this.getRelativeCenterPoint();
-        const constraint = this.translateToOriginPoint(relativeCenter, 'left', 'top');
+        const constraint = this.translateToOriginPoint(relativeCenter, originX, originY);
 
         this.set({ width: width, height: height });
-        this.setPositionByOrigin(constraint, 'left', 'top');
+        this.setPositionByOrigin(constraint, originX, originY);
 
         this.roughOptions.preserveVertices = this.rounded;
         if (this.rounded) {

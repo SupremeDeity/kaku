@@ -20,26 +20,31 @@ export class FabricRoughEllipse extends fabric.Ellipse {
 
     _updateRoughEllipse() {
         let [x1, y1, x2, y2] = this.points;
+
         const widthOffset = this.left === x1 ? 0 : this.left - x1;
         const heightOffset = this.top === y1 ? 0 : this.top - y1;
         let width = x2 - this.left + widthOffset;
         let height = y2 - this.top + heightOffset;
 
+        const originX = Math.sign(width) < 0 ? 'right' : 'left';
+        const originY = Math.sign(height) < 0 ? 'bottom' : 'top';
+        width = Math.abs(width)
+        height = Math.abs(height)
         // Gets the top and left based on set origin
         const relativeCenter = this.getRelativeCenterPoint()
         // Translates the relativeCenter point as if origin = 0,0
-        const constraint = this.translateToOriginPoint(relativeCenter, 'left', 'top')
+        const constraint = this.translateToOriginPoint(relativeCenter, originX, originY)
 
         this.set({
-            width,
-            height,
+            width: width,
+            height: height,
         });
 
         // Put shape back in place
         this.setPositionByOrigin(
             constraint,
-            'left',
-            'top',
+            originX,
+            originY,
         );
 
         this.roughEllipse = this.roughGenerator.ellipse(

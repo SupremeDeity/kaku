@@ -23,24 +23,27 @@ export class FabricRoughLine extends fabric.FabricObject {
         let width = x2 - this.left + widthOffset;
         let height = y2 - this.top + heightOffset;
 
+        const originX = Math.sign(width) < 0 ? "right" : "left";
+        const originY = Math.sign(height) < 0 ? "bottom" : "top";
+
         // Gets the top and left based on set origin
         const relativeCenter = this.getRelativeCenterPoint();
         // Translates the relativeCenter point as if origin = 0,0
         const constraint = this.translateToOriginPoint(
             relativeCenter,
-            "left",
-            "top"
+            originX,
+            originY
         );
         this.set({
-            width,
-            height,
+            width: Math.abs(width),
+            height: Math.abs(height),
         });
         // Put shape back in place
-        this.setPositionByOrigin(constraint, "left", "top");
+        this.setPositionByOrigin(constraint, originX, originY);
         this.setCoords();
         this.roughLine = this.roughGenerator.line(
-            -this.width / 2,
-            -this.height / 2,
+            -width / 2,
+            -height / 2,
             width / 2,
             height / 2,
             this.roughOptions
@@ -49,7 +52,6 @@ export class FabricRoughLine extends fabric.FabricObject {
 
     _render(ctx) {
         ctx.save();
-        // Draw the rough line
         const roughCanvas = rough.canvas(ctx.canvas);
         roughCanvas.draw(this.roughLine);
         ctx.restore();

@@ -54,17 +54,19 @@ export class FabricRoughArrow extends fabric.FabricObject {
             this.endArrowHeadStyle === ArrowHeadStyle.Head ||
             this.endArrowHeadStyle === ArrowHeadStyle.FilledHead
         ) {
+            const isFilled = this.endArrowHeadStyle === ArrowHeadStyle.FilledHead;
             const headPath = this._calculateHeadPath(width / 2, height / 2, angle);
             this.endArrowHead = this.roughGenerator.path(
                 headPath +
-                (this.endArrowHeadStyle === ArrowHeadStyle.FilledHead ? "Z" : ""),
-                this.roughOptions
+                (isFilled ? "Z" : ""),
+                { ...this.roughOptions, fill: isFilled ? this.roughOptions.stroke : "transparent" }
             );
         }
         if (
             this.startArrowHeadStyle === ArrowHeadStyle.Head ||
             this.startArrowHeadStyle === ArrowHeadStyle.FilledHead
         ) {
+            const isFilled = this.startArrowHeadStyle === ArrowHeadStyle.FilledHead;
             const headPath2 = this._calculateHeadPath(
                 -width / 2,
                 -height / 2,
@@ -72,8 +74,8 @@ export class FabricRoughArrow extends fabric.FabricObject {
             );
             this.startArrowHead = this.roughGenerator.path(
                 headPath2 +
-                (this.startArrowHeadStyle === ArrowHeadStyle.FilledHead ? "Z" : ""),
-                this.roughOptions
+                (isFilled ? "Z" : ""),
+                { ...this.roughOptions, fill: isFilled ? this.roughOptions.stroke : "transparent" }
             );
         }
     }

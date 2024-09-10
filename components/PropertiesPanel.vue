@@ -50,6 +50,11 @@
         <RoughMultiPicker
           :default="props.selectedObjects[0].roughOptions.fillStyle"
           :options="['hachure', 'cross-hatch', 'solid']"
+          :icons="[
+            'i-material-symbols:stroke-full',
+            'i-material-symbols:grid-4x4-rounded',
+            'i-material-symbols:rectangle-rounded',
+          ]"
           @change="
 	              (value: string) =>
 	                updateProperty(
@@ -167,6 +172,11 @@
             :options="
               Object.keys(ArrowHeadStyle).filter((k) => isNaN(Number(k)))
             "
+            :icons="[
+              'i-ph:line-vertical-bold',
+              'i-ph:arrow-bend-right-up',
+              'i-ph:arrow-bend-right-up-fill',
+            ]"
             @change="
               (value) =>
                 updateProperty(
@@ -188,6 +198,11 @@
             :options="
               Object.keys(ArrowHeadStyle).filter((k) => isNaN(Number(k)))
             "
+            :icons="[
+              'i-ph:line-vertical-bold',
+              'i-ph:arrow-bend-right-up',
+              'i-ph:arrow-bend-right-up-fill',
+            ]"
             @change="
               (value) =>
                 updateProperty(

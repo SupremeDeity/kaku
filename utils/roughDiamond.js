@@ -72,9 +72,6 @@ export class FabricRoughDiamond extends fabric.FabricObject {
         this.setCoords();
     }
 
-
-
-
     _render(ctx) {
         ctx.save();
         ctx.translate(-this.width / 2, -this.height / 2);

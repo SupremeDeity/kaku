@@ -8,19 +8,21 @@
     <div
       class="absolute left-1/2 -translate-x-1/2 z-[1000] top-3 flex gap-1 bg-gray-500 p-2 rounded"
     >
-      <button
-        v-for="mode in drawingModes"
-        :key="mode"
-        :class="[
-          'flex items-center p-2  text-white rounded  transition-colors',
-          mode === currentMode
-            ? 'bg-blue-400 hover:bg-blue-300'
-            : 'bg-gray-900 hover:bg-gray-800/60',
-        ]"
-        @click="setMode(mode)"
-      >
-        <Icon :name="drawingModesIconMap[mode]" />
-      </button>
+      <div v-for="mode in drawingModes" :key="mode">
+        <UTooltip :text="mode">
+          <button
+            :class="[
+              'flex items-center p-2  text-white rounded  transition-colors',
+              mode === currentMode
+                ? 'bg-blue-400 hover:bg-blue-300'
+                : 'bg-gray-900 hover:bg-gray-800/60',
+            ]"
+            @click="setMode(mode)"
+          >
+            <Icon :name="drawingModesIconMap[mode]" />
+          </button>
+        </UTooltip>
+      </div>
       <div class="border border-gray-600" />
 
       <UDropdown :items="dropdownItems" :popper="{ placement: 'bottom-start' }">
@@ -61,6 +63,7 @@
             fabricCanvas.freeDrawingBrush?.freehandOptions?.size.toString()
           "
           :options="['4', '8', '16']"
+          :names="['Thin', 'Normal', 'Bold']"
           :icons="[
             'material-symbols:pen-size-1',
             'material-symbols:pen-size-3',
@@ -158,16 +161,31 @@ async function initializeCanvas() {
     selectionKey: "shiftKey",
   });
 
+  fabric.InteractiveFabricObject.ownDefaults = {
+    ...fabric.InteractiveFabricObject.ownDefaults,
+    cornerStrokeColor: "slateblue",
+    cornerColor: "slateblue",
+    cornerStyle: "circle",
+    borderColor: "slateblue",
+    transparentCorners: false,
+    padding: 4,
+    borderScaleFactor: 2,
+  };
+
   fabricCanvas.backgroundColor = "rgb(3 7 18)";
   const perfectFreehandBrush = new PerfectFreehandBrush(fabricCanvas);
   fabricCanvas.freeDrawingBrush = perfectFreehandBrush;
   perfectFreehandBrush.setOptions(defaultBrushSettings);
   perfectFreehandBrush.color = defaultBrushSettings.color;
-  console.log(perfectFreehandBrush);
 
-  await supportedFonts.forEach(async (f) => {
-    const font = new FontFaceObserver(f);
-    await font.load(null, 5000);
+  Promise.all(
+    supportedFonts.map(async (f) => {
+      const font = new FontFaceObserver(f);
+      return font.load(null, 5000);
+    })
+  ).then(async () => {
+    history = new CanvasHistory(fabricCanvas);
+    await history.init();
   });
 
   fabricCanvas.on("mouse:wheel", handleZoom);
@@ -176,7 +194,6 @@ async function initializeCanvas() {
   fabricCanvas.on("mouse:up:before", handleMouseUp);
   fabricCanvas.on("selection:created", (e) => {
     console.log(e.selected[0]);
-    console.log(e);
     selectedObjects.value = e.selected;
   });
   fabricCanvas.on("selection:updated", (e) => {
@@ -185,9 +202,6 @@ async function initializeCanvas() {
   fabricCanvas.on("selection:cleared", () => {
     selectedObjects.value = null;
   });
-
-  history = new CanvasHistory(fabricCanvas);
-  await history.init();
 }
 
 function downloadPNG() {
@@ -297,7 +311,7 @@ function handleMouseDown(o: any) {
       top: pointer.y,
       fontFamily: "Virgil",
       fontSize: 20,
-      fill: "white",
+      fill: "#ffffff",
       editable: true,
       selectable: true,
       width: 100,
@@ -374,7 +388,7 @@ async function handleKeyEvent(e: any) {
         left: shape.left,
         top: shape.top,
         textAlign: "center",
-        fill: "white",
+        fill: "#ffffff",
         width: shape.width,
         height: shape.height,
         // ? WARNING: origin is deprecated starting from fabric 6.4
@@ -542,6 +556,7 @@ function drawRoughDiamond(start: fabric.Point, end: fabric.Point) {
 }
 
 function setMode(mode: (typeof drawingModes)[number]) {
+  fabricCanvas.discardActiveObject();
   currentMode.value = mode;
   fabricCanvas.isDrawingMode = mode === "Draw";
   fabricCanvas.selection = mode === "Select";
@@ -549,6 +564,7 @@ function setMode(mode: (typeof drawingModes)[number]) {
     obj.selectable = mode === "Select";
     obj.evented = mode === "Select";
   });
+  fabricCanvas.requestRenderAll();
 }
 
 function clearCanvas() {

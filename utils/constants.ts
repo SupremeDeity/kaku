@@ -62,11 +62,11 @@ export const defaultShapeSettings: Partial<FabricObjectProps> &
   stroke: "white",
   strokeWidth: 2,
   opacity: 1,
-  padding: 4,
   // For the "Roundables"
   rounded: false,
   endArrowHeadStyle: ArrowHeadStyle.Head,
   startArrowHeadStyle: ArrowHeadStyle.NoHead,
+  cornerStyle: "circle",
   roughOptions: {
     fillStyle: "solid",
     fill: "transparent",

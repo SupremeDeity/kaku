@@ -7,39 +7,48 @@
       class="text-xs bg-cyan-900 text-cyan-400 p-1 rounded border border-cyan-700"
       >{{
         props.selectedObjects.length > 1
-          ? "group"
+          ? "Multi-Selection"
           : props.selectedObjects[0].name
       }}</span
     >
-    <div class="pt-4 flex flex-col gap-2">
+    <div
+      v-if="props.selectedObjects.length === 1"
+      class="pt-4 flex flex-col gap-2"
+    >
       <!-- ---------- Rough SPECIFIC THINGS  -->
-      <template
-        v-if="
-          props.selectedObjects.length === 1 &&
-          props.selectedObjects[0].roughOptions
-        "
-      >
+      <template v-if="props.selectedObjects[0].roughOptions">
         <div>
           <span class="font-bold uppercase text-xs text-cyan-200">Stroke</span>
-          <ColorPicker
-            :value="props.selectedObjects[0].roughOptions.stroke"
-            @change="
+          <div>
+            <ColorPicker
+              :value="props.selectedObjects[0].roughOptions.stroke"
+              @change="
 	              (args: string) =>
 	                updateProperty(props.selectedObjects[0], 'roughOptions.stroke', args, )
 	            "
-          />
+            />
+          </div>
         </div>
-        <div v-if="!(props.selectedObjects[0] instanceof FabricRoughArrow)">
+        <div
+          v-if="
+            !(
+              props.selectedObjects[0] instanceof FabricRoughArrow ||
+              props.selectedObjects[0] instanceof FabricRoughLine
+            )
+          "
+        >
           <span class="font-bold uppercase text-xs text-cyan-200"
             >Background</span
           >
-          <ColorPicker
-            :value="props.selectedObjects[0].roughOptions.fill"
-            @change="
+          <div>
+            <ColorPicker
+              :value="props.selectedObjects[0].roughOptions.fill"
+              @change="
 	              (args: string) =>
 	                updateProperty(props.selectedObjects[0], 'roughOptions.fill', args, )
 	            "
-          />
+            />
+          </div>
         </div>
         <div
           v-if="
@@ -75,6 +84,7 @@
               props.selectedObjects[0].roughOptions.roughness.toString()
             "
             :options="['0', '1', '2']"
+            :names="['Normal', 'Rough', 'Very Rough']"
             :icons="[
               'material-symbols:architecture-rounded',
               'ph:paint-brush-fill',
@@ -99,6 +109,7 @@
               props.selectedObjects[0].roughOptions.strokeWidth.toString()
             "
             :options="['1', '2', '3']"
+            :names="['Thin', 'Normal', 'Bold']"
             :icons="[
               'material-symbols:pen-size-1',
               'material-symbols:pen-size-3',
@@ -236,13 +247,15 @@
       >
         <div>
           <span class="font-bold uppercase text-xs text-cyan-200">Stroke</span>
-          <ColorPicker
-            :value="props.selectedObjects[0].fill"
-            @change="
+          <div>
+            <ColorPicker
+              :value="props.selectedObjects[0].fill"
+              @change="
 	              (args: string) =>
 	                updateProperty(props.selectedObjects[0], 'fill', args, true)
 	            "
-          />
+            />
+          </div>
         </div>
         <div>
           <span class="font-bold uppercase text-xs text-cyan-200"

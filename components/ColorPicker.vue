@@ -1,23 +1,25 @@
 <template>
-  <div
-    :class="[
-      'size-8 rounded-md hover:scale-110',
-      !props.value || props.value === 'transparent' ? 'checkers' : '',
-    ]"
-    :style="{
-      backgroundColor:
-        !props.value || props.value === 'transparent'
-          ? 'rgb(50, 50, 50)'
-          : props.value,
-    }"
-  >
-    <input
-      class="opacity-0 block size-8 border-0 hover:cursor-pointer"
-      type="color"
-      :value="props.value"
-      @change="emit('change', $event.target?.value ?? '#ffffff')"
-    />
-  </div>
+  <UTooltip :text="props.value">
+    <div
+      :class="[
+        'size-8 rounded-md hover:scale-110',
+        !props.value || props.value === 'transparent' ? 'checkers' : '',
+      ]"
+      :style="{
+        backgroundColor:
+          !props.value || props.value === 'transparent'
+            ? 'rgb(50, 50, 50)'
+            : props.value,
+      }"
+    >
+      <input
+        class="opacity-0 block size-8 border-0 hover:cursor-pointer"
+        type="color"
+        :value="props.value"
+        @change="emit('change', $event.target?.value ?? '#ffffff')"
+      />
+    </div>
+  </UTooltip>
 </template>
 
 <script lang="ts" setup>

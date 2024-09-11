@@ -15,6 +15,7 @@ export default defineNuxtConfig({
       { name: "Virgil", provider: "local", global: true },
       { name: "Kalam", provider: "google", global: true },
       { name: "Itim", provider: "google", global: true },
+      { name: "Just Another Hand", provider: "google", global: true },
     ],
   },
 });

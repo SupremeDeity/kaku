@@ -61,6 +61,11 @@
             fabricCanvas.freeDrawingBrush?.freehandOptions?.size.toString()
           "
           :options="['4', '8', '16']"
+          :icons="[
+            'material-symbols:pen-size-1',
+            'material-symbols:pen-size-3',
+            'material-symbols:pen-size-4',
+          ]"
           @change="
             (val) => {
               if (fabricCanvas.freeDrawingBrush?.freehandOptions)

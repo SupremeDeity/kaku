@@ -23,7 +23,7 @@ export const drawingModesIconMap = {
   Arrow: "ph:arrow-bend-left-up-bold",
 };
 
-export const supportedFonts = ["Kalam", "Itim", "Virgil"];
+export const supportedFonts = ["Kalam", "Itim", "Virgil", "Just Another Hand"];
 export const ROUNDABLES = ["fabricroughrectangle", "fabricroughdiamond"];
 
 export const defaultBrushSettings = {

@@ -2,7 +2,7 @@
 
 A learning venture of creating a diagraming tool with hand-drawn visuals inspired by excallidraw.
 
-<image src="public/kaku.png" />
+<image src="public/og.png" />
 
 > [!NOTE]
 > This tool is merely supposed to be a learning ventured inspired by excallidraw, not something meant to replace excallidraw.

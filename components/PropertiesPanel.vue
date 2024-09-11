@@ -11,51 +11,52 @@
           : props.selectedObjects[0].name
       }}</span
     >
-    <div
-      v-if="
-        props.selectedObjects.length === 1 &&
-        props.selectedObjects[0].roughOptions
-      "
-      class="pt-4 flex flex-col gap-2"
-    >
-      <div>
-        <span class="font-bold uppercase text-xs text-cyan-200">Stroke</span>
-        <ColorPicker
-          :value="props.selectedObjects[0].roughOptions.stroke"
-          @change="
+    <div class="pt-4 flex flex-col gap-2">
+      <!-- ---------- Rough SPECIFIC THINGS  -->
+      <template
+        v-if="
+          props.selectedObjects.length === 1 &&
+          props.selectedObjects[0].roughOptions
+        "
+      >
+        <div>
+          <span class="font-bold uppercase text-xs text-cyan-200">Stroke</span>
+          <ColorPicker
+            :value="props.selectedObjects[0].roughOptions.stroke"
+            @change="
 	              (args: string) =>
 	                updateProperty(props.selectedObjects[0], 'roughOptions.stroke', args, )
 	            "
-        />
-      </div>
-      <div v-if="!(props.selectedObjects[0] instanceof FabricRoughArrow)">
-        <span class="font-bold uppercase text-xs text-cyan-200"
-          >Background</span
-        >
-        <ColorPicker
-          :value="props.selectedObjects[0].roughOptions.fill"
-          @change="
+          />
+        </div>
+        <div v-if="!(props.selectedObjects[0] instanceof FabricRoughArrow)">
+          <span class="font-bold uppercase text-xs text-cyan-200"
+            >Background</span
+          >
+          <ColorPicker
+            :value="props.selectedObjects[0].roughOptions.fill"
+            @change="
 	              (args: string) =>
 	                updateProperty(props.selectedObjects[0], 'roughOptions.fill', args, )
 	            "
-        />
-      </div>
-      <div
-        v-if="
-          props.selectedObjects[0].roughOptions.fill &&
-          props.selectedObjects[0].roughOptions.fill !== 'transparent'
-        "
-      >
-        <span class="font-bold uppercase text-xs text-cyan-200">Fill</span>
-        <RoughMultiPicker
-          :default="props.selectedObjects[0].roughOptions.fillStyle"
-          :options="['hachure', 'cross-hatch', 'solid']"
-          :icons="[
-            'i-material-symbols:stroke-full',
-            'i-material-symbols:grid-4x4-rounded',
-            'i-material-symbols:rectangle-rounded',
-          ]"
-          @change="
+          />
+        </div>
+        <div
+          v-if="
+            props.selectedObjects[0].roughOptions.fill &&
+            props.selectedObjects[0].roughOptions.fill !== 'transparent'
+          "
+        >
+          <span class="font-bold uppercase text-xs text-cyan-200">Fill</span>
+          <RoughMultiPicker
+            :default="props.selectedObjects[0].roughOptions.fillStyle"
+            :options="['hachure', 'cross-hatch', 'solid']"
+            :icons="[
+              'i-material-symbols:stroke-full',
+              'i-material-symbols:grid-4x4-rounded',
+              'i-material-symbols:rectangle-rounded',
+            ]"
+            @change="
 	              (value: string) =>
 	                updateProperty(
 	                  props.selectedObjects[0],
@@ -63,19 +64,23 @@
 	                  value,
 	                )
 	            "
-        />
-      </div>
-      <div>
-        <span class="font-bold uppercase text-xs text-cyan-200">Roughness</span>
-        <RoughMultiPicker
-          :default="props.selectedObjects[0].roughOptions.roughness.toString()"
-          :options="['0', '1', '2']"
-          :icons="[
-            'material-symbols:architecture-rounded',
-            'ph:paint-brush-fill',
-            'ph:pencil-fill',
-          ]"
-          @change="
+          />
+        </div>
+        <div>
+          <span class="font-bold uppercase text-xs text-cyan-200"
+            >Roughness</span
+          >
+          <RoughMultiPicker
+            :default="
+              props.selectedObjects[0].roughOptions.roughness.toString()
+            "
+            :options="['0', '1', '2']"
+            :icons="[
+              'material-symbols:architecture-rounded',
+              'ph:paint-brush-fill',
+              'ph:pencil-fill',
+            ]"
+            @change="
 	              (value: string) =>
 	                updateProperty(
 	                  props.selectedObjects[0],
@@ -83,23 +88,23 @@
 	                  Number.parseInt(value),
 	                )
 	            "
-        />
-      </div>
-      <div>
-        <span class="font-bold uppercase text-xs text-cyan-200"
-          >Stroke width</span
-        >
-        <RoughMultiPicker
-          :default="
-            props.selectedObjects[0].roughOptions.strokeWidth.toString()
-          "
-          :options="['1', '2', '3']"
-          :icons="[
-            'material-symbols:pen-size-1',
-            'material-symbols:pen-size-3',
-            'material-symbols:pen-size-4',
-          ]"
-          @change="
+          />
+        </div>
+        <div>
+          <span class="font-bold uppercase text-xs text-cyan-200"
+            >Stroke width</span
+          >
+          <RoughMultiPicker
+            :default="
+              props.selectedObjects[0].roughOptions.strokeWidth.toString()
+            "
+            :options="['1', '2', '3']"
+            :icons="[
+              'material-symbols:pen-size-1',
+              'material-symbols:pen-size-3',
+              'material-symbols:pen-size-4',
+            ]"
+            @change="
 	              (value: string) =>
 	                {
 	                  updateProperty(
@@ -114,23 +119,25 @@
 	                )
 	                }
 	            "
-        />
-      </div>
-      <div>
-        <span class="font-bold uppercase text-xs text-cyan-200"
-          >Stroke style</span
-        >
-        <RoughMultiPicker
-          :default="
-            getStrokeStyle(props.selectedObjects[0].roughOptions.strokeLineDash)
-          "
-          :options="['Solid', 'Dashed', 'Dotted']"
-          :icons="[
-            'ph:line-vertical-bold',
-            'ph:circle-dashed-bold',
-            'ph:dots-three-vertical-bold',
-          ]"
-          @change="
+          />
+        </div>
+        <div>
+          <span class="font-bold uppercase text-xs text-cyan-200"
+            >Stroke style</span
+          >
+          <RoughMultiPicker
+            :default="
+              getStrokeStyle(
+                props.selectedObjects[0].roughOptions.strokeLineDash
+              )
+            "
+            :options="['Solid', 'Dashed', 'Dotted']"
+            :icons="[
+              'ph:line-vertical-bold',
+              'ph:circle-dashed-bold',
+              'ph:dots-three-vertical-bold',
+            ]"
+            @change="
 	              (value: string) =>
 	                updateProperty(
 	                  props.selectedObjects[0],
@@ -138,18 +145,20 @@
 	                  calculateStrokeStyle(props.selectedObjects[0].roughOptions.strokeWidth, value),
 	                )
 	            "
-        />
-      </div>
-      <div v-if="ROUNDABLES.includes(props.selectedObjects[0].type)">
-        <span class="font-bold uppercase text-xs text-cyan-200">Roundness</span>
-        <RoughMultiPicker
-          :default="props.selectedObjects[0].rounded ? 'Rounded' : 'Edged'"
-          :options="['Edged', 'Rounded']"
-          :icons="[
-            'material-symbols:rectangle-outline',
-            'material-symbols:rounded-corner-rounded',
-          ]"
-          @change="
+          />
+        </div>
+        <div v-if="ROUNDABLES.includes(props.selectedObjects[0].type)">
+          <span class="font-bold uppercase text-xs text-cyan-200"
+            >Roundness</span
+          >
+          <RoughMultiPicker
+            :default="props.selectedObjects[0].rounded ? 'Rounded' : 'Edged'"
+            :options="['Edged', 'Rounded']"
+            :icons="[
+              'material-symbols:rectangle-outline',
+              'material-symbols:rounded-corner-rounded',
+            ]"
+            @change="
 	              (value: string) =>
 	                updateProperty(
 	                  props.selectedObjects[0],
@@ -157,65 +166,130 @@
 	                  value === 'Edged' ? false : true,
 	                )
 	            "
-        />
-      </div>
-      <!-- ---------- ARROW SPECIFIC THINGS ---------- -->
-      <template v-if="props.selectedObjects[0] instanceof FabricRoughArrow">
-        <div>
-          <span class="font-bold uppercase text-xs text-cyan-200"
-            >End Arrowhead style</span
-          >
-          <RoughMultiPicker
-            :default="
-              ArrowHeadStyle[props.selectedObjects[0].endArrowHeadStyle]
-            "
-            :options="
-              Object.keys(ArrowHeadStyle).filter((k) => isNaN(Number(k)))
-            "
-            :icons="[
-              'i-ph:line-vertical-bold',
-              'i-ph:arrow-bend-right-up',
-              'i-ph:arrow-bend-right-up-fill',
-            ]"
-            @change="
-              (value) =>
+          />
+        </div>
+        <!-- ---------- ARROW SPECIFIC THINGS ---------- -->
+        <template v-if="props.selectedObjects[0] instanceof FabricRoughArrow">
+          <div>
+            <span class="font-bold uppercase text-xs text-cyan-200"
+              >End Arrowhead style</span
+            >
+            <RoughMultiPicker
+              :default="
+                ArrowHeadStyle[props.selectedObjects[0].endArrowHeadStyle]
+              "
+              :options="
+                Object.keys(ArrowHeadStyle).filter((k) => isNaN(Number(k)))
+              "
+              :icons="[
+                'i-ph:line-vertical-bold',
+                'i-ph:arrow-bend-right-up',
+                'i-ph:arrow-bend-right-up-fill',
+              ]"
+              @change="
+              (value: any) =>
                 updateProperty(
                   props.selectedObjects[0],
                   'endArrowHeadStyle',
                   ArrowHeadStyle[value]
                 )
             "
+            />
+          </div>
+          <div>
+            <span class="font-bold uppercase text-xs text-cyan-200"
+              >Start Arrowhead style</span
+            >
+            <RoughMultiPicker
+              :default="
+                ArrowHeadStyle[props.selectedObjects[0].startArrowHeadStyle]
+              "
+              :options="
+                Object.keys(ArrowHeadStyle).filter((k) => isNaN(Number(k)))
+              "
+              :icons="[
+                'i-ph:line-vertical-bold',
+                'i-ph:arrow-bend-right-up',
+                'i-ph:arrow-bend-right-up-fill',
+              ]"
+              @change="
+                (value) =>
+                  updateProperty(
+                    props.selectedObjects[0],
+                    'startArrowHeadStyle',
+                    ArrowHeadStyle[value]
+                  )
+              "
+            />
+          </div>
+        </template>
+        <!-- ---------- </ARROW SPECIFIC THINGS> ---------- -->
+      </template>
+      <!-- ---------- </ Rough SPECIFIC THINGS>  -->
+
+      <!-- ---------- TextBox SPECIFIC THINGS  -->
+      <template
+        v-if="
+          props.selectedObjects.length === 1 &&
+          props.selectedObjects[0].name === 'Text'
+        "
+      >
+        <div>
+          <span class="font-bold uppercase text-xs text-cyan-200">Stroke</span>
+          <ColorPicker
+            :value="props.selectedObjects[0].fill"
+            @change="
+	              (args: string) =>
+	                updateProperty(props.selectedObjects[0], 'fill', args, true)
+	            "
           />
         </div>
         <div>
           <span class="font-bold uppercase text-xs text-cyan-200"
-            >Start Arrowhead style</span
+            >Font Family</span
           >
-          <RoughMultiPicker
-            :default="
-              ArrowHeadStyle[props.selectedObjects[0].startArrowHeadStyle]
-            "
-            :options="
-              Object.keys(ArrowHeadStyle).filter((k) => isNaN(Number(k)))
-            "
-            :icons="[
-              'i-ph:line-vertical-bold',
-              'i-ph:arrow-bend-right-up',
-              'i-ph:arrow-bend-right-up-fill',
-            ]"
+          <USelect
+            :options="supportedFonts"
+            :model-value="props.selectedObjects[0].fontFamily"
             @change="
-              (value) =>
+              (value) => {
                 updateProperty(
                   props.selectedObjects[0],
-                  'startArrowHeadStyle',
-                  ArrowHeadStyle[value]
-                )
+                  'fontFamily',
+                  value,
+                  true
+                );
+              }
             "
           />
         </div>
+        <div>
+          <span class="font-bold uppercase text-xs text-cyan-200"
+            >Text Alignment</span
+          >
+          <RoughMultiPicker
+            :default="props.selectedObjects[0].textAlign"
+            :options="['left', 'center', 'right']"
+            :icons="[
+              'i-ph:text-align-left-bold',
+              'i-ph:text-align-center-bold',
+              'i-ph:text-align-right-bold',
+            ]"
+            @change="
+	              (value: string) =>
+	                updateProperty(
+	                  props.selectedObjects[0],
+	                  'textAlign',
+	                  value,
+                    true
+	                )
+	            "
+          />
+        </div>
       </template>
+      <!-- ---------- </TextBox SPECIFIC THINGS>  -->
 
-      <!-- ---------- ARROW SPECIFIC THINGS ---------- -->
+      <!-- ---------- Common Properties ----------  -->
       <div>
         <span class="font-bold uppercase text-xs text-cyan-200">Opacity</span>
         <!-- eslint-disable-next-line vue/html-self-closing -->
@@ -237,29 +311,7 @@
           "
         />
       </div>
-      <!-- <hr class="border-cyan-800" />
-      <div class="flex gap-4">
-        <UButton
-          color="cyan"
-          icon="i-material-symbols-flip-to-front"
-          @click="
-            () => {
-              props.fabricCanvas.bringObjectForward(props.selectedObjects[0]);
-              props.fabricCanvas.renderAll();
-            }
-          "
-        />
-        <UButton
-          color="cyan"
-          icon="i-material-symbols-flip-to-back"
-          @click="
-            () => {
-              props.fabricCanvas.sendObjectBackwards(props.selectedObjects[0]);
-              props.fabricCanvas.renderAll();
-            }
-          "
-        />
-      </div> -->
+      <!-- ---------- </ Common Properties> ----------  -->
     </div>
   </div>
 </template>
@@ -268,8 +320,14 @@ import type { FabricObject } from "fabric";
 import lodashSet from "lodash.set";
 import { ArrowHeadStyle } from "~/utils/constants";
 const props = defineProps(["selectedObjects", "fabricCanvas"]);
-function updateProperty(obj: FabricObject, key: string, value: any) {
+function updateProperty(
+  obj: FabricObject,
+  key: string,
+  value: any,
+  dirty?: boolean
+) {
   lodashSet(obj, key, value);
+  if (dirty) lodashSet(obj, "dirty", dirty);
   // @ts-expect-error custom function on rough objects
   obj.update && obj.update();
   props.fabricCanvas.fire("object:modified");

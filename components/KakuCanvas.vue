@@ -104,7 +104,7 @@ const dropdownItems = [
     {
       label: "Undo",
       icon: "i-ph-arrow-arc-left-duotone",
-      shortcuts: ["⌘", "Z"],
+      shortcuts: ["CTRL", "Z"],
       click: async () => {
         await history.undo();
       },
@@ -112,7 +112,7 @@ const dropdownItems = [
     {
       label: "Redo",
       icon: "i-ph-arrow-arc-right-duotone",
-      shortcuts: ["⌘", "Y"],
+      shortcuts: ["CTRL", "Y"],
       click: async () => {
         await history.redo();
       },

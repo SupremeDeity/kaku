@@ -1,6 +1,7 @@
 <template>
   <div
     v-if="props.selectedObjects"
+    :key="props.selectedObjects"
     class="p-4 absolute left-4 top-16 z-[1000] bg-cyan-950 rounded text-white min-w-52 border border-cyan-800 select-none"
   >
     <span

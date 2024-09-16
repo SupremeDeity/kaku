@@ -9,7 +9,6 @@ class CanvasHistory {
   }
 
   async init() {
-    console.log("called after");
     await this._loadCanvasState()
     this._saveCanvasState(); // Save initial state
   }

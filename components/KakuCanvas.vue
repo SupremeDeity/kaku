@@ -29,7 +29,7 @@
         <button
           class="flex bg-cyan-900 text-white rounded p-2 hover:bg-cyan-800/60 transition-colors"
         >
-          <Icon name="heroicons:bars-3-16-solid" />
+          <Icon name="i-material-symbols:menu-rounded" />
         </button>
       </UDropdown>
     </div>
@@ -43,18 +43,20 @@
     >
       <div>
         <span class="font-bold uppercase text-xs text-cyan-200">Stroke</span>
-        <ColorPicker
-          :value="fabricCanvas.freeDrawingBrush?.color"
-          @change="
-            (val) => {
-              if (fabricCanvas.freeDrawingBrush) {
-                fabricCanvas.freeDrawingBrush.color = val;
-                // Neccessary to force pull new value of fabricCanvas.freeDrawingBrush.color
-                $forceUpdate();
+        <div>
+          <ColorPicker
+            :value="fabricCanvas.freeDrawingBrush?.color"
+            @change="
+              (val) => {
+                if (fabricCanvas.freeDrawingBrush) {
+                  fabricCanvas.freeDrawingBrush.color = val;
+                  // Neccessary to force pull new value of fabricCanvas.freeDrawingBrush.color
+                  $forceUpdate();
+                }
               }
-            }
-          "
-        />
+            "
+          />
+        </div>
       </div>
       <div>
         <span class="font-bold uppercase text-xs text-cyan-200">Fill</span>

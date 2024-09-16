@@ -1,6 +1,7 @@
 import * as fabric from "fabric";
 import rough from "roughjs";
 import { ArrowHeadStyle } from "./constants";
+import { getLineAngle } from "./roughutil"
 
 export class FabricRoughArrow extends fabric.FabricObject {
     static get type() {
@@ -49,7 +50,7 @@ export class FabricRoughArrow extends fabric.FabricObject {
             height / 2,
             this.roughOptions
         );
-        const angle = this._getAngle(width, height);
+        const angle = getLineAngle(width, height);
         if (
             this.endArrowHeadStyle === ArrowHeadStyle.Head ||
             this.endArrowHeadStyle === ArrowHeadStyle.FilledHead
@@ -80,9 +81,6 @@ export class FabricRoughArrow extends fabric.FabricObject {
         }
     }
 
-    _getAngle(width, height) {
-        return Math.atan2(height / 2 - -height / 2, width / 2 - -width / 2);
-    }
 
     _calculateHeadPath(x, y, angle, headlen = 30) {
         const x1 = x - headlen * Math.cos(angle - Math.PI / 6);

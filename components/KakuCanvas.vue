@@ -190,6 +190,12 @@ async function initializeCanvas() {
     await history.init();
   });
 
+  window.addEventListener("resize", () => {
+    fabricCanvas.setDimensions({
+      width: window.document.documentElement.clientWidth,
+      height: window.document.documentElement.clientHeight,
+    });
+  });
   fabricCanvas.on("mouse:wheel", handleZoom);
   fabricCanvas.on("mouse:down:before", handleMouseDown);
   fabricCanvas.on("mouse:move", handleMouseMove);
@@ -270,6 +276,7 @@ function handleZoom(opt: any) {
     new fabric.Point(opt.e.offsetX, opt.e.offsetY),
     zoom
   );
+
   fabricCanvas.requestRenderAll();
   opt.e.preventDefault();
   opt.e.stopPropagation();
@@ -487,6 +494,7 @@ function drawRoughLine(start: any, end: any) {
     // ? WARNING: origin is deprecated starting from fabric 6.4
     lockScalingX: true,
     lockScalingY: true,
+    // hasBorders: false,
   });
   fabricCanvas.add(line);
   fabricCanvas.requestRenderAll();

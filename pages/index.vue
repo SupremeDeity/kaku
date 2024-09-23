@@ -19,6 +19,7 @@ useSeoMeta({
   twitterImage: "/og.png",
   twitterTitle: "Kaku",
   ogTitle: "Kaku",
+  ogSiteName: "Kaku",
 });
 
 useHead({

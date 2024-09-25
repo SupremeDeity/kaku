@@ -14,9 +14,9 @@
         }"
       />
       <template #panel>
-        <div class="p-4">
+        <div class="p-4 max-w-52">
           <span class="text-xs text-gray-400">Presets</span>
-          <div class="grid grid-flow-row grid-cols-4 grid-rows-4 gap-2 mb-2">
+          <div class="grid grid-flow-row grid-cols-4 grid-rows-4 mb-2">
             <div v-for="preset in presets" :key="preset">
               <UTooltip :text="preset.toLowerCase()"
                 ><span
@@ -38,7 +38,7 @@
             </div>
           </div>
           <span class="text-xs text-gray-400">Shades</span>
-          <div class="grid grid-flow-row grid-cols-4 grid-rows-2 gap-2 mb-2">
+          <div class="grid grid-flow-row grid-cols-4 grid-rows-2 mb-2">
             <div v-for="shade in shades" :key="shade.hex">
               <UTooltip :text="shade.hexString()"
                 ><span
@@ -55,13 +55,14 @@
               /></UTooltip>
             </div>
           </div>
-          <UInput
-            :model-modifiers="{ trim: true }"
-            :value="model?.replace('#', '')"
-            maxlength="8"
-            @input="
+          <div class="flex gap-2">
+            <UInput
+              :model-modifiers="{ trim: true }"
+              :value="model?.replace('#', '')"
+              maxlength="8"
+              color="cyan"
+              @input="
               (e: any) => {
-                console.log(e.target.value)
                try {
                  const color = new Values(`#${e.target.value}`)
                 if(color) {
@@ -72,9 +73,17 @@
                catch(e) {}
               }
             "
-          >
-            <template #leading> <span class="text-gray-400">#</span> </template>
-          </UInput>
+            >
+              <template #leading>
+                <span class="text-gray-400">#</span>
+              </template>
+            </UInput>
+            <UButton
+              color="cyan"
+              icon="i-ph:eyedropper-duotone"
+              @click="openEyeDropper"
+            />
+          </div>
         </div>
       </template>
     </UPopover>
@@ -113,6 +122,35 @@ const props = defineProps<{
 }>();
 const emit = defineEmits(["change"]);
 const model = ref(props.value);
+
+const openEyeDropper = () => {
+  // @ts-expect-error Well it does exist
+  if (!window.EyeDropper) {
+    alert("Eyedropper not supported on your browser");
+    return;
+  }
+
+  // @ts-expect-error Well it does exist
+  const eyeDropper = new EyeDropper();
+
+  eyeDropper
+    .open()
+    .then((result: any) => {
+      try {
+        const hexString = `${result.sRGBHex}ff`;
+        const color = new Values(hexString);
+        if (color) {
+          emit("change", hexString);
+          model.value = hexString;
+        }
+      } catch (e) {
+        console.log(e);
+      }
+    })
+    .catch((e: any) => {
+      console.log(e);
+    });
+};
 </script>
 
 <style scoped>

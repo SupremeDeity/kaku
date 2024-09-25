@@ -379,7 +379,7 @@ async function handleKeyEvent(e: any) {
     });
     fabricCanvas.discardActiveObject();
     fabricCanvas.requestRenderAll();
-  } else if (e.key === "Enter" && currentMode.value === "Select") {
+    // } else if (e.key === "Enter" && currentMode.value === "Select") {
     const activeObject = fabricCanvas.getActiveObjects();
     if (
       activeObject.length === 1 &&

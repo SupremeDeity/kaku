@@ -17,8 +17,10 @@
     "nanoid": "^5.0.7",
     "nuxt": "^3.13.0",
     "perfect-freehand": "^1.2.2",
+    "points-on-curve": "^1.0.1",
     "roughjs": "^4.6.6",
     "simplify-js": "^1.2.4",
+    "values.js": "^2.1.1",
     "vue": "latest"
   },
   "packageManager": "pnpm@9.2.0",

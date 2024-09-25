@@ -5,6 +5,22 @@
     class="w-full h-full bg-gray-950"
     @keydown="handleKeyEvent"
   >
+    <div class="absolute bottom-2 right-2 z-[1000] p-2 flex gap-1">
+      <UButton
+        to="https://github.com/supremedeity/kaku"
+        target="_blank"
+        icon="i-ph:github-logo-duotone"
+        variant="soft"
+        color="cyan"
+      />
+      <UTooltip
+        ><UButton variant="soft" color="cyan" icon="i-ph:info-duotone" />
+        <template #text
+          ><span class="font-bold">Kaku</span> {{ " " }}
+          <span class="text-cyan-400">{{ git_commit_sha }}</span></template
+        ></UTooltip
+      >
+    </div>
     <div
       class="absolute left-1/2 -translate-x-1/2 z-[1000] top-3 flex gap-1 bg-gray-500 p-2 rounded"
     >
@@ -94,6 +110,7 @@ import * as fabric from "fabric";
 
 import CanvasHistory from "~/utils/fabric-history";
 import PropertiesPanel from "./PropertiesPanel.vue";
+const git_commit_sha = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "DEV";
 
 const dropdownItems = [
   [
@@ -379,7 +396,7 @@ async function handleKeyEvent(e: any) {
     });
     fabricCanvas.discardActiveObject();
     fabricCanvas.requestRenderAll();
-  } else if (e.key === "Enter" && currentMode.value === "Select") {
+    // } else if (e.key === "Enter" && currentMode.value === "Select") {
     const activeObject = fabricCanvas.getActiveObjects();
     if (
       activeObject.length === 1 &&

@@ -110,7 +110,9 @@ import * as fabric from "fabric";
 
 import CanvasHistory from "~/utils/fabric-history";
 import PropertiesPanel from "./PropertiesPanel.vue";
-const git_commit_sha = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "DEV";
+
+const runtimeConfig = useRuntimeConfig();
+const git_commit_sha = runtimeConfig.public.commitSha;
 
 const dropdownItems = [
   [

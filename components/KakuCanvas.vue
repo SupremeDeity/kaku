@@ -507,13 +507,18 @@ function drawRoughLine(start: any, end: any) {
     fabricCanvas.requestRenderAll();
     return shape;
   }
-  const line = new FabricRoughLine({
+  const line = new FabricRoughLine(undefined, {
     ...structuredClone(defaultShapeSettings),
     points: [start.x, start.y, end.x, end.y],
-    // ? WARNING: origin is deprecated starting from fabric 6.4
     lockScalingX: true,
     lockScalingY: true,
+    objectCaching: false,
     // hasBorders: false,
+  });
+  line.on("modified", () => {
+    line.editing = true;
+    line._updateRoughLine();
+    line.editing = false;
   });
   fabricCanvas.add(line);
   fabricCanvas.requestRenderAll();

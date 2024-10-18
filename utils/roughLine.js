@@ -53,13 +53,11 @@ export class FabricRoughLine extends fabric.Path {
             width / 2,
             height / 2,
         ]);
-        this.path = fabric.util.parsePath(pathData);
-        this.fabricPath = new fabric.Path(this.path, {
-            objectCaching: false,
-            fill: "transparent",
-        });
+        if (!this.editing) {
+            this.path = fabric.util.parsePath(pathData);
+        }
         this.controls = fabric.controlsUtils.createPathControls(
-            this.fabricPath,
+            this,
             {
                 controlPointStyle: {
                     controlStroke: "slateblue",
@@ -71,7 +69,7 @@ export class FabricRoughLine extends fabric.Path {
                 },
             }
         );
-        this.roughLine = this.roughGenerator.path(fabric.util.joinPath(this.fabricPath.path), this.roughOptions);
+        this.roughLine = this.roughGenerator.path(fabric.util.joinPath(this.path), this.roughOptions);
     }
 
     _render(ctx) {
@@ -94,11 +92,8 @@ export class FabricRoughLine extends fabric.Path {
     toObject(propertiesToInclude) {
         return {
             ...super.toObject(propertiesToInclude),
-            path: this.path,
             points: this.points,
             roughOptions: this.roughOptions,
-            left: this.left,
-            top: this.top,
         };
     }
 }

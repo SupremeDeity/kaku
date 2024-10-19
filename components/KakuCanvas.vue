@@ -166,6 +166,9 @@ declare module "fabric" {
   interface BaseBrush {
     freehandOptions: any;
   }
+  interface FabricObject {
+    isDrawing?: boolean;
+  }
 }
 
 async function initializeCanvas() {
@@ -379,9 +382,10 @@ function handleMouseUp() {
     fabricCanvas.isDragging = false;
     fabricCanvas.selection = currentMode.value === "Select";
     fabricCanvas.isDrawingMode = currentMode.value === "Draw";
-  } else if (shapePlacementMode) {
+  } else if (shapePlacementMode && shape) {
     shapePlacementMode = false;
     shape?.setCoords();
+    shape.isDrawing = false;
     shape = undefined;
     fabricCanvas.requestRenderAll();
     currentMode.value = "Select";
@@ -513,12 +517,8 @@ function drawRoughLine(start: any, end: any) {
     lockScalingX: true,
     lockScalingY: true,
     objectCaching: false,
+    isDrawing: true,
     // hasBorders: false,
-  });
-  line.on("modified", () => {
-    line.editing = true;
-    line._updateRoughLine();
-    line.editing = false;
   });
   fabricCanvas.add(line);
   fabricCanvas.requestRenderAll();

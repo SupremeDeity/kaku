@@ -1,86 +1,156 @@
 import * as fabric from "fabric";
 import rough from "roughjs";
 import { ArrowHeadStyle } from "./constants";
-import { getLineAngle } from "./roughutil"
+import { getLineAngle } from "./roughutil";
 
-export class FabricRoughArrow extends fabric.FabricObject {
+export class FabricRoughArrow extends fabric.Path {
     static get type() {
         return "FabricRoughArrow";
     }
-    constructor(options = {}) {
-        super(options);
+    constructor(path, options = {}) {
+        super(path, options);
         this.name = "Arrow";
         this.points = options.points;
-        this.roughOptions.seed = this.roughOptions.seed ?? Math.random() * 100;
+        this.roughOptions = options.roughOptions;
+        this.roughOptions.seed = this.roughOptions?.seed ?? Math.random() * 100;
         this.roughGenerator = rough.generator();
         this.left = this.left !== 0 ? this.left : options.points[0];
         this.top = this.top !== 0 ? this.top : options.points[1];
+        this.startArrowHeadStyle =
+            options.startArrowHeadStyle || ArrowHeadStyle.NoHead;
+        this.endArrowHeadStyle = options.endArrowHeadStyle || ArrowHeadStyle.Head;
         this._updateRoughArrow();
+        this.controls = fabric.controlsUtils.createPathControls(this, {
+            controlPointStyle: {
+                controlStroke: "slateblue",
+                controlFill: "slateblue",
+            },
+            pointStyle: {
+                controlStroke: "slateblue",
+                controlFill: "slateblue",
+            },
+        });
+        this.on("modifyPath", () => {
+            this.editing = true;
+            this._updateRoughArrow();
+            this.editing = false;
+        });
+    }
+
+    _createPathData(points) {
+        const [x1, y1, x2, y2] = points;
+        return `M ${x1} ${y1} Q 0 0 ${x2} ${y2}`;
     }
 
     _updateRoughArrow() {
-        const [x1, y1, x2, y2] = this.points;
-        const widthOffset = this.left === x1 ? 0 : this.left - x1;
-        const heightOffset = this.top === y1 ? 0 : this.top - y1;
-        let width = x2 - this.left + widthOffset;
-        let height = y2 - this.top + heightOffset;
+        if (this.isDrawing) {
+            const [x1, y1, x2, y2] = this.points;
+            const points = [
+                { x: x1, y: y1 },
+                { x: x2, y: y2 },
+            ];
 
-        const originX = Math.sign(width) < 0 ? "right" : "left";
-        const originY = Math.sign(height) < 0 ? "bottom" : "top";
+            const bounds = fabric.util.makeBoundingBoxFromPoints(points);
 
-        // Gets the top and left based on set origin
-        const relativeCenter = this.getRelativeCenterPoint();
-        // Translates the relativeCenter point as if origin = 0,0
-        const constraint = this.translateToOriginPoint(
-            relativeCenter,
-            originX,
-            originY
-        );
-        this.set({
-            width: Math.abs(width),
-            height: Math.abs(height),
-        });
-        // Put shape back in place
-        this.setPositionByOrigin(constraint, originX, originY);
-        this.setCoords();
-        this.roughArrow = this.roughGenerator.line(
-            -width / 2,
-            -height / 2,
-            width / 2,
-            height / 2,
+            const widthSign = x2 >= x1 ? 1 : -1;
+            const heightSign = y2 >= y1 ? 1 : -1;
+
+            const originX = widthSign < 0 ? "right" : "left";
+            const originY = heightSign < 0 ? "bottom" : "top";
+            const relativeCenter = this.getRelativeCenterPoint();
+            const constraint = this.translateToOriginPoint(
+                relativeCenter,
+                originX,
+                originY
+            );
+            this.set({
+                width: Math.abs(bounds.width),
+                height: Math.abs(bounds.height),
+            });
+            this.setPositionByOrigin(constraint, originX, originY);
+
+            const pathData = this._createPathData([
+                (-bounds.width / 2) * widthSign,
+                (-bounds.height / 2) * heightSign,
+                (bounds.width / 2) * widthSign,
+                (bounds.height / 2) * heightSign,
+            ]);
+
+            this.path = fabric.util.parsePath(pathData);
+        } else {
+            const scaledPath = [
+                [
+                    this.path[0][0],
+                    this.path[0][1] - this.pathOffset.x,
+                    this.path[0][2] - this.pathOffset.y,
+                ],
+                [
+                    this.path[1][0],
+                    this.path[1][1] - this.pathOffset.x,
+                    this.path[1][2] - this.pathOffset.y,
+                    this.path[1][3] - this.pathOffset.x,
+                    this.path[1][4] - this.pathOffset.y,
+                ],
+            ];
+            this.roughArrow = this.roughGenerator.path(
+                fabric.util.joinPath(scaledPath),
+                this.roughOptions
+            );
+            this.setCoords();
+
+            // Use path[0] for start point and path[1] for end point
+            const [, x1, y1] = this.path[0];
+            const [, x, y, x2, y2] = this.path[1];
+            const angleStart = getLineAngle(x - x1, y - y1);
+            const angleEnd = getLineAngle(x2 - x, y2 - y);
+            this._updateArrowHeads(
+                x1 - this.pathOffset.x,
+                y1 - this.pathOffset.y,
+                x2 - this.pathOffset.x,
+                y2 - this.pathOffset.y,
+                angleStart,
+                angleEnd
+            );
+            return;
+        }
+
+        this.roughArrow = this.roughGenerator.path(
+            fabric.util.joinPath(this.path),
             this.roughOptions
         );
-        const angle = getLineAngle(width, height);
-        if (
-            this.endArrowHeadStyle === ArrowHeadStyle.Head ||
-            this.endArrowHeadStyle === ArrowHeadStyle.FilledHead
-        ) {
+
+        const [, x1, y1, x2, y2] = this.path[1];
+        const angleStart = getLineAngle(x1 - this.pathOffset.x, y1 - this.pathOffset.y);
+        const angleEnd = getLineAngle(x2 - this.pathOffset.x, y2 - this.pathOffset.y);
+
+        this._updateArrowHeads(x1, y1, x2, y2, angleStart, angleEnd);
+    }
+
+    _updateArrowHeads(x1, y1, x2, y2, angleStart, angleEnd) {
+        if (this.endArrowHeadStyle !== ArrowHeadStyle.NoHead) {
             const isFilled = this.endArrowHeadStyle === ArrowHeadStyle.FilledHead;
-            const headPath = this._calculateHeadPath(width / 2, height / 2, angle);
+            const headPath = this._calculateHeadPath(x2, y2, angleEnd);
             this.endArrowHead = this.roughGenerator.path(
-                headPath +
-                (isFilled ? "Z" : ""),
-                { ...this.roughOptions, fill: isFilled ? this.roughOptions.stroke : "transparent" }
+                headPath + (isFilled ? "Z" : ""),
+                {
+                    ...this.roughOptions,
+                    fill: isFilled ? this.roughOptions.stroke : "transparent",
+                }
             );
         }
-        if (
-            this.startArrowHeadStyle === ArrowHeadStyle.Head ||
-            this.startArrowHeadStyle === ArrowHeadStyle.FilledHead
-        ) {
+
+        if (this.startArrowHeadStyle !== ArrowHeadStyle.NoHead) {
             const isFilled = this.startArrowHeadStyle === ArrowHeadStyle.FilledHead;
-            const headPath2 = this._calculateHeadPath(
-                -width / 2,
-                -height / 2,
-                angle + Math.PI
-            );
+            const headPath = this._calculateHeadPath(x1, y1, angleStart + Math.PI);
             this.startArrowHead = this.roughGenerator.path(
-                headPath2 +
-                (isFilled ? "Z" : ""),
-                { ...this.roughOptions, fill: isFilled ? this.roughOptions.stroke : "transparent" }
+                headPath + (isFilled ? "Z" : ""),
+                {
+                    ...this.roughOptions,
+                    fill: isFilled ? this.roughOptions.stroke : "transparent",
+                }
             );
         }
     }
-
 
     _calculateHeadPath(x, y, angle, headlen = 30) {
         const x1 = x - headlen * Math.cos(angle - Math.PI / 6);
@@ -117,6 +187,8 @@ export class FabricRoughArrow extends fabric.FabricObject {
     toObject(propertiesToInclude) {
         return {
             ...super.toObject(propertiesToInclude),
+            editing: this.editing,
+            path: this.path,
             points: this.points,
             roughOptions: this.roughOptions,
             startArrowHeadStyle: this.startArrowHeadStyle,
@@ -124,5 +196,6 @@ export class FabricRoughArrow extends fabric.FabricObject {
         };
     }
 }
+
 fabric.classRegistry.setClass(FabricRoughArrow);
 fabric.classRegistry.setSVGClass(FabricRoughArrow);

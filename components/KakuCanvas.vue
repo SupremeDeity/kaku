@@ -166,6 +166,9 @@ declare module "fabric" {
   interface BaseBrush {
     freehandOptions: any;
   }
+  interface FabricObject {
+    isDrawing?: boolean;
+  }
 }
 
 async function initializeCanvas() {
@@ -379,9 +382,10 @@ function handleMouseUp() {
     fabricCanvas.isDragging = false;
     fabricCanvas.selection = currentMode.value === "Select";
     fabricCanvas.isDrawingMode = currentMode.value === "Draw";
-  } else if (shapePlacementMode) {
+  } else if (shapePlacementMode && shape) {
     shapePlacementMode = false;
     shape?.setCoords();
+    shape.isDrawing = false;
     shape = undefined;
     fabricCanvas.requestRenderAll();
     currentMode.value = "Select";
@@ -507,13 +511,13 @@ function drawRoughLine(start: any, end: any) {
     fabricCanvas.requestRenderAll();
     return shape;
   }
-  const line = new FabricRoughLine({
+  const line = new FabricRoughLine(undefined, {
     ...structuredClone(defaultShapeSettings),
     points: [start.x, start.y, end.x, end.y],
-    // ? WARNING: origin is deprecated starting from fabric 6.4
     lockScalingX: true,
     lockScalingY: true,
-    // hasBorders: false,
+    objectCaching: false,
+    isDrawing: true,
   });
   fabricCanvas.add(line);
   fabricCanvas.requestRenderAll();
@@ -527,16 +531,17 @@ function drawRoughArrow(start: any, end: any) {
     fabricCanvas.requestRenderAll();
     return shape;
   }
-  const line = new FabricRoughArrow({
+  const arrow = new FabricRoughArrow(undefined, {
     ...structuredClone(defaultShapeSettings),
     points: [start.x, start.y, end.x, end.y],
-    // ? WARNING: origin is deprecated starting from fabric 6.4
     lockScalingX: true,
     lockScalingY: true,
+    objectCaching: true,
+    isDrawing: true,
   });
-  fabricCanvas.add(line);
+  fabricCanvas.add(arrow);
   fabricCanvas.requestRenderAll();
-  return line;
+  return arrow;
 }
 
 function drawRoughEllipse(start: fabric.Point, end: fabric.Point) {

@@ -2,7 +2,11 @@
 export default defineNuxtConfig({
   compatibilityDate: "2024-04-03",
   devtools: { enabled: true },
-  
+  vite: {
+    build: {
+      sourcemap: true
+    }
+  },
    runtimeConfig: {
     public: {
       commitSha: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "DEV"

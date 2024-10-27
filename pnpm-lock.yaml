@@ -12,8 +12,8 @@ importers:
         specifier: ^0.7.2
         version: 0.7.2(ioredis@5.4.1)(magicast@0.3.5)(rollup@4.21.2)(vite@5.4.2(@types/node@22.5.1)(terser@5.31.6))
       fabric:
-        specifier: ^6.4.2
-        version: 6.4.2
+        specifier: ^6.4.3
+        version: 6.4.3
       fontfaceobserver:
         specifier: ^2.3.0
         version: 2.3.0
@@ -2532,8 +2532,8 @@ packages:
   externality@1.0.2:
     resolution: {integrity: sha512-LyExtJWKxtgVzmgtEHyQtLFpw1KFhQphF9nTG8TpAIVkiI/xQ3FJh75tRFLYl4hkn7BNIIdLJInuDAavX35pMw==}
 
-  fabric@6.4.2:
-    resolution: {integrity: sha512-wsXxy45eHQ66t66RSjti9lM6Z6iC+EBhrxvWWkZlcrhsI8Lxgn2mii/o2UqRpUr4IwzmggTZq/SAGjtZ6mHTtQ==}
+  fabric@6.4.3:
+    resolution: {integrity: sha512-z/bJna3kWOBv+wmvVK4XxUQgCXLGb//VaSr5xPFIP708obH7472uuVsWbXam+xq+y21bLBtr4OHO1HuJyYi4FQ==}
     engines: {node: '>=16.20.0'}
 
   fast-deep-equal@3.1.3:
@@ -7856,7 +7856,7 @@ snapshots:
       pathe: 1.1.2
       ufo: 1.5.4
 
-  fabric@6.4.2:
+  fabric@6.4.3:
     optionalDependencies:
       canvas: 2.11.2
       jsdom: 20.0.3(canvas@2.11.2)

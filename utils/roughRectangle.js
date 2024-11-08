@@ -20,16 +20,16 @@ export class FabricRoughRectangle extends fabric.Rect {
 
     _updateRoughRectangle() {
         const [x1, y1, x2, y2] = this.points;
+        const points = [
+            { x: x1, y: y1 },
+            { x: x2, y: y2 },
+        ];
+        const bounds = fabric.util.makeBoundingBoxFromPoints(points);
+        const widthSign = x2 >= x1 ? 1 : -1;
+        const heightSign = y2 >= y1 ? 1 : -1;
 
-        const widthOffset = this.left === x1 ? 0 : this.left - x1;
-        const heightOffset = this.top === y1 ? 0 : this.top - y1;
-        let width = x2 - this.left + widthOffset;
-        let height = y2 - this.top + heightOffset;
-
-        const originX = Math.sign(width) < 0 ? "right" : "left";
-        const originY = Math.sign(height) < 0 ? "bottom" : "top";
-        width = Math.abs(width);
-        height = Math.abs(height);
+        const originX = widthSign < 0 ? "right" : "left";
+        const originY = heightSign < 0 ? "bottom" : "top";
 
         // Gets the top and left based on set origin
         const relativeCenter = this.getRelativeCenterPoint();
@@ -42,8 +42,8 @@ export class FabricRoughRectangle extends fabric.Rect {
 
         // Shape changing stuff
         this.set({
-            width: width,
-            height: height,
+            width: bounds.width,
+            height: bounds.height,
         });
 
         const x = -this.width / 2;
@@ -53,28 +53,27 @@ export class FabricRoughRectangle extends fabric.Rect {
             this.roughRectangle = this.roughGenerator.rectangle(
                 x,
                 y,
-                width,
-                height,
+                bounds.width,
+                bounds.height,
                 this.roughOptions
             );
         } else {
-            const radius = calculateCornerRadius(Math.min(width, height));
+            const radius = calculateCornerRadius(Math.min(bounds.width, bounds.height));
             const path = `
       M ${x + radius} ${y}
-      h ${width - 2 * radius}
+      h ${bounds.width - 2 * radius}
       a ${radius} ${radius} 0 0 1 ${radius} ${radius}
-      v ${height - 2 * radius}
+      v ${bounds.height - 2 * radius}
       a ${radius} ${radius} 0 0 1 -${radius} ${radius}
-      h ${-(width - 2 * radius)}
+      h ${-(bounds.width - 2 * radius)}
       a ${radius} ${radius} 0 0 1 -${radius} -${radius}
-      v ${-(height - 2 * radius)}
+      v ${-(bounds.height - 2 * radius)}
       a ${radius} ${radius} 0 0 1 ${radius} -${radius}
       z
     `;
             this.roughRectangle = this.roughGenerator.path(path, {
                 ...this.roughOptions,
                 roughness: (this.roughOptions.roughness < 1 ? 0 : this.roughOptions.roughness + 1)
-                ,
             });
         }
 

@@ -7,7 +7,6 @@ export class FabricRoughEllipse extends fabric.Ellipse {
     }
     constructor(options = {}) {
         super(options);
-        // this.points = [100, 100, 200, 300];
         this.name = "Ellipse"
         this.points = options.points;
         this.minSize = options.minSize || 5;
@@ -21,23 +20,24 @@ export class FabricRoughEllipse extends fabric.Ellipse {
     _updateRoughEllipse() {
         let [x1, y1, x2, y2] = this.points;
 
-        const widthOffset = this.left === x1 ? 0 : this.left - x1;
-        const heightOffset = this.top === y1 ? 0 : this.top - y1;
-        let width = x2 - this.left + widthOffset;
-        let height = y2 - this.top + heightOffset;
+        const points = [
+            { x: x1, y: y1 },
+            { x: x2, y: y2 },
+        ];
+        const bounds = fabric.util.makeBoundingBoxFromPoints(points);
+        const widthSign = x2 >= x1 ? 1 : -1;
+        const heightSign = y2 >= y1 ? 1 : -1;
 
-        const originX = Math.sign(width) < 0 ? 'right' : 'left';
-        const originY = Math.sign(height) < 0 ? 'bottom' : 'top';
-        width = Math.abs(width)
-        height = Math.abs(height)
+        const originX = widthSign < 0 ? "right" : "left";
+        const originY = heightSign < 0 ? "bottom" : "top";
         // Gets the top and left based on set origin
         const relativeCenter = this.getRelativeCenterPoint()
         // Translates the relativeCenter point as if origin = 0,0
         const constraint = this.translateToOriginPoint(relativeCenter, originX, originY)
 
         this.set({
-            width: width,
-            height: height,
+            width: bounds.width,
+            height: bounds.height,
         });
 
         // Put shape back in place
@@ -48,10 +48,10 @@ export class FabricRoughEllipse extends fabric.Ellipse {
         );
 
         this.roughEllipse = this.roughGenerator.ellipse(
-            width / 2,
-            height / 2,
-            width,
-            height,
+            bounds.width / 2,
+            bounds.height / 2,
+            bounds.width,
+            bounds.height,
             this.roughOptions
         );
         this.setCoords();

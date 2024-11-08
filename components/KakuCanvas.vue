@@ -547,7 +547,7 @@ function setMode(mode: (typeof drawingModes)[number]) {
           const img = await fabric.FabricImage.fromURL(reader.result as string);
           // @ts-expect-error custom attribute
           img.name = "Image";
-          fabricCanvas.centerObject(img);
+          fabricCanvas.viewportCenterObject(img);
           fabricCanvas.add(img);
           // @ts-expect-error custom event
           fabricCanvas.fire("custom:added");

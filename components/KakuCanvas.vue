@@ -33,7 +33,7 @@
                 ? 'bg-blue-400 hover:bg-blue-300'
                 : 'bg-gray-900 hover:bg-gray-800/60',
             ]"
-            @click="setMode(mode)"
+            @click="currentMode = mode"
           >
             <Icon :name="drawingModesIconMap[mode]" />
           </button>
@@ -402,74 +402,6 @@ async function handleKeyEvent(e: any) {
     });
     fabricCanvas.discardActiveObject();
     fabricCanvas.requestRenderAll();
-    // } else if (e.key === "Enter" && currentMode.value === "Select") {
-    const activeObject = fabricCanvas.getActiveObjects();
-    if (
-      activeObject.length === 1 &&
-      (activeObject[0] instanceof FabricRoughRectangle ||
-        activeObject[0] instanceof FabricRoughEllipse ||
-        activeObject[0] instanceof FabricRoughDiamond)
-    ) {
-      const group = new fabric.Group([], {
-        subTargetCheck: true,
-      });
-      const shape = await activeObject[0].clone();
-      const text = new fabric.Textbox("Edit text", {
-        name: "Text",
-        fontFamily: "Virgil",
-        left: shape.left,
-        top: shape.top,
-        textAlign: "center",
-        fill: "#ffffff",
-        width: shape.width,
-        height: shape.height,
-        // ? WARNING: origin is deprecated starting from fabric 6.4
-        originX: shape.originX,
-        originY: shape.originY,
-      });
-      group.add(shape, text);
-
-      // This is a special case where editing text is quite awkward without doing this hack
-      text.on("editing:exited", () => {
-        fabricCanvas.discardActiveObject();
-        group.add(text);
-        fabricCanvas.remove(text);
-        fabricCanvas.requestRenderAll();
-      });
-
-      text.on("changed", () => {
-        if (
-          group.item(0).height < text.height ||
-          group.item(0).width < text.width
-        ) {
-          group
-            .item(0)
-            // @ts-expect-error custom function
-            .updateRoughOptions({
-              size: { height: text.height, width: text.width },
-            });
-        }
-      });
-
-      // group.on("scaling", () => {
-      //   text.set({ width: group.width, dirty: true });
-
-      //   fabricCanvas.requestRenderAll();
-      // });
-
-      group.on("mousedblclick", () => {
-        const iText = group.item(1) as fabric.Textbox;
-        fabricCanvas.add(...group.remove(iText));
-        fabricCanvas.setActiveObject(iText);
-        iText.enterEditing();
-        iText.selectAll();
-        fabricCanvas.requestRenderAll();
-      });
-      fabricCanvas.add(group);
-      fabricCanvas.remove(activeObject[0]);
-      fabricCanvas.discardActiveObject();
-      fabricCanvas.requestRenderAll();
-    }
   } else if (e.ctrlKey && e.key === "z") {
     history.undo();
     e.preventDefault();
@@ -594,10 +526,48 @@ function setMode(mode: (typeof drawingModes)[number]) {
   currentMode.value = mode;
   fabricCanvas.isDrawingMode = mode === "Draw";
   fabricCanvas.selection = mode === "Select";
+
+  // Set object selectability based on mode
   fabricCanvas.forEachObject((obj) => {
     obj.selectable = mode === "Select";
     obj.evented = mode === "Select";
   });
+
+  // Handle Image Mode
+  if (mode === "Image") {
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/*"; // Accept only image files
+
+    fileInput.onchange = async (event) => {
+      const file = (event.target as HTMLInputElement).files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = async () => {
+          const img = await fabric.FabricImage.fromURL(
+            reader.result as string,
+            {},
+            {}
+          );
+          // @ts-expect-error custom attribute
+          img.name = "Image";
+          fabricCanvas.centerObject(img);
+          fabricCanvas.add(img);
+          // @ts-expect-error custom event
+          fabricCanvas.fire("custom:added");
+          fabricCanvas.requestRenderAll();
+          currentMode.value = "Select";
+        };
+        reader.readAsDataURL(file);
+      } else {
+        currentMode.value = "Select";
+      }
+    };
+
+    fileInput.oncancel = () => (currentMode.value = "Select");
+    fileInput.click();
+  }
+
   fabricCanvas.requestRenderAll();
 }
 

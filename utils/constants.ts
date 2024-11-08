@@ -10,6 +10,7 @@ export const drawingModes = [
   "Text",
   "Line",
   "Arrow",
+  "Image"
 ] as const;
 
 export const drawingModesIconMap = {
@@ -21,6 +22,7 @@ export const drawingModesIconMap = {
   Select: "ph:cursor-duotone",
   Line: "material-symbols:pen-size-3",
   Arrow: "ph:arrow-bend-left-up-bold",
+  Image: "ph:image"
 };
 
 export const supportedFonts = ["Kalam", "Itim", "Virgil", "Just Another Hand"];

@@ -544,11 +544,7 @@ function setMode(mode: (typeof drawingModes)[number]) {
       if (file) {
         const reader = new FileReader();
         reader.onload = async () => {
-          const img = await fabric.FabricImage.fromURL(
-            reader.result as string,
-            {},
-            {}
-          );
+          const img = await fabric.FabricImage.fromURL(reader.result as string);
           // @ts-expect-error custom attribute
           img.name = "Image";
           fabricCanvas.centerObject(img);

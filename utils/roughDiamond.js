@@ -20,28 +20,28 @@ export class FabricRoughDiamond extends fabric.FabricObject {
 
     _updateRoughDiamond() {
         const [x1, y1, x2, y2] = this.points;
-        const widthOffset = this.left === x1 ? 0 : this.left - x1;
-        const heightOffset = this.top === y1 ? 0 : this.top - y1;
-        let width = x2 - this.left + widthOffset;
-        let height = y2 - this.top + heightOffset;
+        const points = [
+            { x: x1, y: y1 },
+            { x: x2, y: y2 },
+        ];
+        const bounds = fabric.util.makeBoundingBoxFromPoints(points);
+        const widthSign = x2 >= x1 ? 1 : -1;
+        const heightSign = y2 >= y1 ? 1 : -1;
 
-        const originX = Math.sign(width) < 0 ? 'right' : 'left';
-        const originY = Math.sign(height) < 0 ? 'bottom' : 'top';
-        width = Math.abs(width)
-        height = Math.abs(height)
-
+        const originX = widthSign < 0 ? "right" : "left";
+        const originY = heightSign < 0 ? "bottom" : "top";
         const relativeCenter = this.getRelativeCenterPoint();
         const constraint = this.translateToOriginPoint(relativeCenter, originX, originY);
 
-        this.set({ width: width, height: height });
+        this.set({ width: bounds.width, height: bounds.height });
         this.setPositionByOrigin(constraint, originX, originY);
 
         this.roughOptions.preserveVertices = this.rounded;
         if (this.rounded) {
-            const topX = width / 2, topY = 0;
-            const rightX = width, rightY = height / 2;
-            const bottomX = width / 2, bottomY = height;
-            const leftX = 0, leftY = height / 2;
+            const topX = bounds.width / 2, topY = 0;
+            const rightX = bounds.width, rightY = bounds.height / 2;
+            const bottomX = bounds.width / 2, bottomY = bounds.height;
+            const leftX = 0, leftY = bounds.height / 2;
 
             const verticalRadius = calculateCornerRadius(Math.abs(topX - leftX));
             const horizontalRadius = calculateCornerRadius(Math.abs(rightY - topY));
@@ -60,10 +60,10 @@ export class FabricRoughDiamond extends fabric.FabricObject {
             this.roughDiamond = this.roughGenerator.path(path, this.roughOptions);
         } else {
             const diamondPoints = [
-                [width / 2, 0],
-                [width, height / 2],
-                [width / 2, height],
-                [0, height / 2]
+                [bounds.width / 2, 0],
+                [bounds.width, bounds.height / 2],
+                [bounds.width / 2, bounds.height],
+                [0, bounds.height / 2]
             ];
 
             this.roughDiamond = this.roughGenerator.polygon(diamondPoints, this.roughOptions);

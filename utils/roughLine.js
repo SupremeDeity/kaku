@@ -97,7 +97,6 @@ export class FabricRoughLine extends fabric.Path {
                 this.roughOptions
             );
             this.setCoords()
-            console.log(scaledPath);
             return;
         }
         this.roughLine = this.roughGenerator.path(

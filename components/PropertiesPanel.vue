@@ -25,7 +25,7 @@
               :value="props.selectedObjects[0].roughOptions.stroke"
               @change="
 	              (args: string) =>
-	                updateProperty(props.selectedObjects[0], 'roughOptions.stroke', args, )
+	                updateProperty(props.selectedObjects[0], 'roughOptions.stroke', args)
 	            "
             />
           </div>

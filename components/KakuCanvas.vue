@@ -51,7 +51,7 @@
     </div>
     <PropertiesPanel
       :fabric-canvas="fabricCanvas"
-      :selected-objects="selectedObjects"
+      :selected-objects="toRaw(selectedObjects)"
     />
     <div
       v-if="currentMode === 'Draw'"
@@ -223,11 +223,11 @@ async function initializeCanvas() {
   fabricCanvas.on("mouse:move", handleMouseMove);
   fabricCanvas.on("mouse:up:before", handleMouseUp);
   fabricCanvas.on("selection:created", (e) => {
-    console.log(e.selected[0]);
-    selectedObjects.value = e.selected;
+    console.log("Selection Created: ", e.selected);
+    selectedObjects.value = fabricCanvas.getActiveObjects();
   });
-  fabricCanvas.on("selection:updated", (e) => {
-    selectedObjects.value = e.selected;
+  fabricCanvas.on("selection:updated", (_) => {
+    selectedObjects.value = fabricCanvas.getActiveObjects();
   });
   fabricCanvas.on("selection:cleared", () => {
     selectedObjects.value = null;

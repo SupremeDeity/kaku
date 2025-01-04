@@ -10,7 +10,7 @@
       >
         <button
           :class="[
-            'bg-cyan-600 p-1 font-bold rounded w-8 h-8 flex items-center justify-center',
+            'bg-cyan-600 p-1 font-bold rounded w-8 h-8 flex items-center justify-center hover:bg-cyan-500',
             style === option ? 'outline outline-2 outline-cyan-200' : '',
           ]"
           @click="changeOption(option)"

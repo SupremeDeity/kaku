@@ -9,7 +9,7 @@
       >{{
         props.selectedObjects.length > 1
           ? "Multi-Selection"
-          : props.selectedObjects[0].name
+          : props?.selectedObjects[0]?.name
       }}</span
     >
     <div
@@ -302,38 +302,70 @@
         </div>
       </template>
       <!-- ---------- </TextBox SPECIFIC THINGS>  -->
-
-      <!-- ---------- Common Properties ----------  -->
-      <div>
-        <span class="font-bold uppercase text-xs text-cyan-200">Opacity</span>
-        <!-- eslint-disable-next-line vue/html-self-closing -->
-        <input
-          class="block"
-          type="range"
-          :value="props.selectedObjects[0].opacity"
-          :max="1"
-          :min="0"
-          :step="0.1"
-          @input="
-            (event) =>
-              updateProperty(
-                props.selectedObjects[0],
-                'opacity',
-                // @ts-expect-error it does exist
-                event.target?.value ?? 1
-              )
-          "
-        />
-      </div>
-      <!-- ---------- </ Common Properties> ----------  -->
     </div>
+    <!-- ---------- Common Properties ----------  -->
+    <div class="my-4">
+      <span class="font-bold uppercase text-xs text-cyan-200">Opacity</span>
+      <!-- eslint-disable-next-line vue/html-self-closing -->
+      <input
+        class="block"
+        type="range"
+        :value="props.selectedObjects[0].opacity"
+        :max="1"
+        :min="0"
+        :step="0.1"
+        @input="
+          (event) =>
+            updatePropertyEach(
+              props.selectedObjects,
+              'opacity',
+              // @ts-expect-error it does exist
+              event.target?.value ?? 1
+            )
+        "
+      />
+    </div>
+    <div class="flex gap-4">
+      <UTooltip text="Send to Back">
+        <UButton
+          class="!bg-cyan-600 !text-white hover:!bg-cyan-500"
+          icon="i-material-symbols-flip-to-back"
+          @click="bringToBack(props.selectedObjects)"
+        />
+      </UTooltip>
+      <UTooltip text="Bring backward">
+        <UButton
+          class="!bg-cyan-600 !text-white hover:!bg-cyan-500"
+          icon="i-material-symbols-arrow-downward-alt"
+          @click="bringBackward(props.selectedObjects)"
+        />
+      </UTooltip>
+      <UTooltip text="Bring forward">
+        <UButton
+          class="!bg-cyan-600 !text-white hover:!bg-cyan-500"
+          icon="i-material-symbols-arrow-upward-alt"
+          @click="bringForward(props.selectedObjects)"
+        />
+      </UTooltip>
+      <UTooltip text="Send to Front">
+        <UButton
+          class="!bg-cyan-600 !text-white hover:!bg-cyan-500"
+          icon="i-material-symbols-flip-to-front"
+          @click="bringToFront(props.selectedObjects)"
+        />
+      </UTooltip>
+    </div>
+    <!-- ---------- </ Common Properties> ----------  -->
   </div>
 </template>
 <script lang="ts" setup>
 import type { FabricObject } from "fabric";
 import lodashSet from "lodash.set";
 import { ArrowHeadStyle } from "~/utils/constants";
+import RoughMultiPicker from "./RoughMultiPicker.vue";
+
 const props = defineProps(["selectedObjects", "fabricCanvas"]);
+
 function updateProperty(
   obj: FabricObject,
   key: string,
@@ -343,7 +375,38 @@ function updateProperty(
   lodashSet(obj, key, value);
   if (dirty) lodashSet(obj, "dirty", dirty);
   // @ts-expect-error custom function on rough objects
-  obj.update && obj.update();
+  if (obj.update) obj.update();
+  props.fabricCanvas.fire("object:modified");
+  props.fabricCanvas.requestRenderAll();
+}
+
+// Updates the property for each object in array
+function updatePropertyEach(
+  objs: FabricObject[],
+  key: string,
+  value: any,
+  dirty?: boolean
+) {
+  objs.forEach((obj) => updateProperty(obj, key, value, dirty));
+}
+
+function bringToFront(objs: FabricObject[]) {
+  objs.forEach((obj) => props.fabricCanvas.bringObjectToFront(obj));
+  props.fabricCanvas.fire("object:modified");
+  props.fabricCanvas.requestRenderAll();
+}
+function bringForward(objs: FabricObject[]) {
+  objs.forEach((obj) => props.fabricCanvas.bringObjectForward(obj));
+  props.fabricCanvas.fire("object:modified");
+  props.fabricCanvas.requestRenderAll();
+}
+function bringToBack(objs: FabricObject[]) {
+  objs.forEach((obj) => props.fabricCanvas.sendObjectToBack(obj));
+  props.fabricCanvas.fire("object:modified");
+  props.fabricCanvas.requestRenderAll();
+}
+function bringBackward(objs: FabricObject[]) {
+  objs.forEach((obj) => props.fabricCanvas.sendObjectBackwards(obj));
   props.fabricCanvas.fire("object:modified");
   props.fabricCanvas.requestRenderAll();
 }

@@ -59,6 +59,7 @@
             <UInput
               :model-modifiers="{ trim: true }"
               :value="model?.replace('#', '')"
+              :model-value="model?.replace('#', '')"
               maxlength="8"
               color="cyan"
               @input="

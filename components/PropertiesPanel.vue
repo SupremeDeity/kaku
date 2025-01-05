@@ -2,7 +2,7 @@
   <div
     v-if="props.selectedObjects"
     :key="props.selectedObjects"
-    class="p-4 absolute left-4 top-16 z-[1000] bg-cyan-950 rounded text-white min-w-52 border border-cyan-800 select-none"
+    class="scrollbar p-4 absolute left-4 top-16 z-[1000] bg-cyan-950 rounded text-white min-w-52 border border-cyan-800 select-none overflow-y-auto max-h-[80%]"
   >
     <span
       class="text-xs bg-cyan-900 text-cyan-400 p-1 rounded border border-cyan-700"
@@ -391,23 +391,49 @@ function updatePropertyEach(
 }
 
 function bringToFront(objs: FabricObject[]) {
-  objs.forEach((obj) => props.fabricCanvas.bringObjectToFront(obj));
-  props.fabricCanvas.fire("object:modified");
-  props.fabricCanvas.requestRenderAll();
+  const rawObj = toRaw(objs);
+  rawObj.forEach((obj) => props.fabricCanvas.bringObjectToFront(obj));
+  props.fabricCanvas.renderAll();
 }
 function bringForward(objs: FabricObject[]) {
-  objs.forEach((obj) => props.fabricCanvas.bringObjectForward(obj));
-  props.fabricCanvas.fire("object:modified");
-  props.fabricCanvas.requestRenderAll();
+  const rawObj = toRaw(objs);
+  rawObj.forEach((obj) => props.fabricCanvas.bringObjectForward(obj, true));
+  props.fabricCanvas.renderAll();
 }
 function bringToBack(objs: FabricObject[]) {
-  objs.forEach((obj) => props.fabricCanvas.sendObjectToBack(obj));
-  props.fabricCanvas.fire("object:modified");
-  props.fabricCanvas.requestRenderAll();
+  const rawObj = toRaw(objs);
+  rawObj.forEach((obj) => props.fabricCanvas.sendObjectToBack(obj, true));
+  props.fabricCanvas.renderAll();
 }
 function bringBackward(objs: FabricObject[]) {
-  objs.forEach((obj) => props.fabricCanvas.sendObjectBackwards(obj));
-  props.fabricCanvas.fire("object:modified");
-  props.fabricCanvas.requestRenderAll();
+  const rawObj = toRaw(objs);
+  rawObj.forEach((obj) => props.fabricCanvas.sendObjectBackwards(obj));
+  props.fabricCanvas.renderAll();
 }
 </script>
+<style lang="css" scoped>
+.scrollbar {
+  scrollbar-width: thin; /* For Firefox */
+  scrollbar-color: theme("colors.cyan.700") transparent; /* For Firefox */
+}
+
+/* Webkit-based browsers (Chrome, Safari, Edge) */
+.scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scrollbar::-webkit-scrollbar-track {
+  background: transparent; /* Track color */
+  border-radius: 4px;
+}
+
+.scrollbar::-webkit-scrollbar-thumb {
+  background: theme("colors.cyan.700"); /* Thumb color */
+  border-radius: 4px;
+}
+
+.scrollbar::-webkit-scrollbar-thumb:hover {
+  background: theme("colors.cyan.600"); /* Thumb color on hover */
+}
+</style>

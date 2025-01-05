@@ -1,4 +1,5 @@
 import * as fabric from "fabric";
+import cloneDeep from "lodash.clonedeep"
 
 class CanvasHistory {
   constructor(canvas) {
@@ -14,7 +15,7 @@ class CanvasHistory {
   }
 
   _saveCanvasState() {
-    const jsonCanvas = structuredClone(this.canvas.toObject(["name", "padding"]).objects)
+    const jsonCanvas = cloneDeep(this.canvas.toObject(["name", "padding"]).objects)
     this.history.push(jsonCanvas);
 
     this._saveChangesToLocal(jsonCanvas)

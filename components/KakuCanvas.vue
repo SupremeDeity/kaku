@@ -51,7 +51,7 @@
     </div>
     <PropertiesPanel
       :fabric-canvas="fabricCanvas"
-      :selected-objects="toRaw(selectedObjects)"
+      :selected-objects="selectedObjects"
     />
     <div
       v-if="currentMode === 'Draw'"
@@ -181,7 +181,6 @@ async function initializeCanvas() {
     selection: currentMode.value === "Select",
     enablePointerEvents: true,
     enableRetinaScaling: true,
-    skipOffscreen: false,
     selectionKey: "shiftKey",
   });
 

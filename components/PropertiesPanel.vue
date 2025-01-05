@@ -2,7 +2,7 @@
   <div
     v-if="props.selectedObjects"
     :key="props.selectedObjects"
-    class="p-4 absolute left-4 top-16 z-[1000] bg-cyan-950 rounded text-white min-w-52 border border-cyan-800 select-none"
+    class="scrollbar p-4 absolute left-4 top-16 z-[1000] bg-cyan-950 rounded text-white min-w-52 border border-cyan-800 select-none overflow-y-auto max-h-[80%]"
   >
     <span
       class="text-xs bg-cyan-900 text-cyan-400 p-1 rounded border border-cyan-700"
@@ -411,3 +411,29 @@ function bringBackward(objs: FabricObject[]) {
   props.fabricCanvas.requestRenderAll();
 }
 </script>
+<style lang="css" scoped>
+.scrollbar {
+  scrollbar-width: thin; /* For Firefox */
+  scrollbar-color: theme("colors.cyan.800") transparent; /* For Firefox */
+}
+
+/* Webkit-based browsers (Chrome, Safari, Edge) */
+.scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scrollbar::-webkit-scrollbar-track {
+  background: transparent; /* Track color */
+  border-radius: 4px;
+}
+
+.scrollbar::-webkit-scrollbar-thumb {
+  background: theme("colors.cyan.800"); /* Thumb color */
+  border-radius: 4px;
+}
+
+.scrollbar::-webkit-scrollbar-thumb:hover {
+  background: theme("colors.cyan.600"); /* Thumb color on hover */
+}
+</style>

@@ -123,7 +123,6 @@ const props = defineProps<{
 }>();
 const emit = defineEmits(["change"]);
 const model = ref(props.value);
-console.log(model.value);
 
 const openEyeDropper = () => {
   // @ts-expect-error Well it does exist

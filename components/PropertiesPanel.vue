@@ -175,7 +175,7 @@
 	                updateProperty(
 	                  props.selectedObjects[0],
 	                  'rounded',
-	                  value === 'Edged' ? false : true,
+	                  value !== 'Edged',
 	                )
 	            "
           />
@@ -266,7 +266,7 @@
             :options="supportedFonts"
             :model-value="props.selectedObjects[0].fontFamily"
             @change="
-              (value) => {
+              (value: any) => {
                 updateProperty(
                   props.selectedObjects[0],
                   'fontFamily',

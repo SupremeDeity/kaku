@@ -217,7 +217,7 @@ async function initializeCanvas() {
       height: window.document.documentElement.clientHeight,
     });
   });
-  fabricCanvas.on("mouse:wheel", handleZoom);
+  fabricCanvas.on("mouse:wheel", handleScroll);
   fabricCanvas.on("mouse:down:before", handleMouseDown);
   fabricCanvas.on("mouse:move", handleMouseMove);
   fabricCanvas.on("mouse:up:before", handleMouseUp);
@@ -287,17 +287,28 @@ async function paste() {
   fabricCanvas.requestRenderAll();
 }
 
-function handleZoom(opt: any) {
+function handleScroll(opt: any) {
   const delta = opt.e.deltaY;
-  let zoom = fabricCanvas.getZoom();
-  zoom *= 0.999 ** delta;
-  if (zoom > 20) zoom = 20;
-  if (zoom < 0.01) zoom = 0.01;
-  fabricCanvas.zoomToPoint(
-    new fabric.Point(opt.e.offsetX, opt.e.offsetY),
-    zoom
-  );
-
+  const vpt = fabricCanvas.viewportTransform;
+  // Zoom if Ctrl pressed
+  if (opt.e.ctrlKey) {
+    let zoom = fabricCanvas.getZoom();
+    zoom *= 0.999 ** delta;
+    if (zoom > 20) zoom = 20;
+    if (zoom < 0.01) zoom = 0.01;
+    fabricCanvas.zoomToPoint(
+      new fabric.Point(opt.e.offsetX, opt.e.offsetY),
+      zoom
+    );
+  }
+  // Scroll canvas horizontally if Shift pressed
+  else if (opt.e.shiftKey) {
+    vpt[4] -= delta;
+  }
+  // Otherwise just scroll vertically
+  else {
+    vpt[5] -= delta;
+  }
   fabricCanvas.requestRenderAll();
   opt.e.preventDefault();
   opt.e.stopPropagation();

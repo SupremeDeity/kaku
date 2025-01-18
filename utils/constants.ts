@@ -2,6 +2,7 @@ import type { FabricObjectProps } from "fabric";
 import type { Options } from "roughjs/bin/core";
 
 export const drawingModes = [
+  "Hand (Panning)",
   "Select",
   "Draw",
   "Ellipse",
@@ -14,6 +15,7 @@ export const drawingModes = [
 ] as const;
 
 export const drawingModesIconMap = {
+  "Hand (Panning)": "ph:hand-duotone",
   Draw: "ph:pencil-duotone",
   Ellipse: "ph:circle-bold",
   Rectangle: "ph:rectangle-bold",

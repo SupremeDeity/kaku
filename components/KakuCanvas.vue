@@ -6,13 +6,15 @@
     @keydown="handleKeyEvent"
   >
     <div class="absolute bottom-2 right-2 z-[1000] p-2 flex gap-1">
-      <UButton
-        to="https://github.com/supremedeity/kaku"
-        target="_blank"
-        icon="i-ph:github-logo-duotone"
-        variant="soft"
-        color="cyan"
-      />
+      <UTooltip>
+        <UButton
+          to="https://github.com/supremedeity/kaku"
+          target="_blank"
+          icon="i-ph:github-logo-duotone"
+          variant="soft"
+          color="cyan"
+        />
+      </UTooltip>
       <UTooltip
         ><UButton variant="soft" color="cyan" icon="i-ph:info-duotone" />
         <template #text
@@ -22,13 +24,21 @@
       >
     </div>
     <div
-      class="absolute left-1/2 -translate-x-1/2 z-[1000] top-3 flex gap-1 bg-gray-500 p-2 rounded"
+      v-if="!isContentVisible"
+      class="absolute bottom-4 left-0 right-0 mx-auto z-[1000] text-center"
+    >
+      <UButton variant="soft" color="cyan" @click="scrollToContent"
+        >Scroll to content</UButton
+      >
+    </div>
+    <div
+      class="absolute left-1/2 -translate-x-1/2 z-[1000] top-3 flex items-center gap-1 bg-gray-500 md:p-2 p-1.5 rounded"
     >
       <div v-for="mode in drawingModes" :key="mode">
         <UTooltip :text="mode">
           <button
             :class="[
-              'flex items-center p-2  text-white rounded  transition-colors',
+              'flex items-center md:p-2 p-1 text-white rounded transition-colors',
               mode === currentMode
                 ? 'bg-blue-400 hover:bg-blue-300'
                 : 'bg-gray-900 hover:bg-gray-800/60',
@@ -39,11 +49,11 @@
           </button>
         </UTooltip>
       </div>
-      <div class="border border-gray-600" />
+      <div class="border border-gray-600 md:h-8 h-6" />
 
       <UDropdown :items="dropdownItems" :popper="{ placement: 'bottom-start' }">
         <button
-          class="flex bg-cyan-900 text-white rounded p-2 hover:bg-cyan-800/60 transition-colors"
+          class="flex bg-cyan-900 text-white rounded md:p-2 p-1 hover:bg-cyan-800/60 transition-colors"
         >
           <Icon name="i-material-symbols:menu-rounded" />
         </button>
@@ -63,10 +73,10 @@
           <ColorPicker
             :value="fabricCanvas.freeDrawingBrush?.color"
             @change="
-              (val) => {
+              (val: any) => {
                 if (fabricCanvas.freeDrawingBrush) {
                   fabricCanvas.freeDrawingBrush.color = val;
-                  // Neccessary to force pull new value of fabricCanvas.freeDrawingBrush.color
+                  // Necessary to force pull new value of fabricCanvas.freeDrawingBrush.color
                   $forceUpdate();
                 }
               }
@@ -88,7 +98,7 @@
             'material-symbols:pen-size-4',
           ]"
           @change="
-            (val) => {
+            (val: any) => {
               if (fabricCanvas.freeDrawingBrush?.freehandOptions)
                 fabricCanvas.freeDrawingBrush.freehandOptions.size =
                   Number.parseInt(val);
@@ -161,6 +171,7 @@ let history: CanvasHistory;
 let _clipboard: any;
 
 const currentMode: Ref<(typeof drawingModes)[number]> = ref("Select");
+const isContentVisible: Ref<boolean> = ref(true);
 
 declare module "fabric" {
   interface BaseBrush {
@@ -209,6 +220,9 @@ async function initializeCanvas() {
   ).then(async () => {
     history = new CanvasHistory(fabricCanvas);
     await history.init();
+
+    restoreViewportState();
+    isContentVisible.value = checkContentVisible();
   });
 
   window.addEventListener("resize", () => {
@@ -230,6 +244,22 @@ async function initializeCanvas() {
   });
   fabricCanvas.on("selection:cleared", () => {
     selectedObjects.value = null;
+  });
+
+  gestureDetector(fabricCanvas.upperCanvasEl, {
+    onZoom(scale, previousScale, center) {
+      fabricCanvas.selection = false;
+      const zoom = fabricCanvas.getZoom();
+      let newZoom = zoom * Math.pow(scale / previousScale, 1);
+      newZoom = Math.min(newZoom, 20);
+      newZoom = Math.max(newZoom, 0.01);
+
+      fabricCanvas.zoomToPoint(center, newZoom);
+      fabricCanvas.requestRenderAll();
+    },
+    onGestureEnd() {
+      fabricCanvas.selection = currentMode.value === "Select";
+    },
   });
 }
 
@@ -266,6 +296,7 @@ function copy() {
 async function paste() {
   const clonedObj = await _clipboard.clone(["name", "padding"]);
   fabricCanvas.discardActiveObject();
+  // noinspection SpellCheckingInspection
   clonedObj.set({
     left: clonedObj.left + 10,
     top: clonedObj.top + 10,
@@ -304,14 +335,18 @@ function handleScroll(opt: any) {
   // Scroll canvas horizontally if Shift pressed
   else if (opt.e.shiftKey) {
     vpt[4] -= delta;
+    isContentVisible.value = checkContentVisible();
   }
   // Otherwise just scroll vertically
   else {
     vpt[5] -= delta;
+    isContentVisible.value = checkContentVisible();
   }
+
   fabricCanvas.requestRenderAll();
   opt.e.preventDefault();
   opt.e.stopPropagation();
+  saveViewportState();
 }
 
 let shapePlacementMode = false;
@@ -323,7 +358,7 @@ let lastPosY: number;
 function handleMouseDown(o: any) {
   const evt = o.e;
   // ON DRAGGING
-  if (evt.button === 1) {
+  if (evt.button === 1 || currentMode.value === "Hand (Panning)") {
     fabricCanvas.isDrawingMode = false;
     // @ts-expect-error custom property added to fabricCanvas
     fabricCanvas.isDragging = true;
@@ -392,6 +427,7 @@ function handleMouseUp() {
     fabricCanvas.isDragging = false;
     fabricCanvas.selection = currentMode.value === "Select";
     fabricCanvas.isDrawingMode = currentMode.value === "Draw";
+    saveViewportState();
   } else if (shapePlacementMode && shape) {
     shapePlacementMode = false;
     shape?.setCoords();
@@ -403,6 +439,55 @@ function handleMouseUp() {
     // on mouse up instead of as soon as its created
     fabricCanvas.fire("custom:added");
   }
+
+  isContentVisible.value = checkContentVisible();
+}
+
+function checkContentVisible() {
+  const objects = fabricCanvas.getObjects();
+  const visibleObjects = objects.filter((obj) => obj.isOnScreen());
+  if (objects.length === 0 || visibleObjects.length === 0) return false;
+  return true;
+}
+
+function scrollToContent() {
+  const object = fabricCanvas.item(0);
+  const zoom = fabricCanvas.getZoom();
+  const vpw = fabricCanvas.width / zoom;
+  const vph = fabricCanvas.height / zoom;
+  const x = object.left - vpw / 2; // x is the location where the top left of the viewport should be
+  const y = object.top - vph / 2; // y idem
+  fabricCanvas.absolutePan(new fabric.Point(x, y));
+  fabricCanvas.requestRenderAll();
+  isContentVisible.value = true;
+
+  saveViewportState();
+}
+
+function saveViewportState() {
+  if (localStorage) {
+    const viewportState = {
+      viewportTransform: fabricCanvas.viewportTransform,
+      zoom: fabricCanvas.getZoom(),
+    };
+    localStorage.setItem("viewportState", JSON.stringify(viewportState));
+  }
+}
+
+function restoreViewportState() {
+  if (localStorage) {
+    const viewportState = localStorage.getItem("viewportState");
+    if (viewportState) {
+      const { viewportTransform, zoom } = JSON.parse(viewportState);
+      if (viewportTransform) {
+        fabricCanvas.viewportTransform = viewportTransform;
+      }
+      if (zoom !== null) {
+        fabricCanvas.setZoom(zoom);
+      }
+      fabricCanvas.requestRenderAll();
+    }
+  }
 }
 
 async function handleKeyEvent(e: any) {
@@ -413,10 +498,10 @@ async function handleKeyEvent(e: any) {
     fabricCanvas.discardActiveObject();
     fabricCanvas.requestRenderAll();
   } else if (e.ctrlKey && e.key === "z") {
-    history.undo();
+    await history.undo();
     e.preventDefault();
   } else if (e.ctrlKey && e.key === "y") {
-    history.redo();
+    await history.redo();
     e.preventDefault();
   } else if (e.ctrlKey && e.key === "c") {
     copy();
@@ -578,7 +663,7 @@ function setMode(mode: (typeof drawingModes)[number]) {
 }
 
 function clearCanvas() {
-  if (confirm("Clear the canvas?") == true) {
+  if (confirm("Clear the canvas?")) {
     fabricCanvas.remove(...fabricCanvas.getObjects().concat());
     fabricCanvas.discardActiveObject();
     fabricCanvas.renderAll();

@@ -84,7 +84,7 @@
             :default="
               props.selectedObjects[0].roughOptions.roughness.toString()
             "
-            :options="['0', '1', '2']"
+            :options="['0', '1.5', '2.5']"
             :names="['Normal', 'Rough', 'Very Rough']"
             :icons="[
               'material-symbols:architecture-rounded',
@@ -102,7 +102,7 @@
                   updateProperty(
 	                  props.selectedObjects![0],
 	                  'roughOptions.preserveVertices',
-	                  Number.parseFloat(value) < 2,
+	                  Number.parseFloat(value) < 2.5,
 	                );
                 }
 	            "
@@ -116,7 +116,7 @@
             :default="
               props.selectedObjects[0].roughOptions.strokeWidth!.toString()
             "
-            :options="['0.5', '1', '2']"
+            :options="['1', '3', '5']"
             :names="['Thin', 'Normal', 'Bold']"
             :icons="[
               'material-symbols:pen-size-1',

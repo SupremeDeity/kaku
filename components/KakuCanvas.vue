@@ -25,20 +25,73 @@
     </div>
     <div
       v-if="!isContentVisible"
-      class="absolute bottom-4 left-0 right-0 mx-auto z-[1000] text-center"
+      class="absolute bottom-4 left-0 right-0 mx-auto z-[100] text-center"
     >
       <UButton variant="soft" color="cyan" @click="scrollToContent"
         >Scroll to content</UButton
       >
     </div>
+    <div class="absolute z-[1000] bottom-4 left-4 sm:block hidden">
+      <UButtonGroup size="sm" orientation="horizontal">
+        <UTooltip text="Decrease zoom">
+          <UButton
+            icon="i-heroicons-minus-20-solid"
+            variant="soft"
+            color="cyan"
+            @click="
+              () => {
+                const zoom = fabricCanvas.getZoom() - 0.1;
+                if (zoom < 0.1) return;
+                fabricCanvas.setZoom(zoom);
+                zoomLevel = zoom;
+                fabricCanvas.requestRenderAll();
+                saveViewportState();
+              }
+            "
+        /></UTooltip>
+        <UTooltip text="Reset zoom"
+          ><UButton
+            variant="soft"
+            color="cyan"
+            :label="(zoomLevel * 100).toFixed(0) + '%'"
+            @click="
+              () => {
+                const zoom = 1;
+                fabricCanvas.setZoom(zoom);
+                zoomLevel = zoom;
+                fabricCanvas.requestRenderAll();
+                saveViewportState();
+              }
+            "
+        /></UTooltip>
+
+        <UTooltip text="Increase zoom">
+          <UButton
+            variant="soft"
+            color="cyan"
+            icon="i-heroicons-plus-20-solid"
+            @click="
+              () => {
+                const zoom = fabricCanvas.getZoom() + 0.1;
+                if (zoom > 20) return;
+                fabricCanvas.setZoom(zoom);
+                zoomLevel = zoom;
+                fabricCanvas.requestRenderAll();
+                saveViewportState();
+              }
+            "
+          />
+        </UTooltip>
+      </UButtonGroup>
+    </div>
     <div
-      class="absolute left-1/2 -translate-x-1/2 z-[1000] top-3 flex items-center gap-1 bg-gray-500 md:p-2 p-1.5 rounded"
+      class="absolute left-1/2 -translate-x-1/2 z-[1000] top-3 flex items-center gap-1 bg-gray-500 sm:p-2 p-1.5 rounded"
     >
       <div v-for="mode in drawingModes" :key="mode">
         <UTooltip :text="mode">
           <button
             :class="[
-              'flex items-center md:p-2 p-1 text-white rounded transition-colors',
+              'flex items-center sm:p-2 p-1 text-white rounded transition-colors',
               mode === currentMode
                 ? 'bg-blue-400 hover:bg-blue-300'
                 : 'bg-gray-900 hover:bg-gray-800/60',
@@ -49,11 +102,11 @@
           </button>
         </UTooltip>
       </div>
-      <div class="border border-gray-600 md:h-8 h-6" />
+      <div class="border border-gray-600 sm:h-8 h-6" />
 
       <UDropdown :items="dropdownItems" :popper="{ placement: 'bottom-start' }">
         <button
-          class="flex bg-cyan-900 text-white rounded md:p-2 p-1 hover:bg-cyan-800/60 transition-colors"
+          class="flex bg-cyan-900 text-white rounded sm:p-2 p-1 hover:bg-cyan-800/60 transition-colors"
         >
           <Icon name="i-material-symbols:menu-rounded" />
         </button>
@@ -173,6 +226,7 @@ let _clipboard: any;
 
 const currentMode: Ref<(typeof drawingModes)[number]> = ref("Select");
 const isContentVisible: Ref<boolean> = ref(true);
+const zoomLevel: Ref<number> = ref(1);
 
 async function initializeCanvas() {
   fabricCanvas = new fabric.Canvas(canvas.value, {
@@ -215,6 +269,7 @@ async function initializeCanvas() {
 
     restoreViewportState();
     isContentVisible.value = checkContentVisible();
+    zoomLevel.value = fabricCanvas.getZoom();
   });
 
   window.addEventListener("resize", () => {
@@ -322,6 +377,7 @@ function handleScroll(opt: any) {
       new fabric.Point(opt.e.offsetX, opt.e.offsetY),
       zoom
     );
+    zoomLevel.value = zoom;
   }
   // Scroll canvas horizontally if Shift pressed
   else if (opt.e.shiftKey) {

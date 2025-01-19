@@ -3,9 +3,9 @@
 export function getStrokeStyle(strokeDash: any) {
   if (!strokeDash) return "Solid";
   switch (strokeDash[0]) {
-    case 0.5:
+    case 1.5:
       return "Dotted";
-    case 3:
+    case 8:
       return "Dashed";
     default:
       return "Solid";
@@ -17,9 +17,9 @@ export function calculateStrokeStyle(strokeWidth: number, style: string) {
     case "Solid":
       return [];
     case "Dashed":
-      return [3, strokeWidth + 2];
+      return [8, strokeWidth + 8];
     case "Dotted":
-      return [0.5,  strokeWidth + 1.5];
+      return [1.5,  strokeWidth + 6];
   }
 }
 

@@ -59,6 +59,7 @@ export class FabricRoughEllipse extends fabric.Ellipse {
 
     _render(ctx) {
         ctx.save();
+        ctx.lineCap = "round"
         ctx.translate(-this.width / 2, -this.height / 2);
 
         const roughCanvas = rough.canvas(ctx.canvas);

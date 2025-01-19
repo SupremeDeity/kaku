@@ -120,6 +120,7 @@ import * as fabric from "fabric";
 
 import CanvasHistory from "~/utils/fabric-history";
 import PropertiesPanel from "./PropertiesPanel.vue";
+import cloneDeep from "lodash.clonedeep";
 
 const runtimeConfig = useRuntimeConfig();
 const git_commit_sha = runtimeConfig.public.commitSha;
@@ -173,15 +174,6 @@ let _clipboard: any;
 const currentMode: Ref<(typeof drawingModes)[number]> = ref("Select");
 const isContentVisible: Ref<boolean> = ref(true);
 
-declare module "fabric" {
-  interface BaseBrush {
-    freehandOptions: any;
-  }
-  interface FabricObject {
-    isDrawing?: boolean;
-  }
-}
-
 async function initializeCanvas() {
   fabricCanvas = new fabric.Canvas(canvas.value, {
     isDrawingMode: currentMode.value === "Draw",
@@ -226,7 +218,7 @@ async function initializeCanvas() {
   });
 
   window.addEventListener("resize", () => {
-    fabricCanvas.setDimensions({
+    fabricCanvas?.setDimensions({
       width: window.document.documentElement.clientWidth,
       height: window.document.documentElement.clientHeight,
     });
@@ -252,7 +244,7 @@ async function initializeCanvas() {
       const zoom = fabricCanvas.getZoom();
       let newZoom = zoom * Math.pow(scale / previousScale, 1);
       newZoom = Math.min(newZoom, 20);
-      newZoom = Math.max(newZoom, 0.01);
+      newZoom = Math.max(newZoom, 0.1);
 
       fabricCanvas.zoomToPoint(center, newZoom);
       fabricCanvas.requestRenderAll();
@@ -287,16 +279,15 @@ function downloadPNG() {
 function copy() {
   fabricCanvas
     ?.getActiveObject()
-    ?.clone(["name"])
+    ?.clone(["name", "padding"])
     .then((cloned) => {
       _clipboard = cloned;
     });
 }
 
 async function paste() {
-  const clonedObj = await _clipboard.clone(["name", "padding"]);
+  const clonedObj = cloneDeep(_clipboard);
   fabricCanvas.discardActiveObject();
-  // noinspection SpellCheckingInspection
   clonedObj.set({
     left: clonedObj.left + 10,
     top: clonedObj.top + 10,
@@ -326,7 +317,7 @@ function handleScroll(opt: any) {
     let zoom = fabricCanvas.getZoom();
     zoom *= 0.999 ** delta;
     if (zoom > 20) zoom = 20;
-    if (zoom < 0.01) zoom = 0.01;
+    if (zoom < 0.1) zoom = 0.1;
     fabricCanvas.zoomToPoint(
       new fabric.Point(opt.e.offsetX, opt.e.offsetY),
       zoom
@@ -452,12 +443,16 @@ function checkContentVisible() {
 
 function scrollToContent() {
   const object = fabricCanvas.item(0);
+  if (!object) return;
+
   const zoom = fabricCanvas.getZoom();
-  const vpw = fabricCanvas.width / zoom;
-  const vph = fabricCanvas.height / zoom;
+  fabricCanvas.setZoom(1);
+  const vpw = fabricCanvas.getWidth() / zoom;
+  const vph = fabricCanvas.getHeight() / zoom;
   const x = object.left - vpw / 2; // x is the location where the top left of the viewport should be
   const y = object.top - vph / 2; // y idem
   fabricCanvas.absolutePan(new fabric.Point(x, y));
+  fabricCanvas.setZoom(zoom);
   fabricCanvas.requestRenderAll();
   isContentVisible.value = true;
 
@@ -639,8 +634,11 @@ function setMode(mode: (typeof drawingModes)[number]) {
       if (file) {
         const reader = new FileReader();
         reader.onload = async () => {
-          const img = await fabric.FabricImage.fromURL(reader.result as string);
-          // @ts-expect-error custom attribute
+          const img = await fabric.FabricImage.fromURL(
+            reader.result as string,
+            {},
+            { objectCaching: true }
+          );
           img.name = "Image";
           fabricCanvas.viewportCenterObject(img);
           fabricCanvas.add(img);

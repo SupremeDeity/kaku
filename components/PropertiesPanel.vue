@@ -25,7 +25,7 @@
               :value="props.selectedObjects[0].roughOptions.stroke"
               @change="
 	              (args: string) =>
-	                updateProperty(props.selectedObjects[0], 'roughOptions.stroke', args)
+	                updateProperty(props.selectedObjects![0], 'roughOptions.stroke', args)
 	            "
             />
           </div>
@@ -46,7 +46,7 @@
               :value="props.selectedObjects[0].roughOptions.fill"
               @change="
 	              (args: string) =>
-	                updateProperty(props.selectedObjects[0], 'roughOptions.fill', args, )
+	                updateProperty(props.selectedObjects![0], 'roughOptions.fill', args, )
 	            "
             />
           </div>
@@ -69,7 +69,7 @@
             @change="
 	              (value: string) =>
 	                updateProperty(
-	                  props.selectedObjects[0],
+	                  props.selectedObjects![0],
 	                  'roughOptions.fillStyle',
 	                  value,
 	                )
@@ -93,11 +93,18 @@
             ]"
             @change="
 	              (value: string) =>
-	                updateProperty(
-	                  props.selectedObjects[0],
+	                {
+                    updateProperty(
+	                  props.selectedObjects![0],
 	                  'roughOptions.roughness',
-	                  Number.parseInt(value),
-	                )
+	                  Number.parseFloat(value),
+	                );
+                  updateProperty(
+	                  props.selectedObjects![0],
+	                  'roughOptions.preserveVertices',
+	                  Number.parseFloat(value) < 2,
+	                );
+                }
 	            "
           />
         </div>
@@ -107,9 +114,9 @@
           >
           <RoughMultiPicker
             :default="
-              props.selectedObjects[0].roughOptions.strokeWidth.toString()
+              props.selectedObjects[0].roughOptions.strokeWidth!.toString()
             "
-            :options="['1', '2', '3']"
+            :options="['0.5', '1', '2']"
             :names="['Thin', 'Normal', 'Bold']"
             :icons="[
               'material-symbols:pen-size-1',
@@ -119,16 +126,32 @@
             @change="
 	              (value: string) =>
 	                {
+                   const strokeWidth = Number.parseFloat(value);
+
 	                  updateProperty(
-	                  props.selectedObjects[0],
+	                  props.selectedObjects![0],
 	                  'roughOptions.strokeWidth',
-	                  Number.parseInt(value),
-	                )
+	                   strokeWidth,
+	                );
+                 
 	                updateProperty(
-	                  props.selectedObjects[0],
+	                  props.selectedObjects![0],
 	                  'roughOptions.strokeLineDash',
-	                  calculateStrokeStyle(props.selectedObjects[0].roughOptions.strokeWidth,  getStrokeStyle(props.selectedObjects[0].roughOptions.strokeLineDash))
+	                  calculateStrokeStyle(strokeWidth,  getStrokeStyle(props.selectedObjects![0].roughOptions.strokeLineDash))
 	                )
+
+                  updateProperty(
+	                  props.selectedObjects![0],
+	                  'roughOptions.fillWeight',
+	                  strokeWidth / 2,
+	                )
+
+                  updateProperty(
+	                  props.selectedObjects![0],
+	                  'roughOptions.hachureGap',
+	                  strokeWidth * 4,
+	                )
+
 	                }
 	            "
           />
@@ -151,11 +174,19 @@
             ]"
             @change="
 	              (value: string) =>
-	                updateProperty(
-	                  props.selectedObjects[0],
+	             {
+                   updateProperty(
+	                  props.selectedObjects![0],
 	                  'roughOptions.strokeLineDash',
-	                  calculateStrokeStyle(props.selectedObjects[0].roughOptions.strokeWidth, value),
+	                  calculateStrokeStyle(props.selectedObjects![0].roughOptions.strokeWidth!, value),
 	                )
+                   updateProperty(
+	                  props.selectedObjects![0],
+	                  'roughOptions.disableMultiStroke',
+	                  value !== 'Solid',
+	                )
+                }
+                  
 	            "
           />
         </div>
@@ -173,7 +204,7 @@
             @change="
 	              (value: string) =>
 	                updateProperty(
-	                  props.selectedObjects[0],
+	                  props.selectedObjects![0],
 	                  'rounded',
 	                  value !== 'Edged',
 	                )
@@ -201,7 +232,7 @@
               @change="
               (value: any) =>
                 updateProperty(
-                  props.selectedObjects[0],
+                  props.selectedObjects![0],
                   'endArrowHeadStyle',
                   ArrowHeadStyle[value]
                 )
@@ -227,7 +258,7 @@
               @change="
                 (value) =>
                   updateProperty(
-                    props.selectedObjects[0],
+                    props.selectedObjects![0],
                     'startArrowHeadStyle',
                     ArrowHeadStyle[value]
                   )
@@ -250,10 +281,10 @@
           <span class="font-bold uppercase text-xs text-cyan-200">Stroke</span>
           <div>
             <ColorPicker
-              :value="props.selectedObjects[0].fill"
+              :value="props.selectedObjects[0].fill?.toString()"
               @change="
 	              (args: string) =>
-	                updateProperty(props.selectedObjects[0], 'fill', args, true)
+	                updateProperty(props.selectedObjects![0], 'fill', args, true)
 	            "
             />
           </div>
@@ -268,7 +299,7 @@
             @change="
               (value: any) => {
                 updateProperty(
-                  props.selectedObjects[0],
+                  props.selectedObjects![0],
                   'fontFamily',
                   value,
                   true
@@ -292,7 +323,7 @@
             @change="
 	              (value: string) =>
 	                updateProperty(
-	                  props.selectedObjects[0],
+	                  props.selectedObjects![0],
 	                  'textAlign',
 	                  value,
                     true
@@ -317,7 +348,7 @@
         @input="
           (event) =>
             updatePropertyEach(
-              props.selectedObjects,
+              props.selectedObjects!,
               'opacity',
               // @ts-expect-error it does exist
               event.target?.value ?? 1
@@ -325,6 +356,9 @@
         "
       />
     </div>
+    <span class="font-bold uppercase text-xs text-cyan-200 block my-2"
+      >Layer Actions</span
+    >
     <div class="flex gap-4">
       <UTooltip text="Send to Back">
         <UButton
@@ -359,15 +393,20 @@
   </div>
 </template>
 <script lang="ts" setup>
-import type { FabricObject } from "fabric";
+import type * as fabric from "fabric";
 import lodashSet from "lodash.set";
 import { ArrowHeadStyle } from "~/utils/constants";
 import RoughMultiPicker from "./RoughMultiPicker.vue";
 
-const props = defineProps(["selectedObjects", "fabricCanvas"]);
+interface Props {
+  selectedObjects?: fabric.FabricObject[];
+  fabricCanvas: fabric.Canvas;
+}
+
+const props = defineProps<Props>();
 
 function updateProperty(
-  obj: FabricObject,
+  obj: fabric.FabricObject,
   key: string,
   value: any,
   dirty?: boolean
@@ -382,7 +421,7 @@ function updateProperty(
 
 // Updates the property for each object in array
 function updatePropertyEach(
-  objs: FabricObject[],
+  objs: fabric.FabricObject[],
   key: string,
   value: any,
   dirty?: boolean
@@ -390,24 +429,24 @@ function updatePropertyEach(
   objs.forEach((obj) => updateProperty(obj, key, value, dirty));
 }
 
-function bringToFront(objs: FabricObject[]) {
+function bringToFront(objs: fabric.FabricObject[]) {
   const rawObj = toRaw(objs);
   rawObj.forEach((obj) => props.fabricCanvas.bringObjectToFront(obj));
   props.fabricCanvas.renderAll();
 }
-function bringForward(objs: FabricObject[]) {
+function bringForward(objs: fabric.FabricObject[]) {
   const rawObj = toRaw(objs);
   rawObj.forEach((obj) => props.fabricCanvas.bringObjectForward(obj, true));
   props.fabricCanvas.renderAll();
 }
-function bringToBack(objs: FabricObject[]) {
+function bringToBack(objs: fabric.FabricObject[]) {
   const rawObj = toRaw(objs);
-  rawObj.forEach((obj) => props.fabricCanvas.sendObjectToBack(obj, true));
+  rawObj.forEach((obj) => props.fabricCanvas.sendObjectToBack(obj));
   props.fabricCanvas.renderAll();
 }
-function bringBackward(objs: FabricObject[]) {
+function bringBackward(objs: fabric.FabricObject[]) {
   const rawObj = toRaw(objs);
-  rawObj.forEach((obj) => props.fabricCanvas.sendObjectBackwards(obj));
+  rawObj.forEach((obj) => props.fabricCanvas.sendObjectBackwards(obj, true));
   props.fabricCanvas.renderAll();
 }
 </script>

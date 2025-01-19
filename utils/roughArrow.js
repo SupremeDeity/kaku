@@ -165,6 +165,7 @@ export class FabricRoughArrow extends fabric.Path {
 
     _render(ctx) {
         ctx.save();
+        ctx.lineCap = "round"
         const roughCanvas = rough.canvas(ctx.canvas);
         roughCanvas.draw(this.roughArrow);
         if (this.endArrowHeadStyle !== ArrowHeadStyle.NoHead)

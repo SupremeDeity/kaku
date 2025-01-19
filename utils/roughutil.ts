@@ -17,9 +17,9 @@ export function calculateStrokeStyle(strokeWidth: number, style: string) {
     case "Solid":
       return [];
     case "Dashed":
-      return [8, 8 + strokeWidth];
+      return [8, strokeWidth + 8];
     case "Dotted":
-      return [1.5, 6 + strokeWidth];
+      return [1.5,  strokeWidth + 6];
   }
 }
 

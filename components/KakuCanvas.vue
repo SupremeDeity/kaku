@@ -25,20 +25,73 @@
     </div>
     <div
       v-if="!isContentVisible"
-      class="absolute bottom-4 left-0 right-0 mx-auto z-[1000] text-center"
+      class="absolute bottom-4 left-0 right-0 mx-auto z-[100] text-center"
     >
       <UButton variant="soft" color="cyan" @click="scrollToContent"
         >Scroll to content</UButton
       >
     </div>
+    <div class="absolute z-[1000] bottom-4 left-4 sm:block hidden">
+      <UButtonGroup size="sm" orientation="horizontal">
+        <UTooltip text="Decrease zoom">
+          <UButton
+            icon="i-heroicons-minus-20-solid"
+            variant="soft"
+            color="cyan"
+            @click="
+              () => {
+                const zoom = fabricCanvas.getZoom() - 0.1;
+                if (zoom < 0.1) return;
+                fabricCanvas.setZoom(zoom);
+                zoomLevel = zoom;
+                fabricCanvas.requestRenderAll();
+                saveViewportState();
+              }
+            "
+        /></UTooltip>
+        <UTooltip text="Reset zoom"
+          ><UButton
+            variant="soft"
+            color="cyan"
+            :label="(zoomLevel * 100).toFixed(0) + '%'"
+            @click="
+              () => {
+                const zoom = 1;
+                fabricCanvas.setZoom(zoom);
+                zoomLevel = zoom;
+                fabricCanvas.requestRenderAll();
+                saveViewportState();
+              }
+            "
+        /></UTooltip>
+
+        <UTooltip text="Increase zoom">
+          <UButton
+            variant="soft"
+            color="cyan"
+            icon="i-heroicons-plus-20-solid"
+            @click="
+              () => {
+                const zoom = fabricCanvas.getZoom() + 0.1;
+                if (zoom > 20) return;
+                fabricCanvas.setZoom(zoom);
+                zoomLevel = zoom;
+                fabricCanvas.requestRenderAll();
+                saveViewportState();
+              }
+            "
+          />
+        </UTooltip>
+      </UButtonGroup>
+    </div>
     <div
-      class="absolute left-1/2 -translate-x-1/2 z-[1000] top-3 flex items-center gap-1 bg-gray-500 md:p-2 p-1.5 rounded"
+      class="absolute left-1/2 -translate-x-1/2 z-[1000] top-3 flex items-center gap-1 bg-gray-500 sm:p-2 p-1.5 rounded"
     >
       <div v-for="mode in drawingModes" :key="mode">
         <UTooltip :text="mode">
           <button
             :class="[
-              'flex items-center md:p-2 p-1 text-white rounded transition-colors',
+              'flex items-center sm:p-2 p-1 text-white rounded transition-colors',
               mode === currentMode
                 ? 'bg-blue-400 hover:bg-blue-300'
                 : 'bg-gray-900 hover:bg-gray-800/60',
@@ -49,11 +102,11 @@
           </button>
         </UTooltip>
       </div>
-      <div class="border border-gray-600 md:h-8 h-6" />
+      <div class="border border-gray-600 sm:h-8 h-6" />
 
       <UDropdown :items="dropdownItems" :popper="{ placement: 'bottom-start' }">
         <button
-          class="flex bg-cyan-900 text-white rounded md:p-2 p-1 hover:bg-cyan-800/60 transition-colors"
+          class="flex bg-cyan-900 text-white rounded sm:p-2 p-1 hover:bg-cyan-800/60 transition-colors"
         >
           <Icon name="i-material-symbols:menu-rounded" />
         </button>
@@ -120,6 +173,7 @@ import * as fabric from "fabric";
 
 import CanvasHistory from "~/utils/fabric-history";
 import PropertiesPanel from "./PropertiesPanel.vue";
+import cloneDeep from "lodash.clonedeep";
 
 const runtimeConfig = useRuntimeConfig();
 const git_commit_sha = runtimeConfig.public.commitSha;
@@ -172,15 +226,7 @@ let _clipboard: any;
 
 const currentMode: Ref<(typeof drawingModes)[number]> = ref("Select");
 const isContentVisible: Ref<boolean> = ref(true);
-
-declare module "fabric" {
-  interface BaseBrush {
-    freehandOptions: any;
-  }
-  interface FabricObject {
-    isDrawing?: boolean;
-  }
-}
+const zoomLevel: Ref<number> = ref(1);
 
 async function initializeCanvas() {
   fabricCanvas = new fabric.Canvas(canvas.value, {
@@ -223,10 +269,11 @@ async function initializeCanvas() {
 
     restoreViewportState();
     isContentVisible.value = checkContentVisible();
+    zoomLevel.value = fabricCanvas.getZoom();
   });
 
   window.addEventListener("resize", () => {
-    fabricCanvas.setDimensions({
+    fabricCanvas?.setDimensions({
       width: window.document.documentElement.clientWidth,
       height: window.document.documentElement.clientHeight,
     });
@@ -252,7 +299,7 @@ async function initializeCanvas() {
       const zoom = fabricCanvas.getZoom();
       let newZoom = zoom * Math.pow(scale / previousScale, 1);
       newZoom = Math.min(newZoom, 20);
-      newZoom = Math.max(newZoom, 0.01);
+      newZoom = Math.max(newZoom, 0.1);
 
       fabricCanvas.zoomToPoint(center, newZoom);
       fabricCanvas.requestRenderAll();
@@ -287,16 +334,15 @@ function downloadPNG() {
 function copy() {
   fabricCanvas
     ?.getActiveObject()
-    ?.clone(["name"])
+    ?.clone(["name", "padding"])
     .then((cloned) => {
       _clipboard = cloned;
     });
 }
 
 async function paste() {
-  const clonedObj = await _clipboard.clone(["name", "padding"]);
+  const clonedObj = cloneDeep(_clipboard);
   fabricCanvas.discardActiveObject();
-  // noinspection SpellCheckingInspection
   clonedObj.set({
     left: clonedObj.left + 10,
     top: clonedObj.top + 10,
@@ -326,11 +372,12 @@ function handleScroll(opt: any) {
     let zoom = fabricCanvas.getZoom();
     zoom *= 0.999 ** delta;
     if (zoom > 20) zoom = 20;
-    if (zoom < 0.01) zoom = 0.01;
+    if (zoom < 0.1) zoom = 0.1;
     fabricCanvas.zoomToPoint(
       new fabric.Point(opt.e.offsetX, opt.e.offsetY),
       zoom
     );
+    zoomLevel.value = zoom;
   }
   // Scroll canvas horizontally if Shift pressed
   else if (opt.e.shiftKey) {
@@ -452,12 +499,16 @@ function checkContentVisible() {
 
 function scrollToContent() {
   const object = fabricCanvas.item(0);
+  if (!object) return;
+
   const zoom = fabricCanvas.getZoom();
-  const vpw = fabricCanvas.width / zoom;
-  const vph = fabricCanvas.height / zoom;
+  fabricCanvas.setZoom(1);
+  const vpw = fabricCanvas.getWidth() / zoom;
+  const vph = fabricCanvas.getHeight() / zoom;
   const x = object.left - vpw / 2; // x is the location where the top left of the viewport should be
   const y = object.top - vph / 2; // y idem
   fabricCanvas.absolutePan(new fabric.Point(x, y));
+  fabricCanvas.setZoom(zoom);
   fabricCanvas.requestRenderAll();
   isContentVisible.value = true;
 
@@ -639,8 +690,11 @@ function setMode(mode: (typeof drawingModes)[number]) {
       if (file) {
         const reader = new FileReader();
         reader.onload = async () => {
-          const img = await fabric.FabricImage.fromURL(reader.result as string);
-          // @ts-expect-error custom attribute
+          const img = await fabric.FabricImage.fromURL(
+            reader.result as string,
+            {},
+            { objectCaching: true }
+          );
           img.name = "Image";
           fabricCanvas.viewportCenterObject(img);
           fabricCanvas.add(img);

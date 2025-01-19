@@ -28,6 +28,7 @@ export const drawingModesIconMap = {
 };
 
 export const supportedFonts = ["Kalam", "Itim", "Virgil", "Just Another Hand"];
+export type SupportedFontsType = typeof supportedFonts[number];
 export const ROUNDABLES = ["fabricroughrectangle", "fabricroughdiamond"];
 
 export const defaultBrushSettings = {
@@ -46,15 +47,15 @@ export enum ArrowHeadStyle {
   "FilledHead",
 }
 
-
-interface roughShapeProps {
-  roughOptions: Partial<Options>;
+export interface roughShapeProps {
+  roughOptions: Partial<Options> & {roughness: number;};
   rounded?: boolean;
-  endArrowHeadStyle: ArrowHeadStyle
-  startArrowHeadStyle: ArrowHeadStyle
+  endArrowHeadStyle: ArrowHeadStyle;
+  startArrowHeadStyle: ArrowHeadStyle;
+  fill?: string;
+  fillStyle?: 'hachure' | 'cross-hatch' | 'solid';
+  stroke?: string;
 }
-
-
 
 export const defaultShapeSettings: Partial<FabricObjectProps> &
   roughShapeProps = {
@@ -67,17 +68,18 @@ export const defaultShapeSettings: Partial<FabricObjectProps> &
   strokeWidth: 2,
   opacity: 1,
   // For the "Roundables"
-  rounded: false,
+  rounded: true,
   endArrowHeadStyle: ArrowHeadStyle.Head,
   startArrowHeadStyle: ArrowHeadStyle.NoHead,
   cornerStyle: "circle",
+  strokeLineCap: "round",
+  padding: 4,
   roughOptions: {
     fillStyle: "solid",
     fill: "transparent",
-    maxRandomnessOffset: 2,
     stroke: "#ffffff",
-    roughness: 2,
-    strokeWidth: 2,
+    roughness: 1.5,
+    strokeWidth: 3,
     curveFitting: 1,
     curveTightness: 0,
     curveStepCount: 9,

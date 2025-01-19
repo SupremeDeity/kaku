@@ -12,7 +12,7 @@ export class FabricRoughRectangle extends fabric.Rect {
         this.points = options.points;
         this.roughOptions.seed = this.roughOptions.seed ?? Math.random() * 100;
         this.minSize = options.minSize || 5; // Minimum size of the rectangle
-        this.roughGenerator = rough.generator();
+        this.roughGenerator = this.roughGenerator ?? rough.generator();
         this.left = this.left !== 0 ? this.left : options.points[0];
         this.top = this.top !== 0 ? this.top : options.points[1];
         this._updateRoughRectangle();
@@ -49,6 +49,7 @@ export class FabricRoughRectangle extends fabric.Rect {
         const x = -this.width / 2;
         const y = -this.height / 2;
         this.roughOptions.preserveVertices = this.rounded;
+
         if (!this.rounded) {
             this.roughRectangle = this.roughGenerator.rectangle(
                 x,
@@ -73,7 +74,6 @@ export class FabricRoughRectangle extends fabric.Rect {
     `;
             this.roughRectangle = this.roughGenerator.path(path, {
                 ...this.roughOptions,
-                roughness: (this.roughOptions.roughness < 1 ? 0 : this.roughOptions.roughness + 1)
             });
         }
 
@@ -85,6 +85,7 @@ export class FabricRoughRectangle extends fabric.Rect {
 
     _render(ctx) {
         ctx.save();
+        ctx.lineCap = "round";
 
         const roughCanvas = rough.canvas(ctx.canvas);
         roughCanvas.draw(this.roughRectangle);

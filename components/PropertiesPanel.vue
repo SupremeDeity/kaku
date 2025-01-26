@@ -2,7 +2,7 @@
   <div
     v-if="props.selectedObjects"
     :key="props.selectedObjects"
-    class="scrollbar p-4 absolute left-4 top-16 z-[1000] bg-cyan-950 rounded text-white min-w-52 border border-cyan-800 select-none overflow-y-auto max-h-[80%]"
+    class="scrollbar p-4 absolute left-4 top-16 z-[60] bg-cyan-950 rounded text-white min-w-52 border border-cyan-800 select-none overflow-y-auto max-h-[80%]"
   >
     <span
       class="text-xs bg-cyan-900 text-cyan-400 p-1 rounded border border-cyan-700"

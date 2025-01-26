@@ -1,10 +1,11 @@
 <template>
   <UTooltip :text="props.value">
-    <UPopover :popper="{ placement: 'left' }">
+    <UPopover class="flex items-center" :popper="{ placement: 'left' }">
       <div
         :class="[
           'size-8 rounded-md hover:scale-110',
           !props.value || props.value === 'transparent' ? 'checkers' : '',
+          previewClass,
         ]"
         :style="{
           backgroundColor:
@@ -14,12 +15,14 @@
         }"
       />
       <template #panel>
-        <div class="p-4 max-w-52">
-          <span class="text-xs text-gray-400">Presets</span>
+        <div class="p-4 max-w-52 space-y-2">
+          <span class="text-xs text-gray-400 font-bold text-start"
+            >Presets</span
+          >
           <div class="grid grid-flow-row grid-cols-4 grid-rows-4 mb-2">
             <div v-for="preset in presets" :key="preset">
-              <UTooltip :text="preset.toLowerCase()"
-                ><span
+              <UTooltip :text="preset.toLowerCase()">
+                <span
                   :class="[
                     'size-8 rounded-md hover:scale-110 block',
                     preset === 'transparent' ? 'checkers' : '',
@@ -37,7 +40,7 @@
               /></UTooltip>
             </div>
           </div>
-          <span class="text-xs text-gray-400">Shades</span>
+          <span class="text-xs text-gray-400 font-bold">Shades</span>
           <div class="grid grid-flow-row grid-cols-4 grid-rows-2 mb-2">
             <div v-for="shade in shades" :key="shade.hex">
               <UTooltip :text="shade.hexString()"
@@ -120,6 +123,7 @@ const presets = [
 ];
 const props = defineProps<{
   value?: string;
+  previewClass?: string;
 }>();
 const emit = defineEmits(["change"]);
 const model = ref(props.value);

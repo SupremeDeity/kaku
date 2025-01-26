@@ -5,7 +5,7 @@
     class="w-full h-full bg-gray-950"
     @keydown="handleKeyEvent"
   >
-    <div class="absolute bottom-2 right-2 z-[1000] p-2 flex gap-1">
+    <div class="absolute bottom-2 right-2 z-[50] p-2 flex gap-1">
       <UTooltip>
         <UButton
           to="https://github.com/supremedeity/kaku"
@@ -25,17 +25,17 @@
     </div>
     <div
       v-if="!isContentVisible"
-      class="absolute bottom-4 left-0 right-0 mx-auto z-[100] text-center"
+      class="absolute bottom-4 left-0 right-0 mx-auto z-[70] text-center"
     >
       <UButton variant="soft" color="cyan" @click="scrollToContent"
         >Scroll to content</UButton
       >
     </div>
-    <div class="absolute z-[1000] bottom-4 left-4 sm:block hidden">
+    <div class="absolute z-[70] bottom-4 left-4 sm:block hidden">
       <UButtonGroup size="sm" orientation="horizontal">
         <UTooltip text="Decrease zoom">
           <UButton
-            icon="i-heroicons-minus-20-solid"
+            icon="i-material-symbols-check-indeterminate-small"
             variant="soft"
             color="cyan"
             @click="
@@ -69,7 +69,7 @@
           <UButton
             variant="soft"
             color="cyan"
-            icon="i-heroicons-plus-20-solid"
+            icon="i-material-symbols-add"
             @click="
               () => {
                 const zoom = fabricCanvas.getZoom() + 0.1;
@@ -85,7 +85,7 @@
       </UButtonGroup>
     </div>
     <div
-      class="absolute left-1/2 -translate-x-1/2 z-[1000] top-3 flex items-center gap-1 bg-gray-500 sm:p-2 p-1.5 rounded"
+      class="absolute left-1/2 -translate-x-1/2 z-[70] top-3 flex items-center gap-1 bg-gray-500 sm:p-2 p-1.5 rounded"
     >
       <div v-for="mode in drawingModes" :key="mode">
         <UTooltip :text="mode">
@@ -104,7 +104,34 @@
       </div>
       <div class="border border-gray-600 sm:h-8 h-6" />
 
-      <UDropdown :items="dropdownItems" :popper="{ placement: 'bottom-start' }">
+      <UDropdown
+        :ui="{ container: 'z-[80]', wrapper: 'z-[80]' }"
+        :items="dropdownItems"
+        :popper="{ placement: 'bottom-start' }"
+      >
+        <template #exportImage>
+          <div
+            class="w-full text-start flex items-center gap-1.5"
+            @click="openExportModal"
+          >
+            <UIcon
+              name="i-material-symbols-download-rounded"
+              class="size-5 text-gray-500"
+            />
+            <span>Export Image</span>
+          </div>
+        </template>
+        <template #backgroundColor>
+          <div class="flex justify-between w-full items-center">
+            <span>Background Color</span
+            ><ColorPicker
+              v-model="canvasBgColor"
+              preview-class="!size-5 rounded border border-gray-500"
+              :value="fabricCanvas.backgroundColor as string"
+              @change="(args: string) => canvasBgColor = args"
+            />
+          </div>
+        </template>
         <button
           class="flex bg-cyan-900 text-white rounded sm:p-2 p-1 hover:bg-cyan-800/60 transition-colors"
         >
@@ -118,7 +145,7 @@
     />
     <div
       v-if="currentMode === 'Draw'"
-      class="p-4 absolute left-4 top-16 z-[1000] bg-cyan-950 rounded text-white min-w-52 border border-cyan-800 select-none"
+      class="p-4 absolute left-4 top-16 z-[50] bg-cyan-950 rounded text-white min-w-52 border border-cyan-800 select-none"
     >
       <div>
         <span class="font-bold uppercase text-xs text-cyan-200">Stroke</span>
@@ -161,6 +188,11 @@
       </div>
     </div>
     <canvas ref="canvas" />
+    <ExportImageModal
+      :is-open="isExportModalOpen"
+      :fabric-canvas="fabricCanvas"
+      @update:is-open="isExportModalOpen = $event"
+    />
   </div>
 </template>
 
@@ -182,10 +214,7 @@ const dropdownItems = [
   [
     {
       label: "Export as PNG",
-      icon: "i-material-symbols-download-rounded",
-      click: async () => {
-        downloadPNG();
-      },
+      slot: "exportImage",
     },
   ],
   [
@@ -215,11 +244,21 @@ const dropdownItems = [
       },
     },
   ],
+  [
+    {
+      label: "Background Color",
+      slot: "backgroundColor",
+      click: (e: any) => {
+        e.preventDefault();
+      },
+    },
+  ],
 ];
 
 const canvasWrapper = ref(null);
 const canvas: Ref<HTMLCanvasElement | undefined> = ref();
 const selectedObjects = ref();
+const canvasBgColor = ref("#030712");
 let fabricCanvas: fabric.Canvas;
 let history: CanvasHistory;
 let _clipboard: any;
@@ -227,6 +266,11 @@ let _clipboard: any;
 const currentMode: Ref<(typeof drawingModes)[number]> = ref("Select");
 const isContentVisible: Ref<boolean> = ref(true);
 const zoomLevel: Ref<number> = ref(1);
+
+const isExportModalOpen = ref(false);
+const openExportModal = () => {
+  isExportModalOpen.value = true;
+};
 
 async function initializeCanvas() {
   fabricCanvas = new fabric.Canvas(canvas.value, {
@@ -239,6 +283,7 @@ async function initializeCanvas() {
     enablePointerEvents: true,
     enableRetinaScaling: true,
     selectionKey: "shiftKey",
+    backgroundColor: canvasBgColor.value,
   });
 
   fabric.InteractiveFabricObject.ownDefaults = {
@@ -252,7 +297,6 @@ async function initializeCanvas() {
     borderScaleFactor: 2,
   };
 
-  fabricCanvas.backgroundColor = "rgb(3 7 18)";
   const perfectFreehandBrush = new PerfectFreehandBrush(fabricCanvas);
   fabricCanvas.freeDrawingBrush = perfectFreehandBrush;
   perfectFreehandBrush.setOptions(defaultBrushSettings);
@@ -270,6 +314,7 @@ async function initializeCanvas() {
     restoreViewportState();
     isContentVisible.value = checkContentVisible();
     zoomLevel.value = fabricCanvas.getZoom();
+    canvasBgColor.value = fabricCanvas.backgroundColor as string;
   });
 
   window.addEventListener("resize", () => {
@@ -308,27 +353,6 @@ async function initializeCanvas() {
       fabricCanvas.selection = currentMode.value === "Select";
     },
   });
-}
-
-function downloadPNG() {
-  const sel = new fabric.ActiveSelection(fabricCanvas.getObjects(), {
-    canvas: fabricCanvas,
-  });
-  if (sel.isEmpty()) return;
-  const dataURL = sel.toDataURL({
-    left: -sel.width / 22,
-    top: -sel.height / 22,
-    width: sel.width * 1.1,
-    height: sel.height * 1.1,
-    format: "png",
-    multiplier: 2,
-  });
-  const link = document.createElement("a");
-  link.download = "kaku-" + new Date().toISOString() + ".png";
-  link.href = dataURL;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
 }
 
 function copy() {
@@ -520,6 +544,7 @@ function saveViewportState() {
     const viewportState = {
       viewportTransform: fabricCanvas.viewportTransform,
       zoom: fabricCanvas.getZoom(),
+      backgroundColor: fabricCanvas.backgroundColor,
     };
     localStorage.setItem("viewportState", JSON.stringify(viewportState));
   }
@@ -529,12 +554,16 @@ function restoreViewportState() {
   if (localStorage) {
     const viewportState = localStorage.getItem("viewportState");
     if (viewportState) {
-      const { viewportTransform, zoom } = JSON.parse(viewportState);
+      const { viewportTransform, zoom, backgroundColor } =
+        JSON.parse(viewportState);
       if (viewportTransform) {
         fabricCanvas.viewportTransform = viewportTransform;
       }
       if (zoom !== null) {
         fabricCanvas.setZoom(zoom);
+      }
+      if (backgroundColor) {
+        fabricCanvas.backgroundColor = backgroundColor;
       }
       fabricCanvas.requestRenderAll();
     }
@@ -736,5 +765,11 @@ onUnmounted(() => {
 
 watch(currentMode, (newMode) => {
   setMode(newMode);
+});
+
+watch(canvasBgColor, (newColor) => {
+  fabricCanvas.backgroundColor = newColor;
+  fabricCanvas.requestRenderAll();
+  saveViewportState();
 });
 </script>

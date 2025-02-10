@@ -120,10 +120,6 @@ const selectionToImage = (selection: fabric.ActiveSelection) => {
     const canvas = selection.toCanvasElement({
       multiplier: multiplier.value,
       format: "png",
-      left: -selection.width / 22,
-      top: -selection.height / 22,
-      width: selection.width * 1.1,
-      height: selection.height * 1.1,
     });
 
     const img = new fabric.FabricImage(canvas);
@@ -133,14 +129,22 @@ const selectionToImage = (selection: fabric.ActiveSelection) => {
 
 // Update the image preview
 const updatePreview = async () => {
-  const sel = new fabric.ActiveSelection(props.fabricCanvas.getObjects(), {
+  const selectedObjects = props.fabricCanvas.getActiveObjects();
+  const objects =
+    selectedObjects.length !== 0
+      ? selectedObjects
+      : props.fabricCanvas.getObjects();
+  const sel = new fabric.ActiveSelection(objects, {
     canvas: props.fabricCanvas,
     backgroundColor: includeBackground.value
       ? (props.fabricCanvas.backgroundColor as string)
       : undefined,
   });
 
-  if (sel.isEmpty()) return;
+  if (sel.isEmpty()) {
+    imagePreview.value = "";
+    return;
+  }
 
   // Convert selection to image
   const img = await selectionToImage(sel);
@@ -170,33 +174,9 @@ const downloadImage = () => {
 
 // Copy to clipboard
 const copyToClipboard = async () => {
-  const sel = new fabric.ActiveSelection(props.fabricCanvas.getObjects(), {
-    canvas: props.fabricCanvas,
-    backgroundColor: includeBackground.value
-      ? (props.fabricCanvas.backgroundColor as string)
-      : undefined,
-  });
-
-  if (sel.isEmpty()) return;
-
-  // Convert selection to image
-  const img = await selectionToImage(sel);
-
-  // Invert colors if enabled
-  if (invertColors.value) {
-    img.filters.push(new fabric.filters.Invert());
-    img.applyFilters();
-  }
-
-  // Generate the image data URL
-  const dataURL = img.toDataURL({
-    format: "png",
-    multiplier: multiplier.value,
-  });
-
   // Copy to clipboard
   try {
-    const blob = await (await fetch(dataURL)).blob();
+    const blob = await (await fetch(imagePreview.value)).blob();
     await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
     alert("Image copied to clipboard!");
   } catch (error) {

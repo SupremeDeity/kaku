@@ -111,6 +111,7 @@
       >
         <template #exportImage>
           <div
+            :class="{ 'opacity-50 pointer-events-none': fabricCanvas.getObjects().length <= 0 }"
             class="w-full text-start flex items-center gap-1.5"
             @click="openExportModal"
           >

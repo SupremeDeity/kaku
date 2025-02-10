@@ -111,6 +111,10 @@
       >
         <template #exportImage>
           <div
+            :class="{
+              'opacity-50 pointer-events-none':
+                fabricCanvas.getObjects().length <= 0,
+            }"
             class="w-full text-start flex items-center gap-1.5"
             @click="openExportModal"
           >
@@ -516,8 +520,11 @@ function handleMouseUp() {
 
 function checkContentVisible() {
   const objects = fabricCanvas.getObjects();
+  // We dont want to show the "Scroll to content" button if there is no content on screen
+  if (objects.length === 0) return true;
+
   const visibleObjects = objects.filter((obj) => obj.isOnScreen());
-  if (objects.length === 0 || visibleObjects.length === 0) return false;
+  if (visibleObjects.length === 0) return false;
   return true;
 }
 

@@ -68,10 +68,23 @@ class CanvasHistory {
   async _loadCanvasState() {
     if (localStorage) {
       const canvasState = localStorage.getItem("canvasState");
-      if (!canvasState) return;
+      if (!canvasState) {
+        this._attachEventListeners();
+        return;
+      };
       const objects = await fabric.util.enlivenObjects(JSON.parse(canvasState));
       this._applyState(objects)
     }
+  }
+
+  _attachEventListeners() {
+    this.canvas.on("custom:added", () => this._saveCanvasState());
+    this.canvas.on("object:modified", () => this._saveCanvasState());
+    this.canvas.on("object:removed", () => {
+      if (!this._isClearingCanvas) {
+        this._saveCanvasState();
+      }
+    });
   }
 
   _applyState(objects) {
@@ -84,13 +97,8 @@ class CanvasHistory {
     });
 
     // Re-enable event listeners
-    this.canvas.on("custom:added", () => this._saveCanvasState());
-    this.canvas.on("object:modified", () => this._saveCanvasState());
-    this.canvas.on("object:removed", () => {
-      if (!this._isClearingCanvas) {
-        this._saveCanvasState();
-      }
-    });
+    this._attachEventListeners()
+
     this.canvas.renderAll()
   }
 }

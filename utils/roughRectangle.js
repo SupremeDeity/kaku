@@ -59,7 +59,7 @@ export class FabricRoughRectangle extends fabric.Rect {
                 this.roughOptions
             );
         } else {
-            const radius = calculateCornerRadius(Math.min(bounds.width, bounds.height));
+            const radius = calculateCornerRadius(Math.min(bounds.width, bounds.height), true);
             const path = `
       M ${x + radius} ${y}
       h ${bounds.width - 2 * radius}

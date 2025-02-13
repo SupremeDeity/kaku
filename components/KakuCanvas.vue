@@ -1,9 +1,9 @@
 <template>
   <div
     ref="canvasWrapper"
-    tabindex="1000"
+    tabindex="1"
     class="w-full h-full bg-gray-950"
-    @keydown="handleKeyEvent"
+    @keydown.prevent="handleKeyEvent"
   >
     <div class="absolute bottom-2 right-2 z-[50] p-2 flex gap-1">
       <UTooltip>
@@ -105,7 +105,7 @@
       <div class="border border-gray-600 sm:h-8 h-6" />
 
       <UDropdown
-        :ui="{ container: 'z-[80]', wrapper: 'z-[80]' }"
+        :ui="{ container: 'z-[80] w-[220px]', wrapper: 'z-[80]' }"
         :items="dropdownItems"
         :popper="{ placement: 'bottom-start' }"
       >
@@ -115,14 +115,20 @@
               'opacity-50 pointer-events-none':
                 fabricCanvas.getObjects().length <= 0,
             }"
-            class="w-full text-start flex items-center gap-1.5"
+            class="w-full flex items-center justify-between gap-1.5"
             @click="openExportModal"
           >
-            <UIcon
-              name="i-material-symbols-download-rounded"
-              class="size-5 text-gray-500"
-            />
-            <span>Export Image</span>
+            <div class="flex items-center gap-1.5">
+              <UIcon
+                name="i-material-symbols-add-photo-alternate-outline-rounded"
+                class="size-5 text-gray-500"
+              />
+              <span class="">Export Image</span>
+            </div>
+            <span class="flex gap-0.5 items-center">
+              <UKbd>Ctrl</UKbd>
+              <UKbd>E</UKbd>
+            </span>
           </div>
         </template>
         <template #backgroundColor>
@@ -210,12 +216,25 @@ import * as fabric from "fabric";
 import CanvasHistory from "~/utils/fabric-history";
 import PropertiesPanel from "./PropertiesPanel.vue";
 import cloneDeep from "lodash.clonedeep";
+import pako from "pako";
 
 const runtimeConfig = useRuntimeConfig();
 const git_commit_sha = runtimeConfig.public.commitSha;
 
 const dropdownItems = [
   [
+    {
+      label: "Open",
+      click: importScene,
+      icon: "i-material-symbols-folder-open-outline-rounded",
+      shortcuts: ["Ctrl", "O"],
+    },
+    {
+      label: "Export Scene",
+      click: exportScene,
+      icon: "i-ph-download",
+      shortcuts: ["Ctrl", "S"],
+    },
     {
       label: "Export as PNG",
       slot: "exportImage",
@@ -225,7 +244,7 @@ const dropdownItems = [
     {
       label: "Undo",
       icon: "i-ph-arrow-arc-left-duotone",
-      shortcuts: ["CTRL", "Z"],
+      shortcuts: ["Ctrl", "Z"],
       click: async () => {
         await history.undo();
       },
@@ -233,7 +252,7 @@ const dropdownItems = [
     {
       label: "Redo",
       icon: "i-ph-arrow-arc-right-duotone",
-      shortcuts: ["CTRL", "Y"],
+      shortcuts: ["Ctrl", "Y"],
       click: async () => {
         await history.redo();
       },
@@ -546,6 +565,85 @@ function scrollToContent() {
   saveViewportState();
 }
 
+function importScene() {
+  const fileInput = document.createElement("input");
+  fileInput.type = "file";
+  fileInput.accept = ".kaku"; // Restrict to .kaku files only
+
+  fileInput.onchange = async (event) => {
+    const file = (event.target as HTMLInputElement).files?.[0];
+
+    if (!file) return; // No file selected
+
+    if (!file.name.endsWith(".kaku")) {
+      alert("Invalid file type! Please select a .kaku file.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const decompressed = pako.inflate(
+          new Uint8Array(reader.result as ArrayBuffer),
+          {
+            to: "string",
+          }
+        );
+        const sceneData = JSON.parse(decompressed);
+        console.log(sceneData);
+
+        // Load canvas objects
+        await fabricCanvas.loadFromJSON(sceneData.objects, () => {
+          if (sceneData.viewport) {
+            const { viewportTransform, zoom, backgroundColor } =
+              sceneData.viewport;
+            fabricCanvas.setViewportTransform(viewportTransform);
+            fabricCanvas.setZoom(zoom);
+            zoomLevel.value = zoom;
+            fabricCanvas.backgroundColor = backgroundColor;
+          }
+        });
+        fabricCanvas.renderAll();
+        saveViewportState();
+        history._saveCanvasState();
+      } catch (error) {
+        alert("Failed to load scene. The file might be corrupted or invalid.");
+        console.error("Error importing scene:", error);
+      }
+    };
+
+    reader.readAsArrayBuffer(file);
+  };
+
+  fileInput.click();
+}
+
+function exportScene() {
+  if (!fabricCanvas) return;
+
+  const viewportState = {
+    viewportTransform: fabricCanvas.viewportTransform,
+    zoom: fabricCanvas.getZoom(),
+    backgroundColor: fabricCanvas.backgroundColor,
+  };
+
+  const sceneData = {
+    objects: fabricCanvas.toDatalessJSON(["name"]),
+    viewport: viewportState,
+  };
+
+  const json = JSON.stringify(sceneData);
+  const compressed = pako.deflate(json);
+  const blob = new Blob([compressed], { type: "application/octet-stream" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "scene.kaku";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function saveViewportState() {
   if (localStorage) {
     const viewportState = {
@@ -586,14 +684,18 @@ async function handleKeyEvent(e: any) {
     fabricCanvas.requestRenderAll();
   } else if (e.ctrlKey && e.key === "z") {
     await history.undo();
-    e.preventDefault();
   } else if (e.ctrlKey && e.key === "y") {
     await history.redo();
-    e.preventDefault();
   } else if (e.ctrlKey && e.key === "c") {
     copy();
   } else if (e.ctrlKey && e.key === "v") {
     await paste();
+  } else if (e.ctrlKey && e.key === "o") {
+    importScene();
+  } else if (e.ctrlKey && e.key === "s") {
+    exportScene();
+  } else if (e.ctrlKey && e.key === "e") {
+    openExportModal();
   }
 }
 

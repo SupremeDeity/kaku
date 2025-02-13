@@ -23,13 +23,13 @@ export function calculateStrokeStyle(strokeWidth: number, style: string) {
   }
 }
 
-export function calculateCornerRadius(dim: number) {
+export function calculateCornerRadius(dim: number, cutoff: boolean) {
   const DEFAULT_ADAPTIVE_RADIUS = 32;
   const DEFAULT_PROPORTIONAL_RADIUS = 0.25;
   const CUTOFF_SIZE = DEFAULT_ADAPTIVE_RADIUS / DEFAULT_PROPORTIONAL_RADIUS;
 
   // If the dimension is smaller than the cutoff, use proportional radius
-  if (dim <= CUTOFF_SIZE) {
+  if (dim <= CUTOFF_SIZE || !cutoff) {
     return dim * DEFAULT_PROPORTIONAL_RADIUS;
   }
 

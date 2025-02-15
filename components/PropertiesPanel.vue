@@ -357,7 +357,7 @@
       />
     </div>
     <span class="font-bold uppercase text-xs text-cyan-200 block my-2"
-      >Layer Actions</span
+      >Layer</span
     >
     <div class="flex gap-4">
       <UTooltip text="Send to Back">
@@ -389,11 +389,30 @@
         />
       </UTooltip>
     </div>
+    <span class="font-bold uppercase text-xs text-cyan-200 block mt-4 mb-2"
+      >Actions</span
+    >
+    <div class="flex gap-4">
+      <UTooltip text="Duplicate">
+        <UButton
+          class="!bg-cyan-600 !text-white hover:!bg-cyan-500"
+          icon="i-material-symbols-content-copy-outline-rounded"
+          @click="duplicate()"
+        />
+      </UTooltip>
+      <UTooltip text="Delete">
+        <UButton
+          class="!bg-cyan-600 !text-white hover:!bg-cyan-500"
+          icon="i-material-symbols-delete-outline"
+          @click="deleteObjects(props.selectedObjects)"
+        />
+      </UTooltip>
+    </div>
     <!-- ---------- </ Common Properties> ----------  -->
   </div>
 </template>
 <script lang="ts" setup>
-import type * as fabric from "fabric";
+import * as fabric from "fabric";
 import lodashSet from "lodash.set";
 import { ArrowHeadStyle } from "~/utils/constants";
 import RoughMultiPicker from "./RoughMultiPicker.vue";
@@ -448,6 +467,58 @@ function bringBackward(objs: fabric.FabricObject[]) {
   const rawObj = toRaw(objs);
   rawObj.forEach((obj) => props.fabricCanvas.sendObjectBackwards(obj, true));
   props.fabricCanvas.renderAll();
+}
+
+function deleteObjects(objs: fabric.FabricObject[]) {
+  const rawObj = toRaw(objs);
+  // using this instead of just canvas.remove(obj) to get rid of annoying type error
+  rawObj.forEach((obj) => props.fabricCanvas.remove(obj));
+  props.fabricCanvas.discardActiveObject();
+  props.fabricCanvas.renderAll();
+}
+
+function duplicate() {
+  const activeObject = props.fabricCanvas.getActiveObject();
+  if (!activeObject) return;
+
+  const toClone = activeObject.toJSON(); // Deep copy via JSON
+
+  fabric.util
+    .enlivenObjects([JSON.parse(JSON.stringify(toClone))])
+    .then((clone) => {
+      const clonedObj = clone[0];
+      if (
+        !(
+          clonedObj instanceof fabric.FabricObject ||
+          clonedObj instanceof fabric.BaseFabricObject
+        )
+      )
+        return;
+
+      props.fabricCanvas.discardActiveObject();
+      clonedObj.set({
+        left: clonedObj.left + 10,
+        top: clonedObj.top + 10,
+        evented: true,
+      });
+
+      if (clonedObj instanceof fabric.ActiveSelection) {
+        clonedObj.canvas = props.fabricCanvas;
+        clonedObj.forEachObject((obj) => {
+          props.fabricCanvas.add(obj);
+        });
+        clonedObj.setCoords();
+      } else {
+        // @ts-expect-error just fabric having horrendous type-coherence
+        props.fabricCanvas.add(clonedObj);
+      }
+
+      toClone.top += 10;
+      toClone.left += 10;
+      // @ts-expect-error just fabric having horrendous type-coherence
+      props.fabricCanvas.setActiveObject(clonedObj);
+      props.fabricCanvas.requestRenderAll();
+    });
 }
 </script>
 <style lang="css" scoped>

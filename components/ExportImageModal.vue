@@ -1,12 +1,16 @@
 <template>
   <UModal
-    :ui="{ wrapper: 'z-[100]', container: 'items-center' }"
+    :ui="{
+      wrapper: 'z-[100]',
+      container: 'items-center',
+    }"
     :model-value="isOpen"
     @update:model-value="handleUpdate"
   >
-    <UCard>
+    <UCard :ui="{ background: 'dark:bg-cyan-950 bg-cyan-950' }">
       <!-- Image Preview -->
       <div
+        v-if="imagePreview"
         class="flex min-w-sm max-h-52 justify-center border rounded border-gray-800 checkers"
       >
         <img
@@ -14,6 +18,15 @@
           alt="Image Preview"
           class="rounded-lg object-contain"
         />
+      </div>
+      <div
+        v-else
+        class="flex justify-center items-center min-w-sm h-52 gap-4 border rounded border-gray-800"
+      >
+        <UIcon class="size-10" name="i-ph-exclamation-mark-bold" />
+        <span class="font-bold text-red-400 select-none"
+          >Error updating preview.</span
+        >
       </div>
 
       <!-- Controls -->
@@ -56,7 +69,12 @@
       <!-- Download Button -->
       <template #footer>
         <div class="flex gap-2">
-          <UButton @click="downloadImage"> Download </UButton>
+          <UButton icon="i-material-symbols-download" @click="downloadPNG">
+            PNG
+          </UButton>
+          <UButton icon="i-material-symbols-download" @click="downloadSVG">
+            SVG
+          </UButton>
           <UButton @click="copyToClipboard"> Copy to Clipboard </UButton>
         </div>
       </template>
@@ -94,6 +112,12 @@ const multiplier = ref(1);
 // Include background toggle
 const includeBackground = ref(false);
 
+let image: fabric.FabricImage<
+  Partial<fabric.ImageProps>,
+  fabric.SerializedImageProps,
+  fabric.ObjectEvents
+>;
+
 // Watch for changes to isOpen prop
 watch(
   () => props.isOpen,
@@ -128,7 +152,7 @@ const selectionToImage = (selection: fabric.ActiveSelection) => {
 };
 
 // Update the image preview
-const updatePreview = async () => {
+const updatePreview = () => {
   const selectedObjects = props.fabricCanvas.getActiveObjects();
   const objects =
     selectedObjects.length !== 0
@@ -147,29 +171,47 @@ const updatePreview = async () => {
   }
 
   // Convert selection to image
-  const img = await selectionToImage(sel);
+  selectionToImage(sel).then((img) => {
+    image = img;
+    // Invert colors if enabled
+    if (invertColors.value) {
+      img.filters.push(new fabric.filters.Invert());
+      img.applyFilters();
+    }
 
-  // Invert colors if enabled
-  if (invertColors.value) {
-    img.filters.push(new fabric.filters.Invert());
-    img.applyFilters();
-  }
-
-  // Generate the image preview
-  imagePreview.value = img.toDataURL({
-    format: "png",
-    multiplier: multiplier.value,
+    // Generate the image preview
+    imagePreview.value = img.toDataURL({
+      format: "png",
+    });
   });
 };
 
-// Download the image
-const downloadImage = () => {
+// Download as PNG
+const downloadPNG = () => {
   const link = document.createElement("a");
   link.download = "kaku-" + new Date().toISOString() + ".png";
   link.href = imagePreview.value;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
+};
+
+// Download as SVG
+const downloadSVG = () => {
+  const height = image.getScaledHeight();
+  const width = image.getScaledWidth();
+  const svgString = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="${height}" width="${width}" viewBox="0 0 ${width} ${height}">${image.toSVG()}</svg>`;
+  const blob = new Blob([svgString], { type: "image/svg+xml" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "kaku-" + new Date().toISOString() + ".svg";
+
+  document.body.appendChild(link);
+  link.click();
+
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
 };
 
 // Copy to clipboard

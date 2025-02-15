@@ -3,36 +3,51 @@
     ref="canvasWrapper"
     tabindex="1"
     class="w-full h-full bg-gray-950"
-    @keydown.prevent="handleKeyEvent"
+    @keydown="handleKeyEvent"
   >
     <div class="absolute bottom-2 right-2 z-[50] p-2 flex gap-1">
-      <UTooltip>
-        <UButton
-          to="https://github.com/supremedeity/kaku"
-          target="_blank"
-          icon="i-ph:github-logo-duotone"
-          variant="soft"
-          color="cyan"
-        />
-      </UTooltip>
-      <UTooltip
-        ><UButton variant="soft" color="cyan" icon="i-ph:info-duotone" />
-        <template #text
-          ><span class="font-bold">Kaku</span> {{ " " }}
-          <span class="text-cyan-400">{{ git_commit_sha }}</span></template
-        ></UTooltip
-      >
+      <UButtonGroup class="border border-cyan-800 rounded">
+        <UTooltip>
+          <UButton
+            to="https://github.com/supremedeity/kaku"
+            target="_blank"
+            icon="i-ph:github-logo-duotone"
+            variant="soft"
+            color="cyan"
+          />
+        </UTooltip>
+        <UTooltip
+          ><UButton
+            class="border-l border-cyan-800"
+            variant="soft"
+            color="cyan"
+            icon="i-ph:info-duotone"
+          />
+          <template #text
+            ><span class="font-bold">Kaku</span> {{ " " }}
+            <span class="text-cyan-400">{{ git_commit_sha }}</span></template
+          ></UTooltip
+        >
+      </UButtonGroup>
     </div>
     <div
       v-if="!isContentVisible"
       class="absolute bottom-4 left-0 right-0 mx-auto z-[70] text-center"
     >
-      <UButton variant="soft" color="cyan" @click="scrollToContent"
+      <UButton
+        variant="soft"
+        color="cyan"
+        class="border border-cyan-800"
+        @click="scrollToContent"
         >Scroll to content</UButton
       >
     </div>
     <div class="absolute z-[70] bottom-4 left-4 sm:block hidden">
-      <UButtonGroup size="sm" orientation="horizontal">
+      <UButtonGroup
+        size="sm"
+        orientation="horizontal"
+        class="border border-cyan-800 rounded"
+      >
         <UTooltip text="Decrease zoom">
           <UButton
             icon="i-material-symbols-check-indeterminate-small"
@@ -53,6 +68,8 @@
           ><UButton
             variant="soft"
             color="cyan"
+            block
+            class="border-l border-cyan-800 min-w-[68px]"
             :label="(zoomLevel * 100).toFixed(0) + '%'"
             @click="
               () => {
@@ -70,6 +87,7 @@
             variant="soft"
             color="cyan"
             icon="i-material-symbols-add"
+            class="border-l border-cyan-800"
             @click="
               () => {
                 const zoom = fabricCanvas.getZoom() + 0.1;
@@ -85,16 +103,16 @@
       </UButtonGroup>
     </div>
     <div
-      class="absolute left-1/2 -translate-x-1/2 z-[70] top-3 flex items-center gap-1 bg-gray-500 sm:p-2 p-1.5 rounded"
+      class="absolute left-1/2 -translate-x-1/2 z-[70] top-3 flex items-center gap-1 bg-cyan-950 border border-cyan-800 sm:p-2 p-1.5 rounded"
     >
       <div v-for="mode in drawingModes" :key="mode">
         <UTooltip :text="mode">
           <button
             :class="[
-              'flex items-center sm:p-2 p-1 text-white rounded transition-colors',
+              'flex items-center sm:p-2 p-1 text-white rounded transition-colors ',
               mode === currentMode
                 ? 'bg-blue-400 hover:bg-blue-300'
-                : 'bg-gray-900 hover:bg-gray-800/60',
+                : 'bg-cyan-800 hover:bg-cyan-600',
             ]"
             @click="currentMode = mode"
           >
@@ -102,7 +120,7 @@
           </button>
         </UTooltip>
       </div>
-      <div class="border border-gray-600 sm:h-8 h-6" />
+      <div class="border border-cyan-800 sm:h-8 h-6" />
 
       <UDropdown
         :ui="{ container: 'z-[80] w-[220px]', wrapper: 'z-[80]' }"
@@ -143,7 +161,7 @@
           </div>
         </template>
         <button
-          class="flex bg-cyan-900 text-white rounded sm:p-2 p-1 hover:bg-cyan-800/60 transition-colors"
+          class="flex bg-cyan-800 text-white rounded sm:p-2 p-1 hover:bg-cyan-600 transition-colors"
         >
           <Icon name="i-material-symbols:menu-rounded" />
         </button>
@@ -208,14 +226,13 @@
 
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted, watch } from "vue";
-import type { FabricObject } from "fabric";
+import { FabricObject } from "fabric";
 import FontFaceObserver from "fontfaceobserver";
 import { drawingModes, drawingModesIconMap } from "~/utils/constants";
 import * as fabric from "fabric";
 
 import CanvasHistory from "~/utils/fabric-history";
 import PropertiesPanel from "./PropertiesPanel.vue";
-import cloneDeep from "lodash.clonedeep";
 import pako from "pako";
 
 const runtimeConfig = useRuntimeConfig();
@@ -232,7 +249,7 @@ const dropdownItems = [
     {
       label: "Export Scene",
       click: exportScene,
-      icon: "i-ph-download",
+      icon: "i-material-symbols-download",
       shortcuts: ["Ctrl", "S"],
     },
     {
@@ -379,34 +396,45 @@ async function initializeCanvas() {
 }
 
 function copy() {
-  fabricCanvas
-    ?.getActiveObject()
-    ?.clone(["name", "padding"])
-    .then((cloned) => {
-      _clipboard = cloned;
-    });
+  const activeObject = fabricCanvas.getActiveObject();
+  if (!activeObject) return;
+
+  _clipboard = activeObject.toJSON(); // Deep copy via JSON
 }
 
 async function paste() {
-  const clonedObj = cloneDeep(_clipboard);
+  const clone = await fabric.util.enlivenObjects([
+    JSON.parse(JSON.stringify(_clipboard)),
+  ]);
+
+  const clonedObj = clone[0];
+  if (
+    !(
+      clonedObj instanceof FabricObject ||
+      clonedObj instanceof fabric.BaseFabricObject
+    )
+  )
+    return;
   fabricCanvas.discardActiveObject();
   clonedObj.set({
     left: clonedObj.left + 10,
     top: clonedObj.top + 10,
     evented: true,
   });
+
   if (clonedObj instanceof fabric.ActiveSelection) {
     clonedObj.canvas = fabricCanvas;
     clonedObj.forEachObject((obj) => {
       fabricCanvas.add(obj);
     });
-    // this should solve the unselectability
     clonedObj.setCoords();
   } else {
+    // @ts-expect-error just fabric having horrendous type-coherence
     fabricCanvas.add(clonedObj);
   }
   _clipboard.top += 10;
   _clipboard.left += 10;
+  // @ts-expect-error just fabric having horrendous type-coherence
   fabricCanvas.setActiveObject(clonedObj);
   fabricCanvas.requestRenderAll();
 }
@@ -430,11 +458,13 @@ function handleScroll(opt: any) {
   else if (opt.e.shiftKey) {
     vpt[4] -= delta;
     isContentVisible.value = checkContentVisible();
+    fabricCanvas.setViewportTransform(fabricCanvas.viewportTransform);
   }
   // Otherwise just scroll vertically
   else {
     vpt[5] -= delta;
     isContentVisible.value = checkContentVisible();
+    fabricCanvas.setViewportTransform(fabricCanvas.viewportTransform);
   }
 
   fabricCanvas.requestRenderAll();
@@ -504,9 +534,11 @@ function handleMouseMove(o: any) {
     const vpt = fabricCanvas.viewportTransform;
     vpt[4] += e.clientX - lastPosX;
     vpt[5] += e.clientY - lastPosY;
-    fabricCanvas.requestRenderAll();
     lastPosX = e.clientX;
     lastPosY = e.clientY;
+
+    fabricCanvas.setViewportTransform(fabricCanvas.viewportTransform);
+    fabricCanvas.requestRenderAll();
     return;
   } else if (!shapePlacementMode) return;
 
@@ -533,6 +565,7 @@ function handleMouseUp() {
     // on mouse up instead of as soon as its created
     fabricCanvas.fire("custom:added");
   }
+  fabricCanvas.requestRenderAll();
 
   isContentVisible.value = checkContentVisible();
 }
@@ -683,18 +716,25 @@ async function handleKeyEvent(e: any) {
     fabricCanvas.discardActiveObject();
     fabricCanvas.requestRenderAll();
   } else if (e.ctrlKey && e.key === "z") {
+    e.preventDefault();
     await history.undo();
   } else if (e.ctrlKey && e.key === "y") {
+    e.preventDefault();
     await history.redo();
   } else if (e.ctrlKey && e.key === "c") {
+    e.preventDefault();
     copy();
   } else if (e.ctrlKey && e.key === "v") {
+    e.preventDefault();
     await paste();
   } else if (e.ctrlKey && e.key === "o") {
+    e.preventDefault();
     importScene();
   } else if (e.ctrlKey && e.key === "s") {
+    e.preventDefault();
     exportScene();
   } else if (e.ctrlKey && e.key === "e") {
+    e.preventDefault();
     openExportModal();
   }
 }

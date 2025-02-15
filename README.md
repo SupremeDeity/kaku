@@ -1,16 +1,22 @@
-# Kaku
-
-A learning venture of creating a diagraming tool with hand-drawn visuals inspired by excallidraw.
-
+# <center> KAKU </center>
 <image src="public/og.png" />
 
-> [!NOTE]
-> This tool is merely supposed to be a learning ventured inspired by excallidraw, not something meant to replace excallidraw.
+## A learning venture of creating a diagraming tool with hand-drawn visuals inspired by excallidraw.
 
-> [!WARNING]
-> This tool is being developed as a hobby and is in its very early phases. Don't expect quick updates and fixes. There are known bugs which will eventually be ironed out.
+## 🛠️ Features
 
-## Contributing
+* Free & open-source, always.
+* Infinite canvas space.
+* Customization options for all shapes.
+* Choose between hand-drawn, sketch-like visuals or precise, clean shapes!
+* **Shapes and Tools:** Diamond, Ellipse, Rectangle, Line, Arrow, Text, Free-draw.
+* Text & Image support.
+* Export canvas/selection as PNG, SVG, to clipboard, or as a compressed `.kaku` scene file that can be easily imported.
+* Undo / Redo.
+* Zoom and panning support.
+* Custom canvas color.
+
+## 💡 Contributing
 
 You can contribute to this repository by bug reporting or feature proposals. If you want to try your hand at improving this tool, you are welcome to send a PR forward of your own. Make sure to follow general guidelines of contributing to an open-source project and:
 

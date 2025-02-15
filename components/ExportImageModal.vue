@@ -56,7 +56,12 @@
       <!-- Download Button -->
       <template #footer>
         <div class="flex gap-2">
-          <UButton @click="downloadImage"> Download </UButton>
+          <UButton icon="i-material-symbols-download" @click="downloadPNG">
+            PNG
+          </UButton>
+          <UButton icon="i-material-symbols-download" @click="downloadSVG">
+            SVG
+          </UButton>
           <UButton @click="copyToClipboard"> Copy to Clipboard </UButton>
         </div>
       </template>
@@ -93,6 +98,12 @@ const multiplier = ref(1);
 
 // Include background toggle
 const includeBackground = ref(false);
+
+let image: fabric.FabricImage<
+  Partial<fabric.ImageProps>,
+  fabric.SerializedImageProps,
+  fabric.ObjectEvents
+>;
 
 // Watch for changes to isOpen prop
 watch(
@@ -147,29 +158,47 @@ const updatePreview = async () => {
   }
 
   // Convert selection to image
-  const img = await selectionToImage(sel);
+  image = await selectionToImage(sel);
 
   // Invert colors if enabled
   if (invertColors.value) {
-    img.filters.push(new fabric.filters.Invert());
-    img.applyFilters();
+    image.filters.push(new fabric.filters.Invert());
+    image.applyFilters();
   }
 
   // Generate the image preview
-  imagePreview.value = img.toDataURL({
+  imagePreview.value = image.toDataURL({
     format: "png",
     multiplier: multiplier.value,
   });
 };
 
-// Download the image
-const downloadImage = () => {
+// Download as PNG
+const downloadPNG = () => {
   const link = document.createElement("a");
   link.download = "kaku-" + new Date().toISOString() + ".png";
   link.href = imagePreview.value;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
+};
+
+// Download as SVG
+const downloadSVG = () => {
+  const height = image.getScaledHeight();
+  const width = image.getScaledWidth();
+  const svgString = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="${height}" width="${width}" viewBox="0 0 ${width} ${height}">${image.toSVG()}</svg>`;
+  const blob = new Blob([svgString], { type: "image/svg+xml" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "kaku-" + new Date().toISOString() + ".svg";
+
+  document.body.appendChild(link);
+  link.click();
+
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
 };
 
 // Copy to clipboard

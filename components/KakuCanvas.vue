@@ -3,7 +3,7 @@
     ref="canvasWrapper"
     tabindex="1"
     class="w-full h-full bg-gray-950"
-    @keydown.prevent="handleKeyEvent"
+    @keydown="handleKeyEvent"
   >
     <div class="absolute bottom-2 right-2 z-[50] p-2 flex gap-1">
       <UTooltip>
@@ -232,7 +232,7 @@ const dropdownItems = [
     {
       label: "Export Scene",
       click: exportScene,
-      icon: "i-ph-download",
+      icon: "i-material-symbols-download",
       shortcuts: ["Ctrl", "S"],
     },
     {
@@ -430,11 +430,13 @@ function handleScroll(opt: any) {
   else if (opt.e.shiftKey) {
     vpt[4] -= delta;
     isContentVisible.value = checkContentVisible();
+    fabricCanvas.setViewportTransform(fabricCanvas.viewportTransform);
   }
   // Otherwise just scroll vertically
   else {
     vpt[5] -= delta;
     isContentVisible.value = checkContentVisible();
+    fabricCanvas.setViewportTransform(fabricCanvas.viewportTransform);
   }
 
   fabricCanvas.requestRenderAll();
@@ -504,9 +506,11 @@ function handleMouseMove(o: any) {
     const vpt = fabricCanvas.viewportTransform;
     vpt[4] += e.clientX - lastPosX;
     vpt[5] += e.clientY - lastPosY;
-    fabricCanvas.requestRenderAll();
     lastPosX = e.clientX;
     lastPosY = e.clientY;
+
+    fabricCanvas.setViewportTransform(fabricCanvas.viewportTransform);
+    fabricCanvas.requestRenderAll();
     return;
   } else if (!shapePlacementMode) return;
 
@@ -533,6 +537,7 @@ function handleMouseUp() {
     // on mouse up instead of as soon as its created
     fabricCanvas.fire("custom:added");
   }
+  fabricCanvas.requestRenderAll();
 
   isContentVisible.value = checkContentVisible();
 }
@@ -683,18 +688,25 @@ async function handleKeyEvent(e: any) {
     fabricCanvas.discardActiveObject();
     fabricCanvas.requestRenderAll();
   } else if (e.ctrlKey && e.key === "z") {
+    e.preventDefault();
     await history.undo();
   } else if (e.ctrlKey && e.key === "y") {
+    e.preventDefault();
     await history.redo();
   } else if (e.ctrlKey && e.key === "c") {
+    e.preventDefault();
     copy();
   } else if (e.ctrlKey && e.key === "v") {
+    e.preventDefault();
     await paste();
   } else if (e.ctrlKey && e.key === "o") {
+    e.preventDefault();
     importScene();
   } else if (e.ctrlKey && e.key === "s") {
+    e.preventDefault();
     exportScene();
   } else if (e.ctrlKey && e.key === "e") {
+    e.preventDefault();
     openExportModal();
   }
 }

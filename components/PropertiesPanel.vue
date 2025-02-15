@@ -518,6 +518,8 @@ function duplicate() {
       // @ts-expect-error just fabric having horrendous type-coherence
       props.fabricCanvas.setActiveObject(clonedObj);
       props.fabricCanvas.requestRenderAll();
+      // @ts-expect-error custom event
+      props.fabricCanvas.fire("custom:added");
     });
 }
 </script>

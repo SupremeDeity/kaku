@@ -1,12 +1,16 @@
 <template>
   <UModal
-    :ui="{ wrapper: 'z-[100]', container: 'items-center' }"
+    :ui="{
+      wrapper: 'z-[100]',
+      container: 'items-center',
+    }"
     :model-value="isOpen"
     @update:model-value="handleUpdate"
   >
-    <UCard>
+    <UCard :ui="{ background: 'dark:bg-cyan-950 bg-cyan-950' }">
       <!-- Image Preview -->
       <div
+        v-if="imagePreview"
         class="flex min-w-sm max-h-52 justify-center border rounded border-gray-800 checkers"
       >
         <img
@@ -14,6 +18,15 @@
           alt="Image Preview"
           class="rounded-lg object-contain"
         />
+      </div>
+      <div
+        v-else
+        class="flex justify-center items-center min-w-sm h-52 gap-4 border rounded border-gray-800"
+      >
+        <UIcon class="size-10" name="i-ph-exclamation-mark-bold" />
+        <span class="font-bold text-red-400 select-none"
+          >Error updating preview.</span
+        >
       </div>
 
       <!-- Controls -->
@@ -139,7 +152,7 @@ const selectionToImage = (selection: fabric.ActiveSelection) => {
 };
 
 // Update the image preview
-const updatePreview = async () => {
+const updatePreview = () => {
   const selectedObjects = props.fabricCanvas.getActiveObjects();
   const objects =
     selectedObjects.length !== 0
@@ -158,18 +171,18 @@ const updatePreview = async () => {
   }
 
   // Convert selection to image
-  image = await selectionToImage(sel);
+  selectionToImage(sel).then((img) => {
+    image = img;
+    // Invert colors if enabled
+    if (invertColors.value) {
+      img.filters.push(new fabric.filters.Invert());
+      img.applyFilters();
+    }
 
-  // Invert colors if enabled
-  if (invertColors.value) {
-    image.filters.push(new fabric.filters.Invert());
-    image.applyFilters();
-  }
-
-  // Generate the image preview
-  imagePreview.value = image.toDataURL({
-    format: "png",
-    multiplier: multiplier.value,
+    // Generate the image preview
+    imagePreview.value = img.toDataURL({
+      format: "png",
+    });
   });
 };
 

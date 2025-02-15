@@ -26,10 +26,11 @@
                   :class="[
                     'size-8 rounded-md hover:scale-110 block',
                     preset === 'transparent' ? 'checkers' : '',
-                    preset === props.value ? 'ring ring-2 ring-cyan-200' : '',
+                    preset === props.value ? 'ring-2 ring-cyan-200' : '',
                   ]"
                   :style="{
-                    backgroundColor: preset,
+                    backgroundColor:
+                      preset === 'transparent' ? '#727272FF' : preset,
                   }"
                   @click="
                     () => {
@@ -160,10 +161,16 @@ const openEyeDropper = () => {
 
 <style scoped>
 .checkers {
-  background-image: linear-gradient(45deg, #4a4a4a 25%, transparent 25%),
-    linear-gradient(135deg, #4a4a4a 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #4a4a4a 75%),
-    linear-gradient(135deg, transparent 75%, #4a4a4a 75%);
+  --color-1: transparent;
+  --color-2: #4a4a4a;
+  background-image: linear-gradient(
+      45deg,
+      var(--color-2) 25%,
+      var(--color-1) 25%
+    ),
+    linear-gradient(135deg, var(--color-2) 25%, var(--color-1) 25%),
+    linear-gradient(45deg, var(--color-1) 75%, var(--color-2) 75%),
+    linear-gradient(135deg, var(--color-1) 75%, var(--color-2) 75%);
   background-size: 15px 15px; /* Must be a square */
   background-position: 0 0, 7.5px 0, 7.5px -7.5px, 0px 7.5px;
 }

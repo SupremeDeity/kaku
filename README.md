@@ -3,6 +3,8 @@
 
 ## A learning venture of creating a diagraming tool with hand-drawn visuals inspired by excallidraw.
 
+<image src="public/mockup.png" />
+
 ## 🛠️ Features
 
 * Free & open-source, always.

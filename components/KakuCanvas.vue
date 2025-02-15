@@ -226,14 +226,13 @@
 
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted, watch } from "vue";
-import type { FabricObject } from "fabric";
+import { FabricObject } from "fabric";
 import FontFaceObserver from "fontfaceobserver";
 import { drawingModes, drawingModesIconMap } from "~/utils/constants";
 import * as fabric from "fabric";
 
 import CanvasHistory from "~/utils/fabric-history";
 import PropertiesPanel from "./PropertiesPanel.vue";
-import cloneDeep from "lodash.clonedeep";
 import pako from "pako";
 
 const runtimeConfig = useRuntimeConfig();
@@ -397,34 +396,45 @@ async function initializeCanvas() {
 }
 
 function copy() {
-  fabricCanvas
-    ?.getActiveObject()
-    ?.clone(["name", "padding"])
-    .then((cloned) => {
-      _clipboard = cloned;
-    });
+  const activeObject = fabricCanvas.getActiveObject();
+  if (!activeObject) return;
+
+  _clipboard = activeObject.toJSON(); // Deep copy via JSON
 }
 
 async function paste() {
-  const clonedObj = cloneDeep(_clipboard);
+  const clone = await fabric.util.enlivenObjects([
+    JSON.parse(JSON.stringify(_clipboard)),
+  ]);
+
+  const clonedObj = clone[0];
+  if (
+    !(
+      clonedObj instanceof FabricObject ||
+      clonedObj instanceof fabric.BaseFabricObject
+    )
+  )
+    return;
   fabricCanvas.discardActiveObject();
   clonedObj.set({
     left: clonedObj.left + 10,
     top: clonedObj.top + 10,
     evented: true,
   });
+
   if (clonedObj instanceof fabric.ActiveSelection) {
     clonedObj.canvas = fabricCanvas;
     clonedObj.forEachObject((obj) => {
       fabricCanvas.add(obj);
     });
-    // this should solve the unselectability
     clonedObj.setCoords();
   } else {
+    // @ts-expect-error just fabric having horrendous type-coherence
     fabricCanvas.add(clonedObj);
   }
   _clipboard.top += 10;
   _clipboard.left += 10;
+  // @ts-expect-error just fabric having horrendous type-coherence
   fabricCanvas.setActiveObject(clonedObj);
   fabricCanvas.requestRenderAll();
 }

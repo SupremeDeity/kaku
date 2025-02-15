@@ -437,6 +437,8 @@ async function paste() {
   // @ts-expect-error just fabric having horrendous type-coherence
   fabricCanvas.setActiveObject(clonedObj);
   fabricCanvas.requestRenderAll();
+  // @ts-expect-error custom event
+  fabricCanvas.fire("custom:added");
 }
 
 function handleScroll(opt: any) {
@@ -718,24 +720,31 @@ async function handleKeyEvent(e: any) {
   } else if (e.ctrlKey && e.key === "z") {
     e.preventDefault();
     await history.undo();
+    e.preventPropogation();
   } else if (e.ctrlKey && e.key === "y") {
     e.preventDefault();
     await history.redo();
+    e.preventPropogation();
   } else if (e.ctrlKey && e.key === "c") {
     e.preventDefault();
     copy();
+    e.preventPropogation();
   } else if (e.ctrlKey && e.key === "v") {
     e.preventDefault();
     await paste();
+    e.preventPropogation();
   } else if (e.ctrlKey && e.key === "o") {
     e.preventDefault();
     importScene();
+    e.preventPropogation();
   } else if (e.ctrlKey && e.key === "s") {
     e.preventDefault();
     exportScene();
+    e.preventPropogation();
   } else if (e.ctrlKey && e.key === "e") {
     e.preventDefault();
     openExportModal();
+    e.preventPropogation();
   }
 }
 

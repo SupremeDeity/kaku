@@ -337,6 +337,19 @@ async function initializeCanvas() {
     borderScaleFactor: 2,
   };
 
+  fabric.FabricObject.customProperties = [
+    "name",
+    "padding",
+    "points",
+    "roughOptions",
+    "minSize",
+    "rounded",
+    "editing",
+    "path",
+    "startArrowHeadStyle",
+    "endArrowHeadStyle",
+  ];
+
   const perfectFreehandBrush = new PerfectFreehandBrush(fabricCanvas);
   fabricCanvas.freeDrawingBrush = perfectFreehandBrush;
   perfectFreehandBrush.setOptions(defaultBrushSettings);
@@ -625,7 +638,6 @@ function importScene() {
           }
         );
         const sceneData = JSON.parse(decompressed);
-        console.log(sceneData);
 
         // Load canvas objects
         await fabricCanvas.loadFromJSON(sceneData.objects, () => {
@@ -720,31 +732,31 @@ async function handleKeyEvent(e: any) {
   } else if (e.ctrlKey && e.key === "z") {
     e.preventDefault();
     await history.undo();
-    e.preventPropogation();
+    e.stopPropagation();
   } else if (e.ctrlKey && e.key === "y") {
     e.preventDefault();
     await history.redo();
-    e.preventPropogation();
+    e.stopPropagation();
   } else if (e.ctrlKey && e.key === "c") {
     e.preventDefault();
     copy();
-    e.preventPropogation();
+    e.stopPropagation();
   } else if (e.ctrlKey && e.key === "v") {
     e.preventDefault();
     await paste();
-    e.preventPropogation();
+    e.stopPropagation();
   } else if (e.ctrlKey && e.key === "o") {
     e.preventDefault();
     importScene();
-    e.preventPropogation();
+    e.stopPropagation();
   } else if (e.ctrlKey && e.key === "s") {
     e.preventDefault();
     exportScene();
-    e.preventPropogation();
+    e.stopPropagation();
   } else if (e.ctrlKey && e.key === "e") {
     e.preventDefault();
     openExportModal();
-    e.preventPropogation();
+    e.stopPropagation();
   }
 }
 

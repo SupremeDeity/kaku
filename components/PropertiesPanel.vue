@@ -416,6 +416,7 @@ import * as fabric from "fabric";
 import lodashSet from "lodash.set";
 import { ArrowHeadStyle } from "~/utils/constants";
 import RoughMultiPicker from "./RoughMultiPicker.vue";
+import cloneDeep from "lodash.clonedeep";
 
 interface Props {
   selectedObjects?: fabric.FabricObject[];
@@ -477,50 +478,36 @@ function deleteObjects(objs: fabric.FabricObject[]) {
   props.fabricCanvas.renderAll();
 }
 
-function duplicate() {
-  const activeObject = props.fabricCanvas.getActiveObject();
-  if (!activeObject) return;
+async function duplicate() {
+  const activeObjects = props.fabricCanvas.getActiveObjects();
+  props.fabricCanvas.discardActiveObject();
 
-  const toClone = activeObject.toJSON(); // Deep copy via JSON
+  const toClone = JSON.stringify(cloneDeep(activeObjects)); // Deep copy via JSON
 
-  fabric.util
-    .enlivenObjects([JSON.parse(JSON.stringify(toClone))])
-    .then((clone) => {
-      const clonedObj = clone[0];
-      if (
-        !(
-          clonedObj instanceof fabric.FabricObject ||
-          clonedObj instanceof fabric.BaseFabricObject
-        )
-      )
-        return;
+  const objects = await fabric.util.enlivenObjects(JSON.parse(toClone));
 
-      props.fabricCanvas.discardActiveObject();
-      clonedObj.set({
-        left: clonedObj.left + 10,
-        top: clonedObj.top + 10,
-        evented: true,
-      });
-
-      if (clonedObj instanceof fabric.ActiveSelection) {
-        clonedObj.canvas = props.fabricCanvas;
-        clonedObj.forEachObject((obj) => {
-          props.fabricCanvas.add(obj);
-        });
-        clonedObj.setCoords();
-      } else {
-        // @ts-expect-error just fabric having horrendous type-coherence
-        props.fabricCanvas.add(clonedObj);
-      }
-
-      toClone.top += 10;
-      toClone.left += 10;
-      // @ts-expect-error just fabric having horrendous type-coherence
-      props.fabricCanvas.setActiveObject(clonedObj);
-      props.fabricCanvas.requestRenderAll();
-      // @ts-expect-error custom event
-      props.fabricCanvas.fire("custom:added");
+  const fabricObjects = objects.filter(
+    (obj): obj is fabric.FabricObject => obj instanceof fabric.FabricObject
+  );
+  if (!fabricObjects.length) return;
+  fabricObjects.forEach((obj) => {
+    obj.set({
+      left: obj.left + 10,
+      top: obj.top + 10,
     });
+    obj.setCoords();
+
+    props.fabricCanvas.add(obj);
+  });
+  const selection = new fabric.ActiveSelection(fabricObjects, {
+    canvas: props.fabricCanvas,
+  });
+
+  props.fabricCanvas.setActiveObject(selection);
+  props.fabricCanvas.renderAll();
+
+  // @ts-expect-error custom event
+  props.fabricCanvas.fire("custom:added");
 }
 </script>
 <style lang="css" scoped>

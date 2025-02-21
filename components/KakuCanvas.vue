@@ -234,6 +234,7 @@ import * as fabric from "fabric";
 import CanvasHistory from "~/utils/fabric-history";
 import PropertiesPanel from "./PropertiesPanel.vue";
 import pako from "pako";
+import cloneDeep from "lodash.clonedeep";
 
 const runtimeConfig = useRuntimeConfig();
 const git_commit_sha = runtimeConfig.public.commitSha;
@@ -337,6 +338,19 @@ async function initializeCanvas() {
     borderScaleFactor: 2,
   };
 
+  fabric.FabricObject.customProperties = [
+    "name",
+    "padding",
+    "points",
+    "roughOptions",
+    "minSize",
+    "rounded",
+    "editing",
+    "path",
+    "startArrowHeadStyle",
+    "endArrowHeadStyle",
+  ];
+
   const perfectFreehandBrush = new PerfectFreehandBrush(fabricCanvas);
   fabricCanvas.freeDrawingBrush = perfectFreehandBrush;
   perfectFreehandBrush.setOptions(defaultBrushSettings);
@@ -396,49 +410,38 @@ async function initializeCanvas() {
 }
 
 function copy() {
-  const activeObject = fabricCanvas.getActiveObject();
-  if (!activeObject) return;
-
-  _clipboard = activeObject.toJSON(); // Deep copy via JSON
+  const activeObjects = fabricCanvas.getActiveObjects();
+  fabricCanvas.discardActiveObject();
+  // Serialize the whole selection
+  _clipboard = JSON.stringify(cloneDeep(activeObjects));
 }
 
 async function paste() {
-  const clone = await fabric.util.enlivenObjects([
-    JSON.parse(JSON.stringify(_clipboard)),
-  ]);
+  if (!_clipboard) return;
 
-  const clonedObj = clone[0];
-  if (
-    !(
-      clonedObj instanceof FabricObject ||
-      clonedObj instanceof fabric.BaseFabricObject
-    )
-  )
-    return;
-  fabricCanvas.discardActiveObject();
-  clonedObj.set({
-    left: clonedObj.left + 10,
-    top: clonedObj.top + 10,
-    evented: true,
+  const objects = await fabric.util.enlivenObjects(JSON.parse(_clipboard));
+  const fabricObjects = objects.filter(
+    (obj): obj is fabric.FabricObject => obj instanceof fabric.FabricObject
+  );
+  if (!fabricObjects.length) return;
+  fabricObjects.forEach((obj) => {
+    obj.set({
+      left: obj.left + 10,
+      top: obj.top + 10,
+    });
+    obj.setCoords();
+
+    fabricCanvas.add(obj);
+  });
+  const selection = new fabric.ActiveSelection(fabricObjects, {
+    canvas: fabricCanvas,
   });
 
-  if (clonedObj instanceof fabric.ActiveSelection) {
-    clonedObj.canvas = fabricCanvas;
-    clonedObj.forEachObject((obj) => {
-      fabricCanvas.add(obj);
-    });
-    clonedObj.setCoords();
-  } else {
-    // @ts-expect-error just fabric having horrendous type-coherence
-    fabricCanvas.add(clonedObj);
-  }
-  _clipboard.top += 10;
-  _clipboard.left += 10;
-  // @ts-expect-error just fabric having horrendous type-coherence
-  fabricCanvas.setActiveObject(clonedObj);
-  fabricCanvas.requestRenderAll();
+  fabricCanvas.setActiveObject(selection);
+  fabricCanvas.renderAll();
+
   // @ts-expect-error custom event
-  fabricCanvas.fire("custom:added");
+  fabricCanvas.fire("custom:added")
 }
 
 function handleScroll(opt: any) {
@@ -625,7 +628,6 @@ function importScene() {
           }
         );
         const sceneData = JSON.parse(decompressed);
-        console.log(sceneData);
 
         // Load canvas objects
         await fabricCanvas.loadFromJSON(sceneData.objects, () => {
@@ -720,31 +722,31 @@ async function handleKeyEvent(e: any) {
   } else if (e.ctrlKey && e.key === "z") {
     e.preventDefault();
     await history.undo();
-    e.preventPropogation();
+    e.stopPropagation();
   } else if (e.ctrlKey && e.key === "y") {
     e.preventDefault();
     await history.redo();
-    e.preventPropogation();
+    e.stopPropagation();
   } else if (e.ctrlKey && e.key === "c") {
     e.preventDefault();
     copy();
-    e.preventPropogation();
+    e.stopPropagation();
   } else if (e.ctrlKey && e.key === "v") {
     e.preventDefault();
     await paste();
-    e.preventPropogation();
+    e.stopPropagation();
   } else if (e.ctrlKey && e.key === "o") {
     e.preventDefault();
     importScene();
-    e.preventPropogation();
+    e.stopPropagation();
   } else if (e.ctrlKey && e.key === "s") {
     e.preventDefault();
     exportScene();
-    e.preventPropogation();
+    e.stopPropagation();
   } else if (e.ctrlKey && e.key === "e") {
     e.preventDefault();
     openExportModal();
-    e.preventPropogation();
+    e.stopPropagation();
   }
 }
 

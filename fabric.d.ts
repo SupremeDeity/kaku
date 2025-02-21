@@ -1,4 +1,3 @@
-import 'fabric';
 import type { roughShapeProps, SupportedFontsType } from "~/utils/constants";
 
 declare module "fabric" {

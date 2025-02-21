@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@nuxt/fonts": "0.10.3",
-    "fabric": "6.5.4",
+    "fabric": "6.6.1",
     "fontfaceobserver": "^2.3.0",
     "lodash.clonedeep": "^4.5.0",
     "lodash.set": "^4.3.2",

@@ -12,8 +12,8 @@ export class FabricRoughEllipse extends fabric.Ellipse {
         this.minSize = options.minSize || 5;
         this.roughOptions.seed = this.roughOptions.seed ?? Math.random() * 100;
         this.roughGenerator = rough.generator(this.roughOptions);
-        this.left = this.left !== 0 ? this.left : options.points[0];
-        this.top = this.top !== 0 ? this.top : options.points[1];
+        this.left = this.left !== null ? this.left : options.points[0];
+        this.top = this.top !== null ? this.top : options.points[1];
         this._updateRoughEllipse();
     }
 

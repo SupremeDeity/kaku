@@ -689,7 +689,7 @@ function exportScene() {
 }
 
 function saveViewportState() {
-  if (localStorage) {
+  if (localStorage && fabricCanvas) {
     const viewportState = {
       viewportTransform: fabricCanvas.viewportTransform,
       zoom: fabricCanvas.getZoom(),
@@ -700,12 +700,22 @@ function saveViewportState() {
 }
 
 function restoreViewportState() {
-  if (localStorage) {
+  const isValidViewportTransform = (
+    transform: any
+  ): transform is fabric.TMat2D => {
+    return (
+      Array.isArray(transform) &&
+      transform.length === 6 &&
+      transform.every((v) => typeof v === "number" && !isNaN(v))
+    );
+  };
+
+  if (localStorage && fabricCanvas) {
     const viewportState = localStorage.getItem("viewportState");
     if (viewportState) {
       const { viewportTransform, zoom, backgroundColor } =
         JSON.parse(viewportState);
-      if (viewportTransform) {
+      if (viewportTransform && isValidViewportTransform(viewportTransform)) {
         fabricCanvas.viewportTransform = viewportTransform;
       }
       if (zoom !== null) {
@@ -936,7 +946,7 @@ watch(currentMode, (newMode) => {
 
 watch(canvasBgColor, (newColor) => {
   fabricCanvas.backgroundColor = newColor;
-  fabricCanvas.requestRenderAll();
+  fabricCanvas.renderAll();
   saveViewportState();
 });
 </script>

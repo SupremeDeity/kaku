@@ -12,8 +12,8 @@ export class FabricRoughLine extends fabric.Path {
         this.roughOptions = options.roughOptions;
         this.roughOptions.seed = this.roughOptions?.seed ?? Math.random() * 100;
         this.roughGenerator = rough.generator();
-        this.left = this.left !== 0 ? this.left : options.points[0];
-        this.top = this.top !== 0 ? this.top : options.points[1];
+        this.left = this.left !== null ? this.left : options.points[0];
+        this.top = this.top !== null ? this.top : options.points[1];
         this._updateRoughLine();
         this.controls = fabric.controlsUtils.createPathControls(this, {
             controlPointStyle: {

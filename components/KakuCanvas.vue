@@ -403,6 +403,13 @@ async function initializeCanvas() {
       fabricCanvas.zoomToPoint(center, newZoom);
       fabricCanvas.requestRenderAll();
     },
+    onDrag(dx, dy, prevDx, prevDy, _) {
+      const vpt = fabricCanvas.viewportTransform;
+      vpt[4] += dx - prevDx;
+      vpt[5] += dy - prevDy;
+      fabricCanvas.setViewportTransform(vpt);
+      fabricCanvas.requestRenderAll();
+    },
     onGestureEnd() {
       fabricCanvas.selection = currentMode.value === "Select";
       fabricCanvas.requestRenderAll();

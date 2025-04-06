@@ -226,7 +226,7 @@
 
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted, watch } from "vue";
-import { FabricObject } from "fabric";
+import type { FabricObject } from "fabric";
 import FontFaceObserver from "fontfaceobserver";
 import { drawingModes, drawingModesIconMap } from "~/utils/constants";
 import * as fabric from "fabric";

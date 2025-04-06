@@ -9,8 +9,10 @@ export class PerfectFreehandBrush extends fabric.BaseBrush {
     this.strokePath = null;
   }
 
-  onMouseDown(pointer) {
-    this.points = [pointer];
+  onMouseDown(pointer, ev) {
+    this.freehandOptions.simulatePressure = ev.pressure !== undefined;
+    const pressure = ev.pressure || 0.5;
+    this.points.push({ x: pointer.x, y: pointer.y, pressure });
     this.viewportTransform = this.canvas.viewportTransform;
     this._render();
   }
@@ -94,4 +96,5 @@ export class PerfectFreehandBrush extends fabric.BaseBrush {
   setOptions(options) {
     this.freehandOptions = { ...this.freehandOptions, ...options };
   }
+
 }

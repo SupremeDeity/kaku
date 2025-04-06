@@ -404,6 +404,7 @@ async function initializeCanvas() {
       fabricCanvas.requestRenderAll();
     },
     onDrag(dx, dy, prevDx, prevDy, _) {
+      if (currentMode.value === "Hand (Panning)") return;
       const vpt = fabricCanvas.viewportTransform;
       vpt[4] += dx - prevDx;
       vpt[5] += dy - prevDy;
@@ -496,6 +497,7 @@ function handleMouseDown(o: any) {
   const evt = o.e;
   // ON DRAGGING
   if (evt.button === 1 || currentMode.value === "Hand (Panning)") {
+    if (!evt.isPrimary) return;
     fabricCanvas.isDrawingMode = false;
     // @ts-expect-error custom property added to fabricCanvas
     fabricCanvas.isDragging = true;

@@ -405,6 +405,7 @@ async function initializeCanvas() {
     },
     onGestureEnd() {
       fabricCanvas.selection = currentMode.value === "Select";
+      fabricCanvas.requestRenderAll();
     },
   });
 }
@@ -441,7 +442,7 @@ async function paste() {
   fabricCanvas.renderAll();
 
   // @ts-expect-error custom event
-  fabricCanvas.fire("custom:added")
+  fabricCanvas.fire("custom:added");
 }
 
 function handleScroll(opt: any) {
@@ -564,13 +565,12 @@ function handleMouseUp() {
     shape?.setCoords();
     shape.isDrawing = false;
     shape = undefined;
-    fabricCanvas.requestRenderAll();
     currentMode.value = "Select";
     // @ts-expect-error custom event on object add, because we want to fire
     // on mouse up instead of as soon as its created
     fabricCanvas.fire("custom:added");
   }
-  fabricCanvas.requestRenderAll();
+  fabricCanvas.renderAll();
 
   isContentVisible.value = checkContentVisible();
 }

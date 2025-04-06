@@ -9,20 +9,37 @@ export class PerfectFreehandBrush extends fabric.BaseBrush {
     this.strokePath = null;
   }
 
-  onMouseDown(pointer, ev) {
-    this.freehandOptions.simulatePressure = ev.pressure !== undefined;
-    const pressure = ev.pressure || 0.5;
+  onMouseDown(pointer, o) {
+    const evt = o.e;
+    if (evt.pointerType === "touch" && !evt.isPrimary) {
+      return;
+    }
+    this.freehandOptions.simulatePressure = evt.pressure !== undefined;
+    const pressure = evt.pressure || 0.5;
+    this.strokePath = null;
+    this.points = []
     this.points.push({ x: pointer.x, y: pointer.y, pressure });
     this.viewportTransform = this.canvas.viewportTransform;
     this._render();
   }
 
-  onMouseMove(pointer) {
-    this.points.push(pointer);
+  onMouseMove(pointer, o) {
+    const evt = o.e;
+
+    if (evt.pointerType === "touch" && !evt.isPrimary) {
+      return;
+    }
+    this.viewportTransform = this.canvas.viewportTransform;
+    const pressure = evt.pressure || 0.5;
+    this.points.push({ x: pointer.x, y: pointer.y, pressure });
     this._render();
   }
 
-  onMouseUp() {
+  onMouseUp(o) {
+    const evt = o.e;
+    if (evt.pointerType === "touch" && !evt.isPrimary) {
+      return;
+    }
     this._finalizeAndAddPath();
   }
 
@@ -58,7 +75,7 @@ export class PerfectFreehandBrush extends fabric.BaseBrush {
     path.name = "Drawing";
 
     this.canvas.add(path);
-    this.canvas.fire("custom:added")
+    this.canvas.fire("custom:added");
     this.canvas.clearContext(this.canvas.contextTop);
     this.canvas.requestRenderAll();
     this.points = [];
@@ -96,5 +113,4 @@ export class PerfectFreehandBrush extends fabric.BaseBrush {
   setOptions(options) {
     this.freehandOptions = { ...this.freehandOptions, ...options };
   }
-
 }

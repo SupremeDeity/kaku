@@ -33,7 +33,7 @@ export const ROUNDABLES = ["fabricroughrectangle", "fabricroughdiamond"];
 
 export const defaultBrushSettings = {
   color: "white",
-  size: 16,
+  size: 8,
   thinning: 0.6,
   smoothing: 0.5,
   streamline: 0.5,

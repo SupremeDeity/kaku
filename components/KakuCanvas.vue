@@ -413,6 +413,8 @@ async function initializeCanvas() {
     },
     onGestureEnd() {
       fabricCanvas.selection = currentMode.value === "Select";
+      isContentVisible.value = checkContentVisible();
+      saveViewportState();
       fabricCanvas.requestRenderAll();
     },
   });

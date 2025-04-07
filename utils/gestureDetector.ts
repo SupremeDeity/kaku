@@ -22,113 +22,100 @@ function normalizeAngle(angle: number): number {
 }
 
 export function gestureDetector(el: HTMLElement, options: GestureDetectorOptions) {
-    let initialDistance = 0
-    let initialX = 0
-    let initialY = 0
-
-    let initialAngle = 0
-    let previousAngle = 0
-
-    let previousScale = 1
-    let previousDx = 0
-    let previousDy = 0
+    let initialDistance = 0;
+    let initialX = 0;
+    let initialY = 0;
+    let initialAngle = 0;
+    let previousAngle = 0;
+    let previousScale = 1;
+    let previousDx = 0;
+    let previousDy = 0;
+    const ZOOM_THRESHOLD = 0.01; // Very sensitive zoom detection
 
     function onTouchStart(e: TouchEvent) {
         if (e.touches.length === 2) {
-            const x1 = e.touches[0].clientX
-            const y1 = e.touches[0].clientY
-            const x2 = e.touches[1].clientX
-            const y2 = e.touches[1].clientY
+            const x1 = e.touches[0].clientX;
+            const y1 = e.touches[0].clientY;
+            const x2 = e.touches[1].clientX;
+            const y2 = e.touches[1].clientY;
 
-            initialX = (x1 + x2) / 2
-            initialY = (y1 + y2) / 2
+            initialX = (x1 + x2) / 2;
+            initialY = (y1 + y2) / 2;
+            initialDistance = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+            initialAngle = calculateAngle(x1, y1, x2, y2);
 
-            previousScale = 1
-            previousDx = 0
-            previousDy = 0
-
-            initialAngle = calculateAngle(
-                e.touches[0].clientX,
-                e.touches[0].clientY,
-                e.touches[1].clientX,
-                e.touches[1].clientY
-            )
-
-            previousAngle = initialAngle
-
-            initialDistance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
+            previousDx = 0;
+            previousDy = 0;
+            previousScale = 1;
+            previousAngle = initialAngle;
 
             if (options.onGestureStart) {
-                options.onGestureStart()
+                options.onGestureStart();
             }
         }
     }
 
     function onTouchMove(e: TouchEvent) {
         if (e.touches.length === 2) {
-            const x1 = e.touches[0].clientX
-            const y1 = e.touches[0].clientY
-            const x2 = e.touches[1].clientX
-            const y2 = e.touches[1].clientY
+            const x1 = e.touches[0].clientX;
+            const y1 = e.touches[0].clientY;
+            const x2 = e.touches[1].clientX;
+            const y2 = e.touches[1].clientY;
 
-            const currentX = (x1 + x2) / 2
-            const currentY = (y1 + y2) / 2
+            const currentX = (x1 + x2) / 2;
+            const currentY = (y1 + y2) / 2;
+            const center: Point = new Point(currentX, currentY);
 
-            const center: Point = new Point (
-               currentX,
-              currentY
-        )
+            // Calculate panning (always)
+            const dx = currentX - initialX;
+            const dy = currentY - initialY;
 
-            const dx = currentX - initialX
-            const dy = currentY - initialY
+            // Calculate zoom (independent of panning)
+            const currentDistance = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+            const scale = currentDistance / initialDistance;
+            const scaleChange = Math.abs(scale - 1);
 
-            const currentDistance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))
-            const scale = currentDistance / initialDistance
+            // Calculate rotation (if needed)
+            const currentAngle = calculateAngle(x1, y1, x2, y2);
+            const angleDifference = normalizeAngle(currentAngle - previousAngle);
 
-            const currentAngle = calculateAngle(
-                e.touches[0].clientX,
-                e.touches[0].clientY,
-                e.touches[1].clientX,
-                e.touches[1].clientY
-            )
-            const angleDifference = normalizeAngle(currentAngle - previousAngle)
-
-            if (options.onRotate) {
-                options.onRotate(angleDifference, center)
+            // Execute all possible simultaneous gestures:
+            if (scaleChange >= ZOOM_THRESHOLD && options.onZoom) {
+                options.onZoom(scale, previousScale, center);
             }
-
-            if (options.onZoom) {
-                options.onZoom(scale, previousScale, center)
-            }
-
+            
             if (options.onDrag) {
-                options.onDrag(dx, dy, previousDx, previousDy, center)
+                options.onDrag(dx, dy, previousDx, previousDy, center);
+            }
+            
+            if (Math.abs(angleDifference) > 2 && options.onRotate) {
+                options.onRotate(angleDifference, center);
             }
 
             // Update previous values
-            previousAngle = currentAngle
-            previousScale = scale
-            previousDx = dx
-            previousDy = dy
+            previousDx = dx;
+            previousDy = dy;
+            previousScale = scale;
+            previousAngle = currentAngle;
         }
     }
 
     function onTouchEnd(e: TouchEvent) {
         if (options.onGestureEnd) {
-            options.onGestureEnd(e.touches.length)
+            options.onGestureEnd(e.touches.length);
         }
     }
 
-    el.addEventListener('touchstart', onTouchStart, { passive: true })
-    el.addEventListener('touchmove', onTouchMove, { passive: true })
-    el.addEventListener('touchend', onTouchEnd, { passive: true })
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: true });
+    el.addEventListener('touchend', onTouchEnd, { passive: true });
 
     return {
         destroy() {
-            el.removeEventListener('touchstart', onTouchStart)
-            el.removeEventListener('touchmove', onTouchMove)
-            el.removeEventListener('touchend', onTouchEnd)
+            el.removeEventListener('touchstart', onTouchStart);
+            el.removeEventListener('touchmove', onTouchMove);
+            el.removeEventListener('touchend', onTouchEnd);
         }
-    }
+    };
 }
 

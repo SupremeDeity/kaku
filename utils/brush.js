@@ -7,21 +7,65 @@ export class PerfectFreehandBrush extends fabric.BaseBrush {
     this.points = [];
     this.viewportTransform = null;
     this.strokePath = null;
+    this.isMultiTouch = false;
   }
 
-  onMouseDown(pointer) {
-    this.points = [pointer];
+  onMouseDown(pointer, o) {
+    const evt = o.e;
+
+    if (this.isMultiTouch) return;
+    if (evt.pointerType === "touch" && !evt.isPrimary) {
+      this.isMultiTouch = true;
+      this._abortDrawing();
+      return;
+    }
+
+    this.freehandOptions.simulatePressure = evt.pressure !== undefined;
+    const pressure = evt.pressure || 0.5;
+    this.strokePath = null;
+    this.points = []
+    this.points.push({ x: pointer.x, y: pointer.y, pressure });
     this.viewportTransform = this.canvas.viewportTransform;
     this._render();
   }
 
-  onMouseMove(pointer) {
-    this.points.push(pointer);
+  onMouseMove(pointer, o) {
+    const evt = o.e;
+
+    if (this.isMultiTouch) return;
+    if (evt.pointerType === "touch" && !evt.isPrimary) {
+      this.isMultiTouch = true; // Mark as multi-touch
+      this._abortDrawing();
+      return;
+    }
+
+    this.viewportTransform = this.canvas.viewportTransform;
+    const pressure = evt.pressure || 0.5;
+    this.points.push({ x: pointer.x, y: pointer.y, pressure });
     this._render();
   }
 
-  onMouseUp() {
+  onMouseUp(o) {
+    const evt = o.e;
+    // Reset multi-touch state
+    if (evt.pointerType === "touch") {
+      this.isMultiTouch = false;
+    }
+
+    if (this.isMultiTouch) {
+      this._abortDrawing();
+      return;
+    }
+
     this._finalizeAndAddPath();
+  }
+
+  _abortDrawing() {
+    // Clear any temporary drawing
+    this.canvas.clearContext(this.canvas.contextTop);
+    this.canvas.requestRenderAll();
+    this.points = [];
+    this.strokePath = null;
   }
 
   _render() {
@@ -56,7 +100,7 @@ export class PerfectFreehandBrush extends fabric.BaseBrush {
     path.name = "Drawing";
 
     this.canvas.add(path);
-    this.canvas.fire("custom:added")
+    this.canvas.fire("custom:added");
     this.canvas.clearContext(this.canvas.contextTop);
     this.canvas.requestRenderAll();
     this.points = [];

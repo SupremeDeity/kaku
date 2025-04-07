@@ -226,7 +226,7 @@
 
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted, watch } from "vue";
-import { FabricObject } from "fabric";
+import type { FabricObject } from "fabric";
 import FontFaceObserver from "fontfaceobserver";
 import { drawingModes, drawingModesIconMap } from "~/utils/constants";
 import * as fabric from "fabric";
@@ -403,8 +403,19 @@ async function initializeCanvas() {
       fabricCanvas.zoomToPoint(center, newZoom);
       fabricCanvas.requestRenderAll();
     },
+    onDrag(dx, dy, prevDx, prevDy, _) {
+      if (currentMode.value === "Hand (Panning)") return;
+      const vpt = fabricCanvas.viewportTransform;
+      vpt[4] += dx - prevDx;
+      vpt[5] += dy - prevDy;
+      fabricCanvas.setViewportTransform(vpt);
+      fabricCanvas.requestRenderAll();
+    },
     onGestureEnd() {
       fabricCanvas.selection = currentMode.value === "Select";
+      isContentVisible.value = checkContentVisible();
+      saveViewportState();
+      fabricCanvas.requestRenderAll();
     },
   });
 }
@@ -441,7 +452,7 @@ async function paste() {
   fabricCanvas.renderAll();
 
   // @ts-expect-error custom event
-  fabricCanvas.fire("custom:added")
+  fabricCanvas.fire("custom:added");
 }
 
 function handleScroll(opt: any) {
@@ -488,6 +499,7 @@ function handleMouseDown(o: any) {
   const evt = o.e;
   // ON DRAGGING
   if (evt.button === 1 || currentMode.value === "Hand (Panning)") {
+    if (!evt.isPrimary) return;
     fabricCanvas.isDrawingMode = false;
     // @ts-expect-error custom property added to fabricCanvas
     fabricCanvas.isDragging = true;
@@ -564,13 +576,12 @@ function handleMouseUp() {
     shape?.setCoords();
     shape.isDrawing = false;
     shape = undefined;
-    fabricCanvas.requestRenderAll();
     currentMode.value = "Select";
     // @ts-expect-error custom event on object add, because we want to fire
     // on mouse up instead of as soon as its created
     fabricCanvas.fire("custom:added");
   }
-  fabricCanvas.requestRenderAll();
+  fabricCanvas.renderAll();
 
   isContentVisible.value = checkContentVisible();
 }
@@ -682,7 +693,7 @@ function exportScene() {
 }
 
 function saveViewportState() {
-  if (localStorage) {
+  if (localStorage && fabricCanvas) {
     const viewportState = {
       viewportTransform: fabricCanvas.viewportTransform,
       zoom: fabricCanvas.getZoom(),
@@ -693,12 +704,22 @@ function saveViewportState() {
 }
 
 function restoreViewportState() {
-  if (localStorage) {
+  const isValidViewportTransform = (
+    transform: any
+  ): transform is fabric.TMat2D => {
+    return (
+      Array.isArray(transform) &&
+      transform.length === 6 &&
+      transform.every((v) => typeof v === "number" && !isNaN(v))
+    );
+  };
+
+  if (localStorage && fabricCanvas) {
     const viewportState = localStorage.getItem("viewportState");
     if (viewportState) {
       const { viewportTransform, zoom, backgroundColor } =
         JSON.parse(viewportState);
-      if (viewportTransform) {
+      if (viewportTransform && isValidViewportTransform(viewportTransform)) {
         fabricCanvas.viewportTransform = viewportTransform;
       }
       if (zoom !== null) {
@@ -929,7 +950,7 @@ watch(currentMode, (newMode) => {
 
 watch(canvasBgColor, (newColor) => {
   fabricCanvas.backgroundColor = newColor;
-  fabricCanvas.requestRenderAll();
+  fabricCanvas.renderAll();
   saveViewportState();
 });
 </script>

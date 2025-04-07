@@ -13,8 +13,8 @@ export class FabricRoughRectangle extends fabric.Rect {
         this.roughOptions.seed = this.roughOptions.seed ?? Math.random() * 100;
         this.minSize = options.minSize || 5; // Minimum size of the rectangle
         this.roughGenerator = this.roughGenerator ?? rough.generator();
-        this.left = this.left !== null ? this.left : options.points[0];
-        this.top = this.top !== null ? this.top : options.points[1];
+        this.left = (this.left !== null && this.left !== 0) ? this.left : options.points[0];
+        this.top = (this.top !== null && this.top !== 0) ? this.top : options.points[1];
         this._updateRoughRectangle();
     }
 

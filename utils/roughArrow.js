@@ -14,8 +14,10 @@ export class FabricRoughArrow extends fabric.Path {
         this.roughOptions = options.roughOptions;
         this.roughOptions.seed = this.roughOptions?.seed ?? Math.random() * 100;
         this.roughGenerator = rough.generator();
-        this.left = (this.left !== null && this.left !== 0) ? this.left : options.points[0];
-        this.top = (this.top !== null && this.top !== 0) ? this.top : options.points[1];
+        this.left =
+            this.left !== null && this.left !== 0 ? this.left : options.points[0];
+        this.top =
+            this.top !== null && this.top !== 0 ? this.top : options.points[1];
         this.startArrowHeadStyle =
             options.startArrowHeadStyle || ArrowHeadStyle.NoHead;
         this.endArrowHeadStyle = options.endArrowHeadStyle || ArrowHeadStyle.Head;
@@ -42,7 +44,52 @@ export class FabricRoughArrow extends fabric.Path {
         return `M ${x1} ${y1} Q 0 0 ${x2} ${y2}`;
     }
 
+    canvasToPathCoords(path, canvasX, canvasY) {
+        const pathMatrix = path.calcTransformMatrix();
+        const invertedMatrix = fabric.util.invertTransform(pathMatrix);
+
+        return fabric.util.transformPoint(
+            { x: canvasX, y: canvasY },
+            invertedMatrix
+        );
+    }
+
     _updateRoughArrow() {
+        if (this.canvas && this.isDrawing) {
+            const objects = this.canvas.getObjects();
+            const [x1, y1, x2, y2] = this.points;
+            for (const obj of objects) {
+                if (obj !== this) {
+                    const near = isPointNearBoundingBox(
+                        new fabric.Point(x2, y2),
+                        obj,
+                        20
+                    );
+                    this.endConnection = near ? obj : null;
+                    if (near) {
+                        obj.on("moving", () => {
+                            const targetPos = new fabric.Point(obj.left, obj.top);
+                            const localPos = targetPos.transform(
+                                fabric.util.invertTransform(this.calcTransformMatrix())
+                            );
+
+                            const newX = localPos.x + this.pathOffset.x;
+                            const newY = localPos.y + this.pathOffset.y;
+                            this.path[1][3] = newX;
+                            this.path[1][4] = newY;
+
+                            this.setCoords();
+                            this.update();
+                        });
+                        break;
+                    }
+                }
+            }
+            console.log(
+                "Connected to object:",
+                this.endConnection ? this.endConnection.type : "None"
+            );
+        }
         if (this.isDrawing) {
             const [x1, y1, x2, y2] = this.points;
             const points = [
@@ -120,8 +167,14 @@ export class FabricRoughArrow extends fabric.Path {
         );
 
         const [, x1, y1, x2, y2] = this.path[1];
-        const angleStart = getLineAngle(x1 - this.pathOffset.x, y1 - this.pathOffset.y);
-        const angleEnd = getLineAngle(x2 - this.pathOffset.x, y2 - this.pathOffset.y);
+        const angleStart = getLineAngle(
+            x1 - this.pathOffset.x,
+            y1 - this.pathOffset.y
+        );
+        const angleEnd = getLineAngle(
+            x2 - this.pathOffset.x,
+            y2 - this.pathOffset.y
+        );
 
         this._updateArrowHeads(x1, y1, x2, y2, angleStart, angleEnd);
     }
@@ -165,7 +218,7 @@ export class FabricRoughArrow extends fabric.Path {
 
     _render(ctx) {
         ctx.save();
-        ctx.lineCap = "round"
+        ctx.lineCap = "round";
         const roughCanvas = rough.canvas(ctx.canvas);
         roughCanvas.draw(this.roughArrow);
         if (this.endArrowHeadStyle !== ArrowHeadStyle.NoHead)

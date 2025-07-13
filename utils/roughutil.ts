@@ -1,6 +1,6 @@
 // Temporary very crude way to get the stroke style
 
-import { FabricObject, Intersection, Point } from "fabric";
+import { FabricObject, iMatrix, Intersection, Path, Point, util, type TMat2D } from "fabric";
 
 // For use inside the properties panel
 export function getStrokeStyle(strokeDash: any) {
@@ -94,3 +94,49 @@ function _distancePointToSegment(P: Point, A: Point, B: Point): number {
   const closest = new Point(A.x + AB.x * t, A.y + AB.y * t);
   return P.distanceFrom(closest);
 }
+
+export function generateUniqueId() {
+  return 'shape_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+export const movePathPoint = (
+  pathObject: Path,
+  x: number,
+  y: number,
+  commandIndex: number,
+  pointIndex: number,
+) => {
+  const { path, pathOffset } = pathObject;
+
+  const anchorCommand =
+    path[(commandIndex > 0 ? commandIndex : path.length) - 1];
+  const anchorPoint = new Point(
+    anchorCommand[pointIndex] as number,
+    anchorCommand[pointIndex + 1] as number,
+  );
+
+  const anchorPointInParentPlane = anchorPoint
+    .subtract(pathOffset)
+    .transform(pathObject.calcOwnMatrix());
+
+  const mouseLocalPosition = util.sendPointToPlane(
+    new Point(x, y),
+    undefined,
+    pathObject.calcOwnMatrix(),
+  );
+
+  path[commandIndex][pointIndex] = mouseLocalPosition.x + pathOffset.x;
+  path[commandIndex][pointIndex + 1] = mouseLocalPosition.y + pathOffset.y;
+  pathObject.setDimensions();
+
+  const newAnchorPointInParentPlane = anchorPoint
+    .subtract(pathObject.pathOffset)
+    .transform(pathObject.calcOwnMatrix());
+
+  const diff = newAnchorPointInParentPlane.subtract(anchorPointInParentPlane);
+  pathObject.left -= diff.x;
+  pathObject.top -= diff.y;
+  pathObject.set('dirty', true);
+  return true;
+};
+

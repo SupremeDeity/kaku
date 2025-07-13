@@ -1,5 +1,6 @@
 import * as fabric from "fabric";
 import rough from "roughjs";
+import { generateUniqueId } from './roughutil';
 
 export class FabricRoughLine extends fabric.Path {
     static get type() {
@@ -10,6 +11,9 @@ export class FabricRoughLine extends fabric.Path {
         this.name = "Line";
         this.points = options.points;
         this.roughOptions = options.roughOptions;
+
+        this.id = options.id || generateUniqueId();
+
         this.roughOptions.seed = this.roughOptions?.seed ?? Math.random() * 100;
         this.roughGenerator = rough.generator();
         this.left = (this.left !== null && this.left !== 0) ? this.left : options.points[0];
@@ -126,6 +130,7 @@ export class FabricRoughLine extends fabric.Path {
     toObject(propertiesToInclude) {
         return {
             ...super.toObject(propertiesToInclude),
+            id: this.id,
             editing: this.editing,
             path: this.path,
             points: this.points,

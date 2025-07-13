@@ -1,5 +1,6 @@
 import * as fabric from "fabric";
 import rough from "roughjs";
+import { generateUniqueId } from './roughutil';
 
 export class FabricRoughEllipse extends fabric.Ellipse {
     static get type() {
@@ -10,6 +11,9 @@ export class FabricRoughEllipse extends fabric.Ellipse {
         this.name = "Ellipse"
         this.points = options.points;
         this.minSize = options.minSize || 5;
+
+        this.id = options.id || generateUniqueId();
+
         this.roughOptions.seed = this.roughOptions.seed ?? Math.random() * 100;
         this.roughGenerator = rough.generator(this.roughOptions);
         this.left = (this.left !== null && this.left !== 0) ? this.left : options.points[0];
@@ -89,6 +93,7 @@ export class FabricRoughEllipse extends fabric.Ellipse {
     toObject(propertiesToInclude) {
         return {
             ...super.toObject(propertiesToInclude),
+            id: this.id,
             points: this.points,
             roughOptions: this.roughOptions,
             minSize: this.minSize,

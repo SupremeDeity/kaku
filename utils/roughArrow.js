@@ -53,6 +53,21 @@ export class FabricRoughArrow extends fabric.Path {
         this.on("added", () => {
             this.reconnectBindings();
         });
+
+        this.on("modified", () => {
+            if (this.path.length < 2) return;
+
+            const matrix = this.calcTransformMatrix();
+            const startLocal = new fabric.Point(this.path[0][1] - this.pathOffset.x, this.path[0][2] - this.pathOffset.y);
+            const startScene = startLocal.transform(matrix);
+
+            const endLocal = new fabric.Point(this.path[1][3] - this.pathOffset.x, this.path[1][4] - this.pathOffset.y);
+            const endScene = endLocal.transform(matrix);
+
+            // Now call _checkPotentialBindings with scene-space coordinates
+            this._checkPotentialBindings(startScene.x, startScene.y, endScene.x, endScene.y);
+            this.finalizePotentialBindings();
+        })
     }
     _getBindingConfig(bindingType) {
         return bindingType === 'end'
@@ -62,11 +77,8 @@ export class FabricRoughArrow extends fabric.Path {
 
     _createMovingHandler(binding, pathIndex1, pathIndex2) {
         return () => {
-            const objectCenter = binding.object.getCenterPoint();
-            const newScenePoint = new fabric.Point(
-                objectCenter.x + binding.offsetX,
-                objectCenter.y + binding.offsetY
-            );
+            const newScenePoint = (binding.object.getCenterPoint()).add({ x: binding.offsetX, y: binding.offsetY });
+
             movePathPoint(this, newScenePoint.x, newScenePoint.y, pathIndex1, pathIndex2);
             this.setCoords();
             this.update();
@@ -81,8 +93,9 @@ export class FabricRoughArrow extends fabric.Path {
         return dispose;
     }
 
-    _createBinding(obj, x, y, objectCenter, bindingType, pathIndex1, pathIndex2) {
+    _createBinding(obj, x, y, bindingType) {
         const connectionPoint = new fabric.Point(x, y);
+        const objectCenter = obj.getCenterPoint();
         const offset = connectionPoint.subtract(objectCenter);
 
         const binding = {
@@ -104,8 +117,6 @@ export class FabricRoughArrow extends fabric.Path {
         } else {
             this.startBinding = binding;
         }
-
-        console.log(`Connected to object (${bindingType}):`, obj.type);
     }
 
     _cleanupBinding(bindingType) {
@@ -120,35 +131,35 @@ export class FabricRoughArrow extends fabric.Path {
         return `M ${x1} ${y1} Q 0 0 ${x2} ${y2}`;
     }
 
-    _updateRoughArrow() {
-        if (this.canvas && this.isDrawing) {
-            const objects = this.canvas.getObjects();
-            const [x1, y1, x2, y2] = this.points;
+    _checkPotentialBindings(x1, y1, x2, y2) {
+        const objects = this.canvas.getObjects();
 
-            // Track potential bindings during drawing (don't create actual bindings yet)
-            let potentialEndBinding = null;
-            let potentialStartBinding = null;
+        // Track potential bindings during drawing (don't create actual bindings yet)
+        let potentialEndBinding = null;
+        let potentialStartBinding = null;
+        for (const obj of objects) {
+            if (obj === this) continue;
 
-            for (const obj of objects) {
-                if (obj === this) continue;
-
-                const objectCenter = obj.getCenterPoint();
-
-                // Check for potential end binding
-                if (isPointNearBoundingBox(new fabric.Point(x2, y2), obj, 20)) {
-                    potentialEndBinding = { obj, x: x2, y: y2, objectCenter };
-                }
-
-                // Check for potential start binding
-                if (isPointNearBoundingBox(new fabric.Point(x1, y1), obj, 20)) {
-                    potentialStartBinding = { obj, x: x1, y: y1, objectCenter };
-                }
-
+            // Check for potential end binding
+            if (isPointNearBoundingBox(new fabric.Point(x2, y2), obj, 20)) {
+                potentialEndBinding = { obj, x: x2, y: y2 };
             }
 
-            // Store potential bindings for finalization later
-            this._potentialEndBinding = potentialEndBinding;
-            this._potentialStartBinding = potentialStartBinding;
+            // Check for potential start binding
+            if (isPointNearBoundingBox(new fabric.Point(x1, y1), obj, 20)) {
+                potentialStartBinding = { obj, x: x1, y: y1 };
+            }
+        }
+
+        // Store potential bindings for finalization later
+        this._potentialEndBinding = potentialEndBinding;
+        this._potentialStartBinding = potentialStartBinding;
+
+    }
+
+    _updateRoughArrow() {
+        if (this.canvas && this.isDrawing) {
+            this._checkPotentialBindings(...this.points);
         }
 
         if (this.isDrawing) {
@@ -301,7 +312,6 @@ export class FabricRoughArrow extends fabric.Path {
             if (obj) {
                 this.startBinding.object = obj;
                 this._attachBindingListener(this.startBinding, 'start');
-                console.log("Reconnected start binding to:", obj.type);
             }
         }
 
@@ -311,28 +321,38 @@ export class FabricRoughArrow extends fabric.Path {
             if (obj) {
                 this.endBinding.object = obj;
                 this._attachBindingListener(this.endBinding, 'end');
-                console.log("Reconnected end binding to:", obj.type);
             }
         }
     }
 
     finalizePotentialBindings() {
-        // Finalize end binding if there's a potential one and no existing binding
-        if (this._potentialEndBinding && !this.endBinding) {
-            const { obj, x, y, objectCenter } = this._potentialEndBinding;
-            this._createBinding(obj, x, y, objectCenter, "end", 1, 3);
+        // Finalize or remove END binding
+        if (this._potentialEndBinding) {
+            const { obj, x, y } = this._potentialEndBinding;
+
+            this._createBinding(obj, x, y, "end");
+        } else if (this.endBinding) {
+            // No potential binding, but we had one before → remove it
+            this._cleanupBinding("end");
+            this.endBinding = null;
         }
 
-        // Finalize start binding if there's a potential one and no existing binding
-        if (this._potentialStartBinding && !this.startBinding) {
-            const { obj, x, y, objectCenter } = this._potentialStartBinding;
-            this._createBinding(obj, x, y, objectCenter, "start", 0, 1);
+        // Finalize or remove START binding
+        if (this._potentialStartBinding) {
+            const { obj, x, y } = this._potentialStartBinding;
+
+            this._createBinding(obj, x, y, "start");
+        } else if (this.startBinding) {
+            // No potential binding, but we had one before → remove it
+            this._cleanupBinding("start");
+            this.startBinding = null;
         }
 
-        // Clear potential bindings
+        // Clear temporary storage
         this._potentialEndBinding = null;
         this._potentialStartBinding = null;
     }
+
 
     clearBindings() {
         this._cleanupBinding('end');

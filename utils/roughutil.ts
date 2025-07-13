@@ -60,12 +60,6 @@ export function getLineAngle(displacementX: number, displacementY: number) {
  * @returns true if point is near or touching the bounding box edge
  */
 export function isPointNearBoundingBox(point: Point, object: FabricObject, threshold: number): boolean {
-  // Ignore if the point is inside the object
-  // if (object.containsPoint(point)) {
-  //   console.log("Point is inside the object, ignoring");
-  //   return false;
-  // }
-
   const bboxCorners = object.getCoords(); // [tl, tr, br, bl] in scene plane
   for (let i = 0; i < bboxCorners.length; i++) {
     const A = bboxCorners[i];

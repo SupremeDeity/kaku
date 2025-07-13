@@ -575,6 +575,11 @@ function handleMouseUp() {
     shapePlacementMode = false;
     shape?.setCoords();
     shape.isDrawing = false;
+
+    if (shape instanceof FabricRoughArrow) {
+      shape.finalizePotentialBindings();
+    }
+
     shape = undefined;
     currentMode.value = "Select";
     // @ts-expect-error custom event on object add, because we want to fire

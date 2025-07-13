@@ -12,7 +12,6 @@ export class FabricRoughArrow extends fabric.Path {
         this.name = "Arrow";
         this.points = options.points;
         this.roughOptions = options.roughOptions;
-        this.objectCaching = false;
 
         this.id = options.id || generateUniqueId();
 
@@ -25,6 +24,15 @@ export class FabricRoughArrow extends fabric.Path {
         this.startArrowHeadStyle =
             options.startArrowHeadStyle || ArrowHeadStyle.NoHead;
         this.endArrowHeadStyle = options.endArrowHeadStyle || ArrowHeadStyle.Head;
+
+        // Initialize bindings if they exist in options
+        if (options.startBinding) {
+            this.startBinding = { ...options.startBinding };
+        }
+        if (options.endBinding) {
+            this.endBinding = { ...options.endBinding };
+        }
+
         this._updateRoughArrow();
         this.controls = fabric.controlsUtils.createPathControls(this, {
             controlPointStyle: {
@@ -41,6 +49,70 @@ export class FabricRoughArrow extends fabric.Path {
             this._updateRoughArrow();
             this.editing = false;
         });
+
+        this.on("added", () => {
+            this.reconnectBindings();
+        });
+    }
+    _getBindingConfig(bindingType) {
+        return bindingType === 'end'
+            ? { pathIndex1: 1, pathIndex2: 3 }
+            : { pathIndex1: 0, pathIndex2: 1 };
+    }
+
+    _createMovingHandler(binding, pathIndex1, pathIndex2) {
+        return () => {
+            const objectCenter = binding.object.getCenterPoint();
+            const newScenePoint = new fabric.Point(
+                objectCenter.x + binding.offsetX,
+                objectCenter.y + binding.offsetY
+            );
+            movePathPoint(this, newScenePoint.x, newScenePoint.y, pathIndex1, pathIndex2);
+            this.setCoords();
+            this.update();
+        };
+    }
+
+    _attachBindingListener(binding, bindingType) {
+        const config = this._getBindingConfig(bindingType);
+        const handler = this._createMovingHandler(binding, config.pathIndex1, config.pathIndex2);
+        const dispose = binding.object.on("moving", handler);
+        binding.dispose = dispose;
+        return dispose;
+    }
+
+    _createBinding(obj, x, y, objectCenter, bindingType, pathIndex1, pathIndex2) {
+        const connectionPoint = new fabric.Point(x, y);
+        const offset = connectionPoint.subtract(objectCenter);
+
+        const binding = {
+            elementId: obj.id,
+            offsetX: offset.x,
+            offsetY: offset.y,
+            object: obj,
+        };
+
+        // Clean up existing binding if any
+        this._cleanupBinding(bindingType);
+
+        // Attach event listener
+        this._attachBindingListener(binding, bindingType);
+
+        // Store the binding
+        if (bindingType === "end") {
+            this.endBinding = binding;
+        } else {
+            this.startBinding = binding;
+        }
+
+        console.log(`Connected to object (${bindingType}):`, obj.type);
+    }
+
+    _cleanupBinding(bindingType) {
+        const binding = bindingType === 'end' ? this.endBinding : this.startBinding;
+        if (binding?.dispose) {
+            binding.dispose();
+        }
     }
 
     _createPathData(points) {
@@ -51,39 +123,32 @@ export class FabricRoughArrow extends fabric.Path {
     _updateRoughArrow() {
         if (this.canvas && this.isDrawing) {
             const objects = this.canvas.getObjects();
-            const [x1, y1, x2, y2] = this.points; // current arrow line
+            const [x1, y1, x2, y2] = this.points;
+
+            // Track potential bindings during drawing (don't create actual bindings yet)
+            let potentialEndBinding = null;
+            let potentialStartBinding = null;
 
             for (const obj of objects) {
-                if (obj !== this) {
-                    const near = isPointNearBoundingBox(new fabric.Point(x2, y2), obj, 20);
-                    if (!near) continue;
+                if (obj === this) continue;
 
-                    const objectCenter = obj.getCenterPoint();
-                    const connectionPoint = new fabric.Point(x2, y2);
-                    const offset = connectionPoint.subtract(objectCenter);
+                const objectCenter = obj.getCenterPoint();
 
-                    this.endBinding = {
-                        elementId: obj.id,
-                        offsetX: offset.x,
-                        offsetY: offset.y
-                    };
-
-                    obj.on("moving", () => {
-                        const objectCenter = obj.getCenterPoint();
-                        const newScenePoint = new fabric.Point(
-                            objectCenter.x + this.endBinding.offsetX,
-                            objectCenter.y + this.endBinding.offsetY
-                        );
-
-                        movePathPoint(this, newScenePoint.x, newScenePoint.y, 1, 3);
-                        this.setCoords()
-                        this.update()
-                    });
-
-                    console.log("Connected to object:", obj.type);
-                    break;
+                // Check for potential end binding
+                if (isPointNearBoundingBox(new fabric.Point(x2, y2), obj, 20)) {
+                    potentialEndBinding = { obj, x: x2, y: y2, objectCenter };
                 }
+
+                // Check for potential start binding
+                if (isPointNearBoundingBox(new fabric.Point(x1, y1), obj, 20)) {
+                    potentialStartBinding = { obj, x: x1, y: y1, objectCenter };
+                }
+
             }
+
+            // Store potential bindings for finalization later
+            this._potentialEndBinding = potentialEndBinding;
+            this._potentialStartBinding = potentialStartBinding;
         }
 
         if (this.isDrawing) {
@@ -126,14 +191,8 @@ export class FabricRoughArrow extends fabric.Path {
             );
 
             const [, _x1, _y1, _x2, _y2] = this.path[1];
-            const angleStart = getLineAngle(
-                _x1,
-                _y1
-            );
-            const angleEnd = getLineAngle(
-                _x2,
-                _y2
-            );
+            const angleStart = getLineAngle(_x1, _y1);
+            const angleEnd = getLineAngle(_x2, _y2);
 
             this._updateArrowHeads(_x1, _y1, _x2, _y2, angleStart, angleEnd);
         } else {
@@ -231,6 +290,57 @@ export class FabricRoughArrow extends fabric.Path {
         this.dirty = true;
     }
 
+    reconnectBindings() {
+        if (!this.canvas) return;
+
+        const objects = this.canvas.getObjects();
+
+        // Reconnect start binding
+        if (this.startBinding && this.startBinding.elementId && !this.startBinding.dispose) {
+            const obj = objects.find(o => o.id === this.startBinding.elementId);
+            if (obj) {
+                this.startBinding.object = obj;
+                this._attachBindingListener(this.startBinding, 'start');
+                console.log("Reconnected start binding to:", obj.type);
+            }
+        }
+
+        // Reconnect end binding
+        if (this.endBinding && this.endBinding.elementId && !this.endBinding.dispose) {
+            const obj = objects.find(o => o.id === this.endBinding.elementId);
+            if (obj) {
+                this.endBinding.object = obj;
+                this._attachBindingListener(this.endBinding, 'end');
+                console.log("Reconnected end binding to:", obj.type);
+            }
+        }
+    }
+
+    finalizePotentialBindings() {
+        // Finalize end binding if there's a potential one and no existing binding
+        if (this._potentialEndBinding && !this.endBinding) {
+            const { obj, x, y, objectCenter } = this._potentialEndBinding;
+            this._createBinding(obj, x, y, objectCenter, "end", 1, 3);
+        }
+
+        // Finalize start binding if there's a potential one and no existing binding
+        if (this._potentialStartBinding && !this.startBinding) {
+            const { obj, x, y, objectCenter } = this._potentialStartBinding;
+            this._createBinding(obj, x, y, objectCenter, "start", 0, 1);
+        }
+
+        // Clear potential bindings
+        this._potentialEndBinding = null;
+        this._potentialStartBinding = null;
+    }
+
+    clearBindings() {
+        this._cleanupBinding('end');
+        this._cleanupBinding('start');
+        this.endBinding = null;
+        this.startBinding = null;
+    }
+
     toObject(propertiesToInclude) {
         return {
             ...super.toObject(propertiesToInclude),
@@ -241,6 +351,16 @@ export class FabricRoughArrow extends fabric.Path {
             roughOptions: this.roughOptions,
             startArrowHeadStyle: this.startArrowHeadStyle,
             endArrowHeadStyle: this.endArrowHeadStyle,
+            startBinding: this.startBinding ? {
+                elementId: this.startBinding.elementId,
+                offsetX: this.startBinding.offsetX,
+                offsetY: this.startBinding.offsetY
+            } : null,
+            endBinding: this.endBinding ? {
+                elementId: this.endBinding.elementId,
+                offsetX: this.endBinding.offsetX,
+                offsetY: this.endBinding.offsetY
+            } : null,
         };
     }
 }

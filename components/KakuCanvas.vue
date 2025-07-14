@@ -14,11 +14,12 @@
             icon="i-ph:github-logo-duotone"
             variant="soft"
             color="cyan"
+            class="rounded-none"
           />
         </UTooltip>
         <UTooltip
           ><UButton
-            class="border-l border-cyan-800"
+            class="border-l border-cyan-800 rounded-none"
             variant="soft"
             color="cyan"
             icon="i-ph:info-duotone"
@@ -50,6 +51,7 @@
       >
         <UTooltip text="Decrease zoom">
           <UButton
+            class="rounded-none"
             icon="i-material-symbols-check-indeterminate-small"
             variant="soft"
             color="cyan"
@@ -87,7 +89,7 @@
             variant="soft"
             color="cyan"
             icon="i-material-symbols-add"
-            class="border-l border-cyan-800"
+            class="border-l border-cyan-800 rounded-none"
             @click="
               () => {
                 const zoom = fabricCanvas.getZoom() + 0.1;

@@ -1,7 +1,7 @@
 import * as fabric from "fabric";
 import rough from "roughjs";
 import { ArrowHeadStyle } from "./constants";
-import { getLineAngle, generateUniqueId } from "./roughutil";
+import { getLineAngle, generateUniqueId, isPointNearBoundingBox, movePathPoint } from "./roughutil";
 
 export class FabricRoughArrow extends fabric.Path {
     static get type() {
@@ -134,27 +134,97 @@ export class FabricRoughArrow extends fabric.Path {
     _checkPotentialBindings(x1, y1, x2, y2) {
         const objects = this.canvas.getObjects();
 
+        // Clear existing highlights first
+        this._clearPotentialHighlights();
+
         // Track potential bindings during drawing (don't create actual bindings yet)
         let potentialEndBinding = null;
         let potentialStartBinding = null;
+        let closestEndDistance = Infinity;
+        let closestStartDistance = Infinity;
+
         for (const obj of objects) {
-            if (obj === this) continue;
+            if (obj.type === this.type) continue;
+
+            const endPoint = new fabric.Point(x2, y2);
+            const startPoint = new fabric.Point(x1, y1);
 
             // Check for potential end binding
-            if (isPointNearBoundingBox(new fabric.Point(x2, y2), obj, 20)) {
-                potentialEndBinding = { obj, x: x2, y: y2 };
+            if (isPointNearBoundingBox(endPoint, obj, 20)) {
+                const objCenter = obj.getCenterPoint();
+                const endDistance = endPoint.distanceFrom(objCenter);
+
+                if (endDistance < closestEndDistance) {
+                    closestEndDistance = endDistance;
+                    potentialEndBinding = { obj, x: x2, y: y2 };
+                }
             }
 
             // Check for potential start binding
-            if (isPointNearBoundingBox(new fabric.Point(x1, y1), obj, 20)) {
-                potentialStartBinding = { obj, x: x1, y: y1 };
+            if (isPointNearBoundingBox(startPoint, obj, 20)) {
+                const objCenter = obj.getCenterPoint();
+                const startDistance = startPoint.distanceFrom(objCenter);
+
+                if (startDistance < closestStartDistance) {
+                    closestStartDistance = startDistance;
+                    potentialStartBinding = { obj, x: x1, y: y1 };
+                }
             }
+        }
+
+        // Highlight only the closest objects
+        if (potentialEndBinding) {
+            this._highlightObject(potentialEndBinding.obj);
+        }
+        if (potentialStartBinding && potentialStartBinding.obj !== potentialEndBinding?.obj) {
+            this._highlightObject(potentialStartBinding.obj);
         }
 
         // Store potential bindings for finalization later
         this._potentialEndBinding = potentialEndBinding;
         this._potentialStartBinding = potentialStartBinding;
+    }
 
+    _highlightObject(obj) {
+        // Store original properties if not already stored
+        if (!obj._originalHighlightProps) {
+            obj._originalHighlightProps = {
+                shadow: obj.shadow
+            };
+        }
+        // Apply highlight effect
+        obj.set({
+            shadow: new fabric.Shadow({
+                color: "#ffff",
+                blur: 15,
+                offsetX: 0,
+                offsetY: 0
+            })
+        });
+
+        // Track highlighted objects
+        if (!this._highlightedObjects) {
+            this._highlightedObjects = new Set();
+        }
+        this._highlightedObjects.add(obj);
+
+        this.canvas.requestRenderAll();
+    }
+
+    _clearPotentialHighlights() {
+        if (!this._highlightedObjects) return;
+
+        this._highlightedObjects.forEach(obj => {
+            if (obj._originalHighlightProps) {
+                obj.set({
+                    shadow: obj._originalHighlightProps.shadow
+                });
+                delete obj._originalHighlightProps;
+            }
+        });
+
+        this._highlightedObjects.clear();
+        this.canvas.requestRenderAll();
     }
 
     _updateRoughArrow() {
@@ -326,6 +396,9 @@ export class FabricRoughArrow extends fabric.Path {
     }
 
     finalizePotentialBindings() {
+        // Clear highlights before finalizing
+        this._clearPotentialHighlights();
+
         // Finalize or remove END binding
         if (this._potentialEndBinding) {
             const { obj, x, y } = this._potentialEndBinding;
@@ -355,6 +428,7 @@ export class FabricRoughArrow extends fabric.Path {
 
 
     clearBindings() {
+        this._clearPotentialHighlights();
         this._cleanupBinding('end');
         this._cleanupBinding('start');
         this.endBinding = null;

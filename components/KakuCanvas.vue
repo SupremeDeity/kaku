@@ -71,7 +71,7 @@
             variant="soft"
             color="cyan"
             block
-            class="border-l border-cyan-800 min-w-[68px]"
+            class="border-l border-cyan-800 min-w-[68px] rounded-none"
             :label="(zoomLevel * 100).toFixed(0) + '%'"
             @click="
               () => {

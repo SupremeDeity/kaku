@@ -1,6 +1,7 @@
 import * as fabric from "fabric";
 import rough from "roughjs";
 import { calculateCornerRadius } from "./roughutil";
+import { generateUniqueId } from './roughutil';
 
 export class FabricRoughRectangle extends fabric.Rect {
     static get type() {
@@ -10,6 +11,9 @@ export class FabricRoughRectangle extends fabric.Rect {
         super(options);
         this.name = "Rectangle";
         this.points = options.points;
+
+        this.id = options.id || generateUniqueId();
+
         this.roughOptions.seed = this.roughOptions.seed ?? Math.random() * 100;
         this.minSize = options.minSize || 5; // Minimum size of the rectangle
         this.roughGenerator = this.roughGenerator ?? rough.generator();
@@ -112,6 +116,7 @@ export class FabricRoughRectangle extends fabric.Rect {
     toObject(propertiesToInclude) {
         return {
             ...super.toObject(propertiesToInclude),
+            id: this.id,
             points: this.points,
             roughOptions: this.roughOptions,
             minSize: this.minSize,

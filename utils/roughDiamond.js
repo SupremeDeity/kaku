@@ -1,6 +1,6 @@
 import * as fabric from 'fabric';
 import rough from 'roughjs';
-import { calculateCornerRadius } from './roughutil';
+import { calculateCornerRadius, generateUniqueId } from './roughutil';
 
 export class FabricRoughDiamond extends fabric.FabricObject {
     static get type() {
@@ -11,6 +11,9 @@ export class FabricRoughDiamond extends fabric.FabricObject {
         this.name = "Diamond";
         this.points = options.points || [0, 0, 100, 100];
         this.minSize = options.minSize || 5;
+
+        this.id = options.id || generateUniqueId();
+
         this.roughOptions.seed = this.roughOptions.seed ?? Math.random() * 100;
         this.roughGenerator = rough.generator();
         this.left = (this.left !== null && this.left !== 0) ? this.left : options.points[0];
@@ -104,6 +107,7 @@ export class FabricRoughDiamond extends fabric.FabricObject {
     toObject(propertiesToInclude) {
         return {
             ...super.toObject(propertiesToInclude),
+            id: this.id,
             points: this.points,
             roughOptions: this.roughOptions,
             minSize: this.minSize,

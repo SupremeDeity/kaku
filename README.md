@@ -13,6 +13,7 @@
 * Choose between hand-drawn, sketch-like visuals or precise, clean shapes!
 * **Shapes and Tools:** Diamond, Ellipse, Rectangle, Line, Arrow, Text, Free-draw.
 * Text & Image support.
+* Bind arrows to objects, to automatically follow object movement.
 * Export canvas/selection as PNG, SVG, to clipboard, or as a compressed `.kaku` scene file that can be easily imported.
 * Undo / Redo.
 * Zoom and panning support.

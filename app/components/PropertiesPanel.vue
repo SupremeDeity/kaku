@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="props.selectedObjects"
-    :key="props.selectedObjects"
+    :key="JSON.stringify(props.selectedObjects)"
     class="scrollbar p-4 absolute left-4 top-16 z-[60] bg-cyan-950 rounded text-white min-w-52 border border-cyan-800 select-none overflow-y-auto max-h-[80%]"
   >
     <span
@@ -17,7 +17,7 @@
       class="pt-4 flex flex-col gap-2"
     >
       <!-- ---------- Rough SPECIFIC THINGS  -->
-      <template v-if="props.selectedObjects[0].roughOptions">
+      <template v-if="props.selectedObjects[0]?.roughOptions">
         <div>
           <span class="font-bold uppercase text-xs text-cyan-200">Stroke</span>
           <div>
@@ -25,7 +25,7 @@
               :value="props.selectedObjects[0].roughOptions.stroke"
               @change="
 	              (args: string) =>
-	                updateProperty(props.selectedObjects![0], 'roughOptions.stroke', args)
+	                updateProperty(props.selectedObjects![0]!, 'roughOptions.stroke', args)
 	            "
             />
           </div>
@@ -46,7 +46,7 @@
               :value="props.selectedObjects[0].roughOptions.fill"
               @change="
 	              (args: string) =>
-	                updateProperty(props.selectedObjects![0], 'roughOptions.fill', args, )
+	                updateProperty(props.selectedObjects![0]!, 'roughOptions.fill', args, )
 	            "
             />
           </div>
@@ -69,7 +69,7 @@
             @change="
 	              (value: string) =>
 	                updateProperty(
-	                  props.selectedObjects![0],
+	                  props.selectedObjects![0]!,
 	                  'roughOptions.fillStyle',
 	                  value,
 	                )
@@ -95,12 +95,12 @@
 	              (value: string) =>
 	                {
                     updateProperty(
-	                  props.selectedObjects![0],
+	                  props.selectedObjects![0]!,
 	                  'roughOptions.roughness',
 	                  Number.parseFloat(value),
 	                );
                   updateProperty(
-	                  props.selectedObjects![0],
+	                  props.selectedObjects![0]!,
 	                  'roughOptions.preserveVertices',
 	                  Number.parseFloat(value) < 2.5,
 	                );
@@ -129,25 +129,25 @@
                    const strokeWidth = Number.parseFloat(value);
 
 	                  updateProperty(
-	                  props.selectedObjects![0],
+	                  props.selectedObjects![0]!,
 	                  'roughOptions.strokeWidth',
 	                   strokeWidth,
 	                );
                  
 	                updateProperty(
-	                  props.selectedObjects![0],
+	                  props.selectedObjects![0]!,
 	                  'roughOptions.strokeLineDash',
-	                  calculateStrokeStyle(strokeWidth,  getStrokeStyle(props.selectedObjects![0].roughOptions.strokeLineDash))
+	                  calculateStrokeStyle(strokeWidth,  getStrokeStyle(props.selectedObjects![0]!.roughOptions.strokeLineDash))
 	                )
 
                   updateProperty(
-	                  props.selectedObjects![0],
+	                  props.selectedObjects![0]!,
 	                  'roughOptions.fillWeight',
 	                  strokeWidth / 2,
 	                )
 
                   updateProperty(
-	                  props.selectedObjects![0],
+	                  props.selectedObjects![0]!,
 	                  'roughOptions.hachureGap',
 	                  strokeWidth * 4,
 	                )
@@ -176,12 +176,12 @@
 	              (value: string) =>
 	             {
                    updateProperty(
-	                  props.selectedObjects![0],
+	                  props.selectedObjects![0]!,
 	                  'roughOptions.strokeLineDash',
-	                  calculateStrokeStyle(props.selectedObjects![0].roughOptions.strokeWidth!, value),
+	                  calculateStrokeStyle(props.selectedObjects![0]!.roughOptions.strokeWidth!, value),
 	                )
                    updateProperty(
-	                  props.selectedObjects![0],
+	                  props.selectedObjects![0]!,
 	                  'roughOptions.disableMultiStroke',
 	                  value !== 'Solid',
 	                )
@@ -204,7 +204,7 @@
             @change="
 	              (value: string) =>
 	                updateProperty(
-	                  props.selectedObjects![0],
+	                  props.selectedObjects![0]!,
 	                  'rounded',
 	                  value !== 'Edged',
 	                )
@@ -232,7 +232,7 @@
               @change="
               (value: any) =>
                 updateProperty(
-                  props.selectedObjects![0],
+                  props.selectedObjects![0]!,
                   'endArrowHeadStyle',
                   ArrowHeadStyle[value]
                 )
@@ -256,9 +256,9 @@
                 'i-ph:arrow-bend-right-up-fill',
               ]"
               @change="
-                (value) =>
+                (value: number) =>
                   updateProperty(
-                    props.selectedObjects![0],
+                    props.selectedObjects![0]!,
                     'startArrowHeadStyle',
                     ArrowHeadStyle[value]
                   )
@@ -274,17 +274,17 @@
       <template
         v-if="
           props.selectedObjects.length === 1 &&
-          props.selectedObjects[0].name === 'Text'
+          props.selectedObjects[0]!.name === 'Text'
         "
       >
         <div>
           <span class="font-bold uppercase text-xs text-cyan-200">Stroke</span>
           <div>
             <ColorPicker
-              :value="props.selectedObjects[0].fill?.toString()"
+              :value="props.selectedObjects[0]!.fill?.toString()"
               @change="
 	              (args: string) =>
-	                updateProperty(props.selectedObjects![0], 'fill', args, true)
+	                updateProperty(props.selectedObjects![0]!, 'fill', args, true)
 	            "
             />
           </div>
@@ -295,11 +295,11 @@
           >
           <USelect
             :options="supportedFonts"
-            :model-value="props.selectedObjects[0].fontFamily"
+            :model-value="props.selectedObjects[0]!.fontFamily"
             @change="
               (value: any) => {
                 updateProperty(
-                  props.selectedObjects![0],
+                  props.selectedObjects![0]!,
                   'fontFamily',
                   value,
                   true
@@ -313,7 +313,7 @@
             >Text Alignment</span
           >
           <RoughMultiPicker
-            :default="props.selectedObjects[0].textAlign"
+            :default="props.selectedObjects[0]!.textAlign"
             :options="['left', 'center', 'right']"
             :icons="[
               'i-ph:text-align-left-bold',
@@ -323,7 +323,7 @@
             @change="
 	              (value: string) =>
 	                updateProperty(
-	                  props.selectedObjects![0],
+	                  props.selectedObjects![0]!,
 	                  'textAlign',
 	                  value,
                     true
@@ -341,7 +341,7 @@
       <input
         class="block"
         type="range"
-        :value="props.selectedObjects[0].opacity"
+        :value="props.selectedObjects[0]!.opacity"
         :max="1"
         :min="0"
         :step="0.1"

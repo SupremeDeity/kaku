@@ -33,11 +33,11 @@ export function gestureDetector(el: HTMLElement, options: GestureDetectorOptions
     const ZOOM_THRESHOLD = 0.01; // Very sensitive zoom detection
 
     function onTouchStart(e: TouchEvent) {
-        if (e.touches.length === 2) {
-            const x1 = e.touches[0].clientX;
-            const y1 = e.touches[0].clientY;
-            const x2 = e.touches[1].clientX;
-            const y2 = e.touches[1].clientY;
+        if (e.touches && e.touches.length === 2) {
+            const x1 = e.touches[0]!.clientX;
+            const y1 = e.touches[0]!.clientY;
+            const x2 = e.touches[1]!.clientX;
+            const y2 = e.touches[1]!.clientY;
 
             initialX = (x1 + x2) / 2;
             initialY = (y1 + y2) / 2;
@@ -56,11 +56,11 @@ export function gestureDetector(el: HTMLElement, options: GestureDetectorOptions
     }
 
     function onTouchMove(e: TouchEvent) {
-        if (e.touches.length === 2) {
-            const x1 = e.touches[0].clientX;
-            const y1 = e.touches[0].clientY;
-            const x2 = e.touches[1].clientX;
-            const y2 = e.touches[1].clientY;
+        if (e.touches && e.touches.length === 2) {
+            const x1 = e.touches[0]!.clientX;
+            const y1 = e.touches[0]!.clientY;
+            const x2 = e.touches[1]!.clientX;
+            const y2 = e.touches[1]!.clientY;
 
             const currentX = (x1 + x2) / 2;
             const currentY = (y1 + y2) / 2;

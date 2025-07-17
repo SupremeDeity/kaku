@@ -1,13 +1,22 @@
 <template>
   <div>
+    <!-- Mobile Overlay to prevent scrolling -->
+    <div
+      v-if="props.selectedObjects && props.showPropertiesPanel && isMobile"
+      class="fixed inset-0 bg-black bg-opacity-50 z-[59] sm:hidden"
+      @click="$emit('toggle-properties')"
+    ></div>
+
     <!-- Mobile Toggle Button (Show Properties) -->
-    <button
+    <UButton
+      variant="soft"
+      icon="i-material-symbols:settings-outline"
       v-if="props.selectedObjects && !props.showPropertiesPanel"
-      class="fixed bottom-4 left-4 z-[80] sm:hidden flex items-center gap-2 bg-cyan-800 text-white px-4 py-2 rounded shadow-lg border border-cyan-700 hover:bg-cyan-700 transition-colors"
+      class="fixed bottom-4 left-4 z-[80] sm:hidden"
       @click="$emit('toggle-properties')"
     >
-      <Icon name="i-material-symbols:settings-outline" />
-    </button>
+      Properties
+    </UButton>
 
     <!-- Properties Panel -->
     <div
@@ -18,6 +27,7 @@
         'fixed bottom-4 left-4 right-4 w-auto max-h-[70vh] sm:static sm:right-auto sm:w-52':
           isMobile,
       }"
+      @touchmove.stop
     >
       <!-- Mobile Close Button -->
       <button
@@ -440,7 +450,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { computed } from "vue";
+import { computed, watch, onUnmounted } from "vue";
 import * as fabric from "fabric";
 import lodashSet from "lodash.set";
 import { ArrowHeadStyle } from "~/utils/constants";
@@ -465,6 +475,27 @@ defineEmits<{
 const isMobile = computed(() => {
   if (typeof window === "undefined") return false;
   return window.innerWidth < 640;
+});
+
+// Prevent body scrolling when mobile properties panel is open
+watch(
+  () => props.showPropertiesPanel && isMobile.value,
+  (isOpen) => {
+    if (typeof document === "undefined") return;
+
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+  }
+);
+
+// Cleanup on unmount
+onUnmounted(() => {
+  if (typeof document !== "undefined") {
+    document.body.style.overflow = "";
+  }
 });
 
 function updateProperty(

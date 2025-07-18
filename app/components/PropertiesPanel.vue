@@ -21,7 +21,9 @@
     <!-- Properties Panel -->
     <div
       v-if="props.selectedObjects && props.showPropertiesPanel"
-      :key="JSON.stringify(props.selectedObjects)"
+      :key="
+        props.selectedObjects.map((obj) => obj.id || obj.toString()).join(',')
+      "
       class="scrollbar p-4 absolute left-4 top-16 z-[60] bg-cyan-950 rounded text-white min-w-52 border border-cyan-800 select-none overflow-y-auto max-h-[80%] sm:block"
       :class="{
         'fixed bottom-4 left-4 right-4 w-auto max-h-[70vh] sm:static sm:right-auto sm:w-52':

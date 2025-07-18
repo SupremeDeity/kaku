@@ -172,6 +172,8 @@
     <PropertiesPanel
       :fabric-canvas="fabricCanvas"
       :selected-objects="selectedObjects"
+      :show-properties-panel="showPropertiesPanel"
+      @toggle-properties="togglePropertiesPanel"
     />
     <div
       v-if="currentMode === 'Draw'"
@@ -313,6 +315,20 @@ const zoomLevel: Ref<number> = ref(1);
 const isExportModalOpen = ref(false);
 const openExportModal = () => {
   isExportModalOpen.value = true;
+};
+
+// Mobile properties panel toggle
+const showPropertiesPanel = ref(true);
+const togglePropertiesPanel = () => {
+  showPropertiesPanel.value = !showPropertiesPanel.value;
+};
+
+// Watch for screen size changes to ensure properties panel is always visible on desktop
+const handleResize = () => {
+  if (window.innerWidth >= 640) {
+    // sm breakpoint
+    showPropertiesPanel.value = true;
+  }
 };
 
 async function initializeCanvas() {
@@ -943,12 +959,16 @@ function clearCanvas() {
 
 onMounted(async () => {
   await initializeCanvas();
+  window.addEventListener("resize", handleResize);
+  // Initial check to ensure properties panel is visible on desktop
+  handleResize();
 });
 
 onUnmounted(() => {
   if (fabricCanvas) {
     fabricCanvas.dispose();
   }
+  window.removeEventListener("resize", handleResize);
 });
 
 watch(currentMode, (newMode) => {

@@ -1,6 +1,14 @@
 // Temporary very crude way to get the stroke style
 
-import { FabricObject, iMatrix, Intersection, Path, Point, util, type TMat2D } from "fabric";
+import {
+  FabricObject,
+  iMatrix,
+  Intersection,
+  Path,
+  Point,
+  util,
+  type TMat2D,
+} from "fabric";
 
 // For use inside the properties panel
 export function getStrokeStyle(strokeDash: any) {
@@ -22,7 +30,7 @@ export function calculateStrokeStyle(strokeWidth: number, style: string) {
     case "Dashed":
       return [8, strokeWidth + 8];
     case "Dotted":
-      return [1.5,  strokeWidth + 6];
+      return [1.5, strokeWidth + 6];
   }
 }
 
@@ -44,10 +52,13 @@ export function calculateCornerRadius(dim: number, cutoff: boolean) {
  * Gets the angle of the line
  * @param displacementX Displacement on the x axis (x2-x1)
  * @param displacementY Displacement on the y axis (y2-y1)
- * @returns 
+ * @returns
  */
 export function getLineAngle(displacementX: number, displacementY: number) {
-  return Math.atan2(displacementY / 2 + displacementY / 2, displacementX / 2 + displacementX / 2);
+  return Math.atan2(
+    displacementY / 2 + displacementY / 2,
+    displacementX / 2 + displacementX / 2
+  );
 }
 
 /**
@@ -59,13 +70,17 @@ export function getLineAngle(displacementX: number, displacementY: number) {
  * @param threshold Distance to consider "near"
  * @returns true if point is near or touching the bounding box edge
  */
-export function isPointNearBoundingBox(point: Point, object: FabricObject, threshold: number): boolean {
+export function isPointNearBoundingBox(
+  point: Point,
+  object: FabricObject,
+  threshold: number
+): boolean {
   const bboxCorners = object.getCoords(); // [tl, tr, br, bl] in scene plane
   for (let i = 0; i < bboxCorners.length; i++) {
     const A = bboxCorners[i];
     const B = bboxCorners[(i + 1) % bboxCorners.length];
 
-    const distance = _distancePointToSegment(point, A, B);
+    const distance = _distancePointToSegment(point, A!, B!);
     if (distance <= threshold) {
       return true;
     }
@@ -90,7 +105,7 @@ function _distancePointToSegment(P: Point, A: Point, B: Point): number {
 }
 
 export function generateUniqueId() {
-  return 'shape_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  return "shape_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
 }
 
 export const movePathPoint = (
@@ -98,15 +113,18 @@ export const movePathPoint = (
   x: number,
   y: number,
   commandIndex: number,
-  pointIndex: number,
+  pointIndex: number
 ) => {
   const { path, pathOffset } = pathObject;
 
   const anchorCommand =
     path[(commandIndex > 0 ? commandIndex : path.length) - 1];
+
+  if (!anchorCommand || !path) return;
+
   const anchorPoint = new Point(
     anchorCommand[pointIndex] as number,
-    anchorCommand[pointIndex + 1] as number,
+    anchorCommand[pointIndex + 1] as number
   );
 
   const anchorPointInParentPlane = anchorPoint
@@ -116,9 +134,10 @@ export const movePathPoint = (
   const mouseLocalPosition = util.sendPointToPlane(
     new Point(x, y),
     undefined,
-    pathObject.calcOwnMatrix(),
+    pathObject.calcOwnMatrix()
   );
 
+  if(!path[commandIndex]) return;
   path[commandIndex][pointIndex] = mouseLocalPosition.x + pathOffset.x;
   path[commandIndex][pointIndex + 1] = mouseLocalPosition.y + pathOffset.y;
   pathObject.setDimensions();
@@ -130,7 +149,6 @@ export const movePathPoint = (
   const diff = newAnchorPointInParentPlane.subtract(anchorPointInParentPlane);
   pathObject.left -= diff.x;
   pathObject.top -= diff.y;
-  pathObject.set('dirty', true);
+  pathObject.set("dirty", true);
   return true;
 };
-

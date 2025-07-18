@@ -12,6 +12,7 @@ export class FabricRoughArrow extends fabric.Path {
         this.name = "Arrow";
         this.points = options.points;
         this.roughOptions = options.roughOptions;
+        this.objectCaching = false;
 
         this.id = options.id || generateUniqueId();
 

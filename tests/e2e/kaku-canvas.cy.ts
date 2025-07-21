@@ -332,7 +332,7 @@ describe("KakuCanvas E2E", () => {
     cy.wait(200);
   });
 
-  it.only("can export canvas as PNG", () => {
+  it("can export canvas as PNG", () => {
     // Step 1: Draw a rectangle for export test
     cy.get('div[class*="top-3"] button').eq(4).realClick(); // Rectangle tool
     cy.wait(300);

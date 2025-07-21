@@ -74,39 +74,6 @@ describe("KakuCanvas E2E", () => {
     cy.get('div[class*="top-3"] button').should("have.length", 11);
   });
 
-  it("can draw a rectangle and verify it appears", () => {
-    // Select Rectangle tool (index 4)
-    cy.get('div[class*="top-3"] button').eq(4).realClick();
-    cy.wait(500);
-
-    cy.get("canvas.upper-canvas")
-      .realMouseDown({ x: 100, y: 100 })
-      .realMouseMove(200, 150)
-      .realMouseMove(300, 200)
-      .realMouseUp({ x: 300, y: 200 });
-    cy.wait(300);
-
-    // Capture canvas content directly and save as image
-    cy.get("canvas.lower-canvas").then(($canvas) => {
-      const canvas = $canvas[0] as HTMLCanvasElement;
-      const dataURL = canvas.toDataURL("image/png");
-
-      cy.writeFile(
-        "cypress/screenshots/rectangle-drawn-canvas.png",
-        dataURL.split(",")[1],
-        "base64"
-      );
-    });
-
-    // Switch to select mode
-    cy.get('div[class*="top-3"] button').eq(1).click();
-    cy.wait(200);
-
-    // Click on the drawn rectangle area to select it
-    cy.get("canvas.upper-canvas").click(200, 150, { force: true });
-    cy.wait(300);
-  });
-
   it("can draw each shape type individually", () => {
     // Step 1: Draw Rectangle
     cy.get('div[class*="top-3"] button').eq(4).realClick(); // Rectangle tool
@@ -476,70 +443,6 @@ describe("KakuCanvas E2E", () => {
 
     // Verify undo/redo worked by switching to select mode and trying to click shapes
     cy.get('div[class*="top-3"] button').eq(1).click();
-  });
-
-  it("can zoom and pan the canvas", () => {
-    cy.get('div[class*="top-3"] button').eq(4).realClick();
-    cy.wait(500);
-
-    // Draw rectangle using real mouse events
-    cy.get("canvas.upper-canvas")
-      .realMouseDown({ x: 100, y: 100 })
-      .realMouseMove(200, 150)
-      .realMouseMove(300, 200)
-      .realMouseUp({ x: 300, y: 200 });
-    cy.wait(300);
-    // Test zoom in - click the last button in the zoom group (add button)
-    cy.get('div[class*="bottom-4"] button')
-      .last()
-      .realClick()
-      .realClick()
-      .realClick();
-    cy.get("button").contains("%").should("contain", "130%");
-
-    cy.get("canvas.lower-canvas").then(($canvas) => {
-      const canvas = $canvas[0] as HTMLCanvasElement;
-      const dataURL = canvas.toDataURL("image/png");
-      cy.writeFile(
-        "cypress/screenshots/zoom-in-test/step-1-zoomed-in.png",
-        dataURL.split(",")[1],
-        "base64"
-      );
-    });
-
-    // Test zoom reset by clicking percentage
-    cy.get('div[class*="bottom-4"] button').last().realClick();
-    cy.get('div[class*="bottom-4"] button').last().realClick();
-    cy.get("button").contains("%").realClick();
-    cy.get("button").contains("%").should("contain", "100%");
-
-    cy.get("canvas.lower-canvas").then(($canvas) => {
-      const canvas = $canvas[0] as HTMLCanvasElement;
-      const dataURL = canvas.toDataURL("image/png");
-      cy.writeFile(
-        "cypress/screenshots/zoom-in-test/step-2-zoom-reset.png",
-        dataURL.split(",")[1],
-        "base64"
-      );
-    });
-
-    // Test zoom out - click the first button in the zoom group (minus button)
-    cy.get('div[class*="bottom-4"] button')
-      .first()
-      .realClick()
-      .realClick()
-      .realClick();
-    cy.get("button").contains("%").should("contain", "70%");
-
-    cy.get("canvas.lower-canvas").then(($canvas) => {
-      const canvas = $canvas[0] as HTMLCanvasElement;
-      const dataURL = canvas.toDataURL("image/png");
-      cy.writeFile(
-        "cypress/screenshots/zoom-in-test/step-3-zoomed-out.png",
-        dataURL.split(",")[1],
-        "base64"
-      );
-    });
   });
 
   it("can copy and paste shapes", () => {
@@ -957,6 +860,70 @@ describe("KakuCanvas E2E", () => {
       const dataURL = canvas.toDataURL("image/png");
       cy.writeFile(
         "cypress/screenshots/10-arrow-binding/step-6-final-arrow-binding-test.png",
+        dataURL.split(",")[1],
+        "base64"
+      );
+    });
+  });
+
+    it("can zoom and pan the canvas", () => {
+    cy.get('div[class*="top-3"] button').eq(4).realClick();
+    cy.wait(500);
+
+    // Draw rectangle using real mouse events
+    cy.get("canvas.upper-canvas")
+      .realMouseDown({ x: 100, y: 100 })
+      .realMouseMove(200, 150)
+      .realMouseMove(300, 200)
+      .realMouseUp({ x: 300, y: 200 });
+    cy.wait(300);
+    // Test zoom in - click the last button in the zoom group (add button)
+    cy.get('div[class*="bottom-4"] button')
+      .last()
+      .realClick()
+      .realClick()
+      .realClick();
+    cy.get("button").contains("%").should("contain", "130%");
+
+    cy.get("canvas.lower-canvas").then(($canvas) => {
+      const canvas = $canvas[0] as HTMLCanvasElement;
+      const dataURL = canvas.toDataURL("image/png");
+      cy.writeFile(
+        "cypress/screenshots/11-zoom-in-test/step-1-zoomed-in.png",
+        dataURL.split(",")[1],
+        "base64"
+      );
+    });
+
+    // Test zoom reset by clicking percentage
+    cy.get('div[class*="bottom-4"] button').last().realClick();
+    cy.get('div[class*="bottom-4"] button').last().realClick();
+    cy.get("button").contains("%").realClick();
+    cy.get("button").contains("%").should("contain", "100%");
+
+    cy.get("canvas.lower-canvas").then(($canvas) => {
+      const canvas = $canvas[0] as HTMLCanvasElement;
+      const dataURL = canvas.toDataURL("image/png");
+      cy.writeFile(
+        "cypress/screenshots/11-zoom-in-test/step-2-zoom-reset.png",
+        dataURL.split(",")[1],
+        "base64"
+      );
+    });
+
+    // Test zoom out - click the first button in the zoom group (minus button)
+    cy.get('div[class*="bottom-4"] button')
+      .first()
+      .realClick()
+      .realClick()
+      .realClick();
+    cy.get("button").contains("%").should("contain", "70%");
+
+    cy.get("canvas.lower-canvas").then(($canvas) => {
+      const canvas = $canvas[0] as HTMLCanvasElement;
+      const dataURL = canvas.toDataURL("image/png");
+      cy.writeFile(
+        "cypress/screenshots/11-zoom-in-test/step-3-zoomed-out.png",
         dataURL.split(",")[1],
         "base64"
       );

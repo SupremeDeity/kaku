@@ -96,6 +96,7 @@
 </template>
 
 <script lang="ts" setup>
+import { computed, ref } from "vue";
 import Values from "values.js";
 
 const shades = computed(() =>

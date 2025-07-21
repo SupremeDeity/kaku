@@ -1,7 +1,7 @@
 import * as fabric from "fabric";
 import rough from "roughjs";
-import { ArrowHeadStyle } from "./constants";
-import { getLineAngle, generateUniqueId, isPointNearBoundingBox, movePathPoint } from "./roughutil";
+import { ArrowHeadStyle } from "../utils/constants";
+import { getLineAngle, generateUniqueId, isPointNearBoundingBox, movePathPoint } from "../utils/roughutil";
 
 export class FabricRoughArrow extends fabric.Path {
     static get type() {

@@ -1,6 +1,6 @@
 import * as fabric from "fabric";
 import rough from "roughjs";
-import { generateUniqueId } from './roughutil';
+import { generateUniqueId } from "../utils/roughutil";
 
 export class FabricRoughEllipse extends fabric.Ellipse {
     static get type() {

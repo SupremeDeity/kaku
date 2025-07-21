@@ -7,8 +7,8 @@ import "cypress-real-events";
 describe("KakuCanvas E2E", () => {
   beforeEach(() => {
     cy.visit("/");
-    cy.get("canvas").should("be.visible").realClick();
-    cy.wait(1000); // Give time for canvas initialization
+    cy.get("canvas").should("be.visible");
+    cy.get("canvas.upper-canvas").realClick();
   });
 
   it("should render canvas and basic UI elements", () => {
@@ -29,10 +29,8 @@ describe("KakuCanvas E2E", () => {
     // Open dropdown menu by clicking menu button
     cy.get('div[class*="top-3"] button').last().click();
 
-    // Wait a bit more for dropdown to load
-    cy.wait(1000);
+    cy.wait(300);
 
-    // Check some key menu items are visible (be more flexible)
     cy.get("body").then(($body) => {
       // Just check that the dropdown opened and has some content
       if ($body.find(':contains("Open")').length > 0) {
@@ -85,14 +83,13 @@ describe("KakuCanvas E2E", () => {
       .realMouseMove(200, 150)
       .realMouseMove(300, 200)
       .realMouseUp({ x: 300, y: 200 });
-    cy.wait(300); 
+    cy.wait(300);
 
     // Capture canvas content directly and save as image
     cy.get("canvas.lower-canvas").then(($canvas) => {
       const canvas = $canvas[0] as HTMLCanvasElement;
       const dataURL = canvas.toDataURL("image/png");
 
-      // Save the canvas image data
       cy.writeFile(
         "cypress/screenshots/rectangle-drawn-canvas.png",
         dataURL.split(",")[1],
@@ -118,7 +115,7 @@ describe("KakuCanvas E2E", () => {
       .realMouseDown({ x: 50, y: 50 })
       .realMouseMove(150, 120)
       .realMouseUp({ x: 150, y: 120 });
-    cy.wait(1000);
+    cy.wait(300);
 
     // Capture rectangle canvas
     cy.get("canvas.lower-canvas").then(($canvas) => {
@@ -335,7 +332,7 @@ describe("KakuCanvas E2E", () => {
     cy.wait(200);
   });
 
-  it("can export canvas as PNG", () => {
+  it.only("can export canvas as PNG", () => {
     // Step 1: Draw a rectangle for export test
     cy.get('div[class*="top-3"] button').eq(4).realClick(); // Rectangle tool
     cy.wait(300);
@@ -369,7 +366,6 @@ describe("KakuCanvas E2E", () => {
         cy.contains("Scale").should("be.visible");
         cy.contains("1x").should("be.visible");
       }
-      // Try to find the image preview, but don't fail if it's not there immediately
       if ($body.find('img[alt="Image Preview"]').length > 0) {
         cy.get('img[alt="Image Preview"]').should("be.visible");
       } else if ($body.find("img").length > 0) {
@@ -381,9 +377,12 @@ describe("KakuCanvas E2E", () => {
     cy.get("body").then(($body) => {
       if ($body.find(':contains("2x")').length > 0) {
         cy.contains("2x").click();
+        cy.wait(200);
         cy.contains("1x").click();
       }
     });
+
+    cy.contains("PNG").realClick();
   });
 
   it("can use undo/redo functionality", () => {
@@ -705,7 +704,7 @@ describe("KakuCanvas E2E", () => {
 
     // Verify draw mode panel appears
     cy.contains("Stroke").should("be.visible");
-    cy.wait(500); // Increased wait to ensure draw tool is fully activated
+    cy.wait(500);
 
     // Step 2: Draw first stroke with different coordinates
     cy.get("canvas.upper-canvas")
@@ -764,7 +763,7 @@ describe("KakuCanvas E2E", () => {
       .realMouseDown({ x: 100, y: 100 })
       .realMouseMove(200, 200)
       .realMouseUp({ x: 200, y: 200 });
-    cy.wait(1000);
+    cy.wait(500);
 
     // Capture before save
     cy.get("canvas.lower-canvas").then(($canvas) => {
@@ -818,7 +817,7 @@ describe("KakuCanvas E2E", () => {
       force: true,
     });
 
-    cy.wait(1500)
+    cy.wait(1500);
 
     // Capture after importing
     cy.get("canvas.lower-canvas").then(($canvas) => {
@@ -839,7 +838,7 @@ describe("KakuCanvas E2E", () => {
 
     cy.get("canvas.upper-canvas")
       .realMouseDown({ x: 350, y: 200 })
-      .realMouseMove(450, 250 )
+      .realMouseMove(450, 250)
       .realMouseUp({ x: 450, y: 250 });
     cy.wait(500);
 
@@ -847,9 +846,9 @@ describe("KakuCanvas E2E", () => {
       const canvas = $canvas[0] as HTMLCanvasElement;
       const dataURL = canvas.toDataURL("image/png");
       cy.writeFile(
-      "cypress/screenshots/10-arrow-binding/step-1-first-rectangle.png",
-      dataURL.split(",")[1],
-      "base64"
+        "cypress/screenshots/10-arrow-binding/step-1-first-rectangle.png",
+        dataURL.split(",")[1],
+        "base64"
       );
     });
 
@@ -858,7 +857,7 @@ describe("KakuCanvas E2E", () => {
     cy.wait(300);
     cy.get("canvas.upper-canvas")
       .realMouseDown({ x: 600, y: 300 })
-      .realMouseMove(700, 350 )
+      .realMouseMove(700, 350)
       .realMouseUp({ x: 700, y: 350 });
     cy.wait(500);
 
@@ -866,9 +865,9 @@ describe("KakuCanvas E2E", () => {
       const canvas = $canvas[0] as HTMLCanvasElement;
       const dataURL = canvas.toDataURL("image/png");
       cy.writeFile(
-      "cypress/screenshots/10-arrow-binding/step-2-two-rectangles.png",
-      dataURL.split(",")[1],
-      "base64"
+        "cypress/screenshots/10-arrow-binding/step-2-two-rectangles.png",
+        dataURL.split(",")[1],
+        "base64"
       );
     });
 
@@ -881,7 +880,7 @@ describe("KakuCanvas E2E", () => {
     // Second rectangle is at (600,300) to (700,350), so left edge center is (600, 325)
     cy.get("canvas.upper-canvas")
       .realMouseDown({ x: 450, y: 225 })
-      .realMouseMove(600, 325 )
+      .realMouseMove(600, 325)
       .realMouseUp({ x: 600, y: 325 });
     cy.wait(1000);
 
@@ -889,9 +888,9 @@ describe("KakuCanvas E2E", () => {
       const canvas = $canvas[0] as HTMLCanvasElement;
       const dataURL = canvas.toDataURL("image/png");
       cy.writeFile(
-      "cypress/screenshots/10-arrow-binding/step-3-arrow-connected.png",
-      dataURL.split(",")[1],
-      "base64"
+        "cypress/screenshots/10-arrow-binding/step-3-arrow-connected.png",
+        dataURL.split(",")[1],
+        "base64"
       );
     });
 
@@ -906,7 +905,7 @@ describe("KakuCanvas E2E", () => {
     // Move the first rectangle up and to the left
     cy.get("canvas.upper-canvas")
       .realMouseDown({ x: 400, y: 225 })
-      .realMouseMove(330, 180 )
+      .realMouseMove(330, 180)
       .realMouseUp({ x: 330, y: 180 });
     cy.wait(1000);
 
@@ -914,9 +913,9 @@ describe("KakuCanvas E2E", () => {
       const canvas = $canvas[0] as HTMLCanvasElement;
       const dataURL = canvas.toDataURL("image/png");
       cy.writeFile(
-      "cypress/screenshots/10-arrow-binding/step-4-first-rectangle-moved.png",
-      dataURL.split(",")[1],
-      "base64"
+        "cypress/screenshots/10-arrow-binding/step-4-first-rectangle-moved.png",
+        dataURL.split(",")[1],
+        "base64"
       );
     });
 
@@ -927,7 +926,7 @@ describe("KakuCanvas E2E", () => {
     // Move the second rectangle down and to the right
     cy.get("canvas.upper-canvas")
       .realMouseDown({ x: 650, y: 325 })
-      .realMouseMove(750, 400 )
+      .realMouseMove(750, 400)
       .realMouseUp({ x: 750, y: 400 });
     cy.wait(1000);
 
@@ -935,9 +934,9 @@ describe("KakuCanvas E2E", () => {
       const canvas = $canvas[0] as HTMLCanvasElement;
       const dataURL = canvas.toDataURL("image/png");
       cy.writeFile(
-      "cypress/screenshots/10-arrow-binding/step-5-second-rectangle-moved.png",
-      dataURL.split(",")[1],
-      "base64"
+        "cypress/screenshots/10-arrow-binding/step-5-second-rectangle-moved.png",
+        dataURL.split(",")[1],
+        "base64"
       );
     });
 
@@ -947,7 +946,7 @@ describe("KakuCanvas E2E", () => {
 
     cy.get("canvas.upper-canvas")
       .realMouseDown({ x: 330, y: 180 })
-      .realMouseMove(400, 400 )
+      .realMouseMove(400, 400)
       .realMouseUp({ x: 400, y: 400 });
     cy.wait(1000);
 

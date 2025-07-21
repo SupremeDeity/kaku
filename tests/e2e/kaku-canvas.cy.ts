@@ -8,6 +8,7 @@ describe("KakuCanvas E2E", () => {
   beforeEach(() => {
     cy.visit("/");
     cy.get("canvas").should("be.visible");
+    cy.wait(1000)
     cy.get("canvas.upper-canvas").realClick();
   });
 

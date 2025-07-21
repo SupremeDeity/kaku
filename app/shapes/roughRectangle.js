@@ -1,7 +1,7 @@
 import * as fabric from "fabric";
 import rough from "roughjs";
-import { calculateCornerRadius } from "./roughutil";
-import { generateUniqueId } from './roughutil';
+import { calculateCornerRadius } from "../utils/roughutil";
+import { generateUniqueId } from "../utils/roughutil";
 
 export class FabricRoughRectangle extends fabric.Rect {
     static get type() {

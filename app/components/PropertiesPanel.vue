@@ -456,6 +456,8 @@ import { computed, watch, onUnmounted } from "vue";
 import * as fabric from "fabric";
 import lodashSet from "lodash.set";
 import { ArrowHeadStyle } from "~/utils/constants";
+import { FabricRoughArrow } from "~/shapes/roughArrow";
+import { FabricRoughLine } from "~/shapes/roughLine";
 import RoughMultiPicker from "./RoughMultiPicker.vue";
 import cloneDeep from "lodash.clonedeep";
 

@@ -29,6 +29,7 @@
 </template>
 
 <script lang="js" setup>
+import { ref } from 'vue';
 const emit = defineEmits(["change"]);
 const props = defineProps({
   // For tooltips.

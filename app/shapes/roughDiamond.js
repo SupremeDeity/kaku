@@ -1,6 +1,6 @@
 import * as fabric from 'fabric';
 import rough from 'roughjs';
-import { calculateCornerRadius, generateUniqueId } from './roughutil';
+import { calculateCornerRadius, generateUniqueId } from "../utils/roughutil";
 
 export class FabricRoughDiamond extends fabric.FabricObject {
     static get type() {

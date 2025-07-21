@@ -225,6 +225,7 @@
       :fabric-canvas="fabricCanvas"
       @update:is-open="isExportModalOpen = $event"
     />
+    <input id="file-loader" type="file" accept=".kaku" style="display: none" />
   </div>
 </template>
 
@@ -234,7 +235,11 @@ import type { FabricObject } from "fabric";
 import FontFaceObserver from "fontfaceobserver";
 import { drawingModes, drawingModesIconMap } from "~/utils/constants";
 import * as fabric from "fabric";
-
+import { FabricRoughRectangle } from "~/shapes/roughRectangle";
+import { FabricRoughDiamond } from "~/shapes/roughDiamond";
+import { FabricRoughEllipse } from "~/shapes/roughEllipse";
+import { FabricRoughLine } from "~/shapes/roughLine";
+import { FabricRoughArrow } from "~/shapes/roughArrow";
 import CanvasHistory from "~/utils/fabric-history";
 import PropertiesPanel from "./PropertiesPanel.vue";
 import pako from "pako";
@@ -638,10 +643,7 @@ function scrollToContent() {
 }
 
 function importScene() {
-  const fileInput = document.createElement("input");
-  fileInput.type = "file";
-  fileInput.accept = ".kaku"; // Restrict to .kaku files only
-
+  const fileInput = document.getElementById("file-loader") as HTMLInputElement;
   fileInput.onchange = async (event) => {
     const file = (event.target as HTMLInputElement).files?.[0];
 

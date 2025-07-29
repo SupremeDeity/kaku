@@ -798,108 +798,76 @@ async function handleKeyEvent(e: any) {
 
 function handleShapePlacement(o: any) {
   const pointer = fabricCanvas.getScenePoint(o.e);
+  const points = [startPoint.x, startPoint.y, pointer.x, pointer.y];
+
   switch (currentMode.value) {
     case "Line":
-      shape = drawRoughLine(startPoint, pointer);
+      shape = createOrUpdateShape(
+        FabricRoughLine,
+        points,
+        {},
+        new FabricRoughLine(undefined, {
+          ...structuredClone(defaultShapeSettings),
+          points,
+          lockScalingX: true,
+          lockScalingY: true,
+          isDrawing: true,
+        })
+      );
       break;
     case "Arrow":
-      shape = drawRoughArrow(startPoint, pointer);
+      shape = createOrUpdateShape(
+        FabricRoughArrow,
+        points,
+        {},
+        new FabricRoughArrow(undefined, {
+          ...structuredClone(defaultShapeSettings),
+          points,
+          lockScalingX: true,
+          lockScalingY: true,
+          isDrawing: true,
+        })
+      );
       break;
     case "Ellipse":
-      shape = drawRoughEllipse(startPoint, pointer);
+      shape = createOrUpdateShape(FabricRoughEllipse, points);
       break;
     case "Rectangle":
-      shape = drawRoughRectangle(startPoint, pointer);
+      shape = createOrUpdateShape(FabricRoughRectangle, points);
       break;
     case "Diamond":
-      shape = drawRoughDiamond(startPoint, pointer);
+      shape = createOrUpdateShape(FabricRoughDiamond, points);
       break;
   }
 }
 
-function drawRoughLine(start: any, end: any) {
+function createOrUpdateShape(
+  ShapeClass: any,
+  points: number[],
+  extraProps: Record<string, any> = {},
+  customFactory?: fabric.Object
+) {
   if (shape) {
-    // @ts-expect-error Custom function
-    shape.setPoints([start.x, start.y, end.x, end.y]);
+    // @ts-expect-error Custom method defined on shape
+    shape.setPoints(points);
     fabricCanvas.requestRenderAll();
     return shape;
   }
-  const line = new FabricRoughLine(undefined, {
-    ...structuredClone(defaultShapeSettings),
-    points: [start.x, start.y, end.x, end.y],
-    lockScalingX: true,
-    lockScalingY: true,
-    objectCaching: false,
-    isDrawing: true,
-  });
-  fabricCanvas.add(line);
+
+  const shapeInstance =
+    customFactory ??
+    new ShapeClass({
+      ...structuredClone(defaultShapeSettings),
+      points,
+      lockScalingX: true,
+      lockScalingY: true,
+      isDrawing: true,
+      ...extraProps,
+    });
+
+  fabricCanvas.add(shapeInstance);
   fabricCanvas.requestRenderAll();
-  return line;
-}
-
-function drawRoughArrow(start: any, end: any) {
-  if (shape) {
-    // @ts-expect-error Custom function
-    shape.setPoints([start.x, start.y, end.x, end.y]);
-    fabricCanvas.requestRenderAll();
-    return shape;
-  }
-  const arrow = new FabricRoughArrow(undefined, {
-    ...structuredClone(defaultShapeSettings),
-    points: [start.x, start.y, end.x, end.y],
-    lockScalingX: true,
-    lockScalingY: true,
-    objectCaching: true,
-    isDrawing: true,
-  });
-  fabricCanvas.add(arrow);
-  fabricCanvas.requestRenderAll();
-  return arrow;
-}
-
-function drawRoughEllipse(start: fabric.Point, end: fabric.Point) {
-  if (shape) {
-    // @ts-expect-error type THIS later
-    shape.setPoints([start.x, start.y, end.x, end.y]);
-    fabricCanvas.requestRenderAll();
-    return shape;
-  }
-  const ellipse = new FabricRoughEllipse({
-    ...structuredClone(defaultShapeSettings),
-    points: [start.x, start.y, end.x, end.y],
-  });
-  fabricCanvas.add(ellipse);
-  return ellipse;
-}
-
-function drawRoughRectangle(start: fabric.Point, end: fabric.Point) {
-  if (shape) {
-    // @ts-expect-error type THIS later
-    shape.setPoints([start.x, start.y, end.x, end.y]);
-    fabricCanvas.requestRenderAll();
-    return shape;
-  }
-  const rectangle = new FabricRoughRectangle({
-    ...structuredClone(defaultShapeSettings),
-    points: [start.x, start.y, end.x, end.y],
-  });
-  fabricCanvas.add(rectangle);
-  return rectangle;
-}
-
-function drawRoughDiamond(start: fabric.Point, end: fabric.Point) {
-  if (shape) {
-    // @ts-expect-error type THIS later
-    shape.setPoints([start.x, start.y, end.x, end.y]);
-    fabricCanvas.requestRenderAll();
-    return shape;
-  }
-  const diamond = new FabricRoughDiamond({
-    ...structuredClone(defaultShapeSettings),
-    points: [start.x, start.y, end.x, end.y],
-  });
-  fabricCanvas.add(diamond);
-  return diamond;
+  return shapeInstance;
 }
 
 function setMode(mode: (typeof drawingModes)[number]) {

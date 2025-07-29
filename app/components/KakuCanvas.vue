@@ -805,7 +805,6 @@ function handleShapePlacement(o: any) {
       shape = createOrUpdateShape(
         FabricRoughLine,
         points,
-        {},
         new FabricRoughLine(undefined, {
           ...structuredClone(defaultShapeSettings),
           points,
@@ -819,7 +818,6 @@ function handleShapePlacement(o: any) {
       shape = createOrUpdateShape(
         FabricRoughArrow,
         points,
-        {},
         new FabricRoughArrow(undefined, {
           ...structuredClone(defaultShapeSettings),
           points,
@@ -844,8 +842,8 @@ function handleShapePlacement(o: any) {
 function createOrUpdateShape(
   ShapeClass: any,
   points: number[],
-  extraProps: Record<string, any> = {},
-  customFactory?: fabric.Object
+  customFactory?: fabric.Object,
+  extraProps: Record<string, any> = {}
 ) {
   if (shape) {
     // @ts-expect-error Custom method defined on shape

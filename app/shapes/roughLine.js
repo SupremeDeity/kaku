@@ -11,6 +11,7 @@ export class FabricRoughLine extends fabric.Path {
         this.name = "Line";
         this.points = options.points;
         this.roughOptions = options.roughOptions;
+        this.roughOptions.preserveVertices = true;
 
         this.id = options.id || generateUniqueId();
 

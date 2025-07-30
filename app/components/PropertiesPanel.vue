@@ -302,6 +302,22 @@
               "
               />
             </div>
+            <div>
+              <span class="font-bold uppercase text-xs text-cyan-200"
+                >Arrow Type</span
+              >
+              <RoughMultiPicker
+                :default="ArrowType[props.selectedObjects[0].arrowType]"
+                :options="
+                  Object.keys(ArrowType).filter((k) => isNaN(Number(k)))
+                "
+                :icons="['i-ph:line-vertical-bold', 'i-ph:arrow-bend-right-up']"
+                @change=" (value: number) => { (props.selectedObjects![0]! as
+              FabricRoughArrow).setArrowType( ArrowType[value] );
+              props.fabricCanvas.fire('object:modified');
+              props.fabricCanvas.requestRenderAll(); } "
+              />
+            </div>
           </template>
           <!-- ---------- </ARROW SPECIFIC THINGS> ---------- -->
         </template>
@@ -455,7 +471,7 @@
 import { computed, watch, onUnmounted } from "vue";
 import * as fabric from "fabric";
 import lodashSet from "lodash.set";
-import { ArrowHeadStyle } from "~/utils/constants";
+import { ArrowHeadStyle, ArrowType } from "~/utils/constants";
 import { FabricRoughArrow } from "~/shapes/roughArrow";
 import { FabricRoughLine } from "~/shapes/roughLine";
 import RoughMultiPicker from "./RoughMultiPicker.vue";

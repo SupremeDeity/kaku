@@ -47,6 +47,11 @@ export enum ArrowHeadStyle {
   "FilledHead",
 }
 
+export enum ArrowType {
+  "Sharp",
+  "CurvedArrow",
+}
+
 export interface roughShapeProps {
   roughOptions: Partial<Options> & {roughness: number;};
   rounded?: boolean;

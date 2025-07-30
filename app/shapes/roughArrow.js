@@ -12,7 +12,7 @@ class ArrowPathManager {
         const [x1, y1, x2, y2] = points;
 
         switch (this.arrowType) {
-            case ArrowType.Sharp:
+            case ArrowType.SharpArrow:
                 return `M ${x1} ${y1} L 0 0 L ${x2} ${y2}`;
             case ArrowType.CurvedArrow:
                 return `M ${x1} ${y1} Q 0 0 ${x2} ${y2}`;
@@ -26,73 +26,54 @@ class ArrowPathManager {
     }
 
     extractEndpoints(path) {
-        switch (this.arrowType) {
-            case ArrowType.Sharp:
-                // M x1 y1 L 0 0 L x2 y2
-                return {
-                    start: { x: path[0][1], y: path[0][2] },
-                    end: { x: path[2][1], y: path[2][2] },
-                    control: { x: path[1][1], y: path[1][2] }
-                };
+        const points = [];
 
-            case ArrowType.CurvedArrow:
-                // M x1 y1 Q cx cy x2 y2
-                return {
-                    start: { x: path[0][1], y: path[0][2] },
-                    end: { x: path[1][3], y: path[1][4] },
-                    control: { x: path[1][1], y: path[1][2] }
-                };
-
-            case ArrowType.ElbowArrow:
-                // M x1 y1 L midX y1 L midX y2 L x2 y2
-                return {
-                    start: { x: path[0][1], y: path[0][2] },
-                    end: { x: path[3][1], y: path[3][2] },
-                    control: { x: path[1][1], y: path[1][2] }
-                };
-
-            default:
-                return {
-                    start: { x: path[0][1], y: path[0][2] },
-                    end: { x: path[1][1], y: path[1][2] }
-                };
+        for (const segment of path) {
+            if (segment[0] === 'M' || segment[0] === 'L') {
+                points.push({ x: segment[1], y: segment[2] });
+            } else if (segment[0] === 'Q') {
+                points.push({ x: segment[1], y: segment[2] });
+                points.push({ x: segment[3], y: segment[4] });
+            }
         }
+
+        const start = points[0];
+        const end = points[points.length - 1];
+
+        const beforeStart = points.length > 1 ? points[1] : start;
+        const beforeEnd = points.length > 1 ? points[points.length - 2] : end;
+
+        return {
+            start,
+            end,
+            beforeStart,
+            beforeEnd,
+            points // all the points, in case we need them later
+        };
     }
 
     calculateAngles(endpoints) {
-        const { start, end, control } = endpoints;
+        const { start, end, beforeStart, beforeEnd } = endpoints;
 
-        switch (this.arrowType) {
-            case ArrowType.Sharp:
-                return {
-                    startAngle: getLineAngle(start.x - control.x, start.y - control.y),
-                    endAngle: getLineAngle(end.x - control.x, end.y - control.y)
-                };
+        const startAngle = getLineAngle(
+            beforeStart.x - start.x,
+            beforeStart.y - start.y
+        );
 
-            case ArrowType.CurvedArrow:
-                return {
-                    startAngle: getLineAngle(control.x - start.x, control.y - start.y),
-                    endAngle: getLineAngle(end.x - control.x, end.y - control.y)
-                };
+        const endAngle = getLineAngle(
+            end.x - beforeEnd.x,
+            end.y - beforeEnd.y
+        );
 
-            case ArrowType.ElbowArrow:
-                return {
-                    startAngle: getLineAngle(control.x - start.x, control.y - start.y),
-                    endAngle: getLineAngle(end.x - control.x, end.y - control.y)
-                };
-
-            default:
-                const angle = getLineAngle(end.x - start.x, end.y - start.y);
-                return {
-                    startAngle: angle + Math.PI,
-                    endAngle: angle
-                };
-        }
+        return {
+            startAngle: startAngle + Math.PI, // Reverse direction for start arrow head
+            endAngle: endAngle
+        };
     }
 
     getBindingConfig(bindingType) {
         switch (this.arrowType) {
-            case ArrowType.Sharp:
+            case ArrowType.SharpArrow:
                 return bindingType === 'end'
                     ? { pathIndex1: 2, pathIndex2: 1 }
                     : { pathIndex1: 0, pathIndex2: 1 };
@@ -155,7 +136,7 @@ export class FabricRoughArrow extends fabric.Path {
 
         this.startArrowHeadStyle = options.startArrowHeadStyle || ArrowHeadStyle.NoHead;
         this.endArrowHeadStyle = options.endArrowHeadStyle || ArrowHeadStyle.Head;
-        this.arrowType = options.arrowType || ArrowType.Sharp;
+        this.arrowType = options.arrowType || ArrowType.SharpArrow;
 
         this.pathManager = new ArrowPathManager(this.arrowType);
 
@@ -188,7 +169,7 @@ export class FabricRoughArrow extends fabric.Path {
     }
 
     _reconstructPathForNewType(endpoints) {
-        const { start, end, control } = endpoints;
+        const { start, end, points } = endpoints;
 
         // Store the binding information before reconstruction
         const startBindingInfo = this.startBinding ? {
@@ -209,16 +190,34 @@ export class FabricRoughArrow extends fabric.Path {
 
         let newPathData;
 
-        if (this.arrowType === ArrowType.Sharp) {
-            // M x1 y1 L cx cy L x2 y2
-            newPathData = `M ${start.x} ${start.y} L ${control.x} ${control.y} L ${end.x} ${end.y}`;
+        if (this.arrowType === ArrowType.SharpArrow) {
+            // Use existing points to create sharp arrow path
+            if (points.length >= 3) {
+                // M start L point2 L point3 ... L end
+                newPathData = `M ${start.x} ${start.y}`;
+                for (let i = 1; i < points.length; i++) {
+                    newPathData += ` L ${points[i].x} ${points[i].y}`;
+                }
+            } else {
+                // Fallback for 2 points
+                const midX = (start.x + end.x) / 2;
+                const midY = (start.y + end.y) / 2;
+                newPathData = `M ${start.x} ${start.y} L ${midX} ${midY} L ${end.x} ${end.y}`;
+            }
         } else if (this.arrowType === ArrowType.CurvedArrow) {
-            // M x1 y1 Q cx cy x2 y2
-            newPathData = `M ${start.x} ${start.y} Q ${control.x} ${control.y} ${end.x} ${end.y}`;
+            // Use middle point as control point for quadratic curve
+            const controlPoint = points.length >= 3 ? points[Math.floor(points.length / 2)] : {
+                x: (start.x + end.x) / 2,
+                y: (start.y + end.y) / 2
+            };
+            newPathData = `M ${start.x} ${start.y} Q ${controlPoint.x} ${controlPoint.y} ${end.x} ${end.y}`;
         } else if (this.arrowType === ArrowType.ElbowArrow) {
-            // M x1 y1 L midX y1 L midX y2 L x2 y2
+            // Always recalculate for proper L-shape
             const midX = (start.x + end.x) / 2;
             newPathData = `M ${start.x} ${start.y} L ${midX} ${start.y} L ${midX} ${end.y} L ${end.x} ${end.y}`;
+        } else {
+            // Default: simple line
+            newPathData = `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
         }
 
         this.path = fabric.util.parsePath(newPathData);

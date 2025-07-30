@@ -311,7 +311,11 @@
                 :options="
                   Object.keys(ArrowType).filter((k) => isNaN(Number(k)))
                 "
-                :icons="['i-ph:line-vertical-bold', 'i-ph:arrow-bend-right-up']"
+                :icons="[
+                  'i-ph:arrow-up-right',
+                  'i-ph:arrow-bend-up-right',
+                  'i-ph:arrow-elbow-up-right',
+                ]"
                 @change=" (value: number) => { (props.selectedObjects![0]! as
               FabricRoughArrow).setArrowType( ArrowType[value] );
               props.fabricCanvas.fire('object:modified');

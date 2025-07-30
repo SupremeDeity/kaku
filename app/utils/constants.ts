@@ -48,8 +48,9 @@ export enum ArrowHeadStyle {
 }
 
 export enum ArrowType {
-  "Sharp",
+  "SharpArrow",
   "CurvedArrow",
+  "ElbowArrow"
 }
 
 export interface roughShapeProps {

@@ -759,6 +759,13 @@ function restoreViewportState() {
 }
 
 async function handleKeyEvent(e: any) {
+  const isMacOS =
+    navigator.userAgent.includes("Macintosh") ||
+    navigator.userAgent.includes("Mac OS X");
+  if (isMacOS && e.metaKey) {
+    e.ctrlKey = true;
+  }
+
   if (e.key === "Delete" && currentMode.value === "Select") {
     fabricCanvas.getActiveObjects().forEach((obj) => {
       fabricCanvas.remove(obj);

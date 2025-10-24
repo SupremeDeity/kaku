@@ -43,7 +43,7 @@
         >Scroll to content</UButton
       >
     </div>
-    <div class="absolute z-[70] bottom-4 left-4 sm:block hidden">
+    <div class="absolute z-[60] bottom-4 left-4 sm:block hidden">
       <UButtonGroup
         size="sm"
         orientation="horizontal"

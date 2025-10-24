@@ -254,7 +254,7 @@
               <span class="font-bold uppercase text-xs text-cyan-200"
                 >Arrowheads</span
               >
-              <div class="flex gap-2">
+              <div class="flex gap-4">
                 <UTooltip text="Start Arrowhead Style">
                   <RoughManyPicker
                     :default="
@@ -268,18 +268,18 @@
                       )
                     "
                     :icons="[
-                      'i-ph:line-vertical-bold', // 0: NoHead (no arrowhead)
-                      'i-ph:arrow-bend-right-up', // 1: Arrow (existing)
-                      'i-ph:arrow-bend-right-up-fill', // 2: FilledTriangle (existing)
-                      'i-ph:caret-right-bold', // 3: Triangle (outline version)
-                      'i-ph:minus-bold', // 4: Bar (perpendicular line)
-                      'i-ph:git-branch-bold', // 5: CrowFootOne (single branch)
-                      'i-ph:fork-knife-bold', // 6: CrowFootOneOrMany (fork shape)
-                      'i-ph:arrows-out-simple-bold', // 7: CrowFootMany (spread out)
-                      'i-ph:circle-fill', // 8: FilledCircle
-                      'i-ph:circle-bold', // 9: Circle
-                      'i-ph:diamond-fill', // 10: FilledDiamond
-                      'i-ph:diamond-bold',
+                      'i-ph:minus-bold', // 0: NoHead (no arrowhead)
+                      'i-ph:arrow-right', // 1: Arrow (existing)
+                      'i-ph:arrow-right-fill', // 2: FilledTriangle (existing)
+                      'i-ph:arrow-right-duotone', // 3: Triangle (outline version)
+                      'i-custom:bar-arrow', // 4: Bar (perpendicular line)
+                      'i-custom:crow-one', // 5: CrowFootOne (single branch)
+                      'i-custom:crow-one-many', // 6: CrowFootOneOrMany (fork shape)
+                      'i-custom:crow-many', // 7: CrowFootMany (spread out)
+                      'i-custom:circle-arrow-filled', // 8: FilledCircle
+                      'i-custom:circle-arrow', // 9: Circle
+                      'i-custom:diamond-arrow-filled', // 10: FilledDiamond
+                      'i-custom:diamond-arrow', // 11: Diamond
                     ]"
                     @change="
                     (value: any) =>
@@ -302,18 +302,18 @@
                       )
                     "
                     :icons="[
-                      'i-ph:line-vertical-bold', // 0: NoHead (no arrowhead)
-                      'i-ph:arrow-bend-right-up', // 1: Arrow (existing)
-                      'i-ph:arrow-bend-right-up-fill', // 2: FilledTriangle (existing)
-                      'i-ph:caret-right-bold', // 3: Triangle (outline version)
-                      'i-ph:minus-bold', // 4: Bar (perpendicular line)
-                      'i-ph:git-branch-bold', // 5: CrowFootOne (single branch)
-                      'i-ph:fork-knife-bold', // 6: CrowFootOneOrMany (fork shape)
-                      'i-ph:arrows-out-simple-bold', // 7: CrowFootMany (spread out)
-                      'i-ph:circle-fill', // 8: FilledCircle
-                      'i-ph:circle-bold', // 9: Circle
-                      'i-ph:diamond-fill', // 10: FilledDiamond
-                      'i-ph:diamond-bold',
+                      'i-ph:minus-bold', // 0: NoHead (no arrowhead)
+                      'i-ph:arrow-right', // 1: Arrow (existing)
+                      'i-ph:arrow-right-fill', // 2: FilledTriangle (existing)
+                      'i-ph:arrow-right-duotone', // 3: Triangle (outline version)
+                      'i-custom:bar-arrow', // 4: Bar (perpendicular line)
+                      'i-custom:crow-one', // 5: CrowFootOne (single branch)
+                      'i-custom:crow-one-many', // 6: CrowFootOneOrMany (fork shape)
+                      'i-custom:crow-many', // 7: CrowFootMany (spread out)
+                      'i-custom:circle-arrow-filled', // 8: FilledCircle
+                      'i-custom:circle-arrow', // 9: Circle
+                      'i-custom:diamond-arrow-filled', // 10: FilledDiamond
+                      'i-custom:diamond-arrow', // 11: Diamond
                     ]"
                     @change="
                   (value: any) =>

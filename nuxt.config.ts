@@ -16,7 +16,11 @@ export default defineNuxtConfig({
   icon: {
     clientBundle: {
       scan: true,
-    }
+    },
+    customCollections: [{
+      prefix: 'custom',
+      dir: './app/assets/icons'
+    }]
   },
 
   modules: ["@nuxt/eslint", "@nuxt/fonts", "@nuxt/ui"],

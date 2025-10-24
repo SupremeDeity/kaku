@@ -1,7 +1,7 @@
 <!-- Specifically created for use when many options(>3) are available -->
 <template>
   <div>
-    <UPopover :popper="{ placement: 'bottom' }">
+    <UPopover>
       <UButton
         :icon="
           props.icons && props.options.indexOf(style) >= 0
@@ -12,7 +12,7 @@
       />
 
       <template #panel="{ close }">
-        <div class="p-2 flex gap-2">
+        <div class="p-2 flex flex-wrap gap-2 max-w-32">
           <UTooltip
             v-for="(option, index) in props.options"
             :key="option"

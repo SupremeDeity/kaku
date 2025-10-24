@@ -267,20 +267,8 @@
                         isNaN(Number(k))
                       )
                     "
-                    :icons="[
-                      'i-ph:minus-bold', // 0: NoHead (no arrowhead)
-                      'i-ph:arrow-right', // 1: Arrow (existing)
-                      'i-ph:arrow-right-fill', // 2: FilledTriangle (existing)
-                      'i-ph:arrow-right-duotone', // 3: Triangle (outline version)
-                      'i-custom:bar-arrow', // 4: Bar (perpendicular line)
-                      'i-custom:crow-one', // 5: CrowFootOne (single branch)
-                      'i-custom:crow-one-many', // 6: CrowFootOneOrMany (fork shape)
-                      'i-custom:crow-many', // 7: CrowFootMany (spread out)
-                      'i-custom:circle-arrow-filled', // 8: FilledCircle
-                      'i-custom:circle-arrow', // 9: Circle
-                      'i-custom:diamond-arrow-filled', // 10: FilledDiamond
-                      'i-custom:diamond-arrow', // 11: Diamond
-                    ]"
+                    iconsClass="rotate-180"
+                    :icons="arrowHeadIcons"
                     @change="
                     (value: any) =>
                       updateProperty(
@@ -301,20 +289,7 @@
                         isNaN(Number(k))
                       )
                     "
-                    :icons="[
-                      'i-ph:minus-bold', // 0: NoHead (no arrowhead)
-                      'i-ph:arrow-right', // 1: Arrow (existing)
-                      'i-ph:arrow-right-fill', // 2: FilledTriangle (existing)
-                      'i-ph:arrow-right-duotone', // 3: Triangle (outline version)
-                      'i-custom:bar-arrow', // 4: Bar (perpendicular line)
-                      'i-custom:crow-one', // 5: CrowFootOne (single branch)
-                      'i-custom:crow-one-many', // 6: CrowFootOneOrMany (fork shape)
-                      'i-custom:crow-many', // 7: CrowFootMany (spread out)
-                      'i-custom:circle-arrow-filled', // 8: FilledCircle
-                      'i-custom:circle-arrow', // 9: Circle
-                      'i-custom:diamond-arrow-filled', // 10: FilledDiamond
-                      'i-custom:diamond-arrow', // 11: Diamond
-                    ]"
+                    :icons="arrowHeadIcons"
                     @change="
                   (value: any) =>
                     updateProperty(
@@ -505,6 +480,21 @@ const isMobile = computed(() => {
   if (typeof window === "undefined") return false;
   return window.innerWidth < 640;
 });
+
+const arrowHeadIcons = [
+  "i-ph:minus-bold", // 0: NoHead (no arrowhead)
+  "i-ph:arrow-right", // 1: Arrow (existing)
+  "i-ph:arrow-right-fill", // 2: FilledTriangle (existing)
+  "i-ph:arrow-right-duotone", // 3: Triangle (outline version)
+  "i-custom:bar-arrow", // 4: Bar (perpendicular line)
+  "i-custom:crow-one", // 5: CrowFootOne (single branch)
+  "i-custom:crow-one-many", // 6: CrowFootOneOrMany (fork shape)
+  "i-custom:crow-many", // 7: CrowFootMany (spread out)
+  "i-custom:circle-arrow-filled", // 8: FilledCircle
+  "i-custom:circle-arrow", // 9: Circle
+  "i-custom:diamond-arrow-filled", // 10: FilledDiamond
+  "i-custom:diamond-arrow", // 11: Diamond
+];
 
 // Prevent body scrolling when mobile properties panel is open
 watch(

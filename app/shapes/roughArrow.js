@@ -13,6 +13,7 @@ export class FabricRoughArrow extends fabric.Path {
         this.points = options.points;
         this.roughOptions = this.roughOptions ?? options.roughOptions;
         this.objectCaching = false;
+        this.headlen = 15;
 
         this.id = options.id || generateUniqueId();
 
@@ -229,24 +230,21 @@ export class FabricRoughArrow extends fabric.Path {
     }
 
     _getArrowheadCutoffDistance(style) {
-        // Returns the distance to shorten the shaft for different arrowhead styles
-        const headlen = 30; // Same as used in _calculateHeadPath
-        const offset = 15; // Same as used in _calculateHeadPath
+        const offset = 20;
 
         switch (style) {
             case ArrowHeadStyle.Triangle:
             case ArrowHeadStyle.FilledTriangle:
-                return offset; // Cut at the base of the triangle
+                return offset / 1.5;
 
             case ArrowHeadStyle.Circle:
             case ArrowHeadStyle.FilledCircle:
-                const radius = headlen / 4.5;
-                return offset - radius; // Cut at the back edge of the circle
+                const radius = this.headlen / 2.25;
+                return offset - radius;
 
             case ArrowHeadStyle.Diamond:
             case ArrowHeadStyle.FilledDiamond:
-                const diamondLen = headlen * 0.8;
-                return offset - diamondLen; // Cut at the back point of the diamond
+                return offset * 1.9;
 
             default:
                 return 0; // No cutoff for other arrow head styles
@@ -293,21 +291,18 @@ export class FabricRoughArrow extends fabric.Path {
             const dy = bounds.height * heightSign;
             const length = Math.sqrt(dx * dx + dy * dy);
 
-            // Calculate shortened endpoints
             let startX = (-bounds.width / 2) * widthSign;
             let startY = (-bounds.height / 2) * heightSign;
             let endX = (bounds.width / 2) * widthSign;
             let endY = (bounds.height / 2) * heightSign;
 
             if (length > 0) {
-                // Shorten from start
                 if (startCutoff > 0) {
                     const ratio = startCutoff / length;
                     startX += dx * ratio;
                     startY += dy * ratio;
                 }
 
-                // Shorten from end
                 if (endCutoff > 0) {
                     const ratio = endCutoff / length;
                     endX -= dx * ratio;
@@ -327,7 +322,6 @@ export class FabricRoughArrow extends fabric.Path {
             const angleStart = getLineAngle(_x1, _y1);
             const angleEnd = getLineAngle(_x2, _y2);
 
-            // Pass original endpoints for arrowhead positioning
             this._updateArrowHeads(
                 (-bounds.width / 2) * widthSign,
                 (-bounds.height / 2) * heightSign,
@@ -337,15 +331,12 @@ export class FabricRoughArrow extends fabric.Path {
                 angleEnd
             );
         } else {
-            // Calculate cutoff distances for arrowheads
             const startCutoff = this._getArrowheadCutoffDistance(this.startArrowHeadStyle);
             const endCutoff = this._getArrowheadCutoffDistance(this.endArrowHeadStyle);
 
-            // Get original path points
             const [, x1, y1] = this.path[0];
             const [, x, y, x2, y2] = this.path[1];
 
-            // Calculate the full vector
             const dx1 = x - x1;
             const dy1 = y - y1;
             const dx2 = x2 - x;
@@ -353,7 +344,6 @@ export class FabricRoughArrow extends fabric.Path {
             const length1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
             const length2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
 
-            // Calculate shortened endpoints for the shaft
             let shaftX1 = x1;
             let shaftY1 = y1;
             let shaftX2 = x2;
@@ -390,7 +380,6 @@ export class FabricRoughArrow extends fabric.Path {
                 this.roughOptions
             );
 
-            // Use original path points for arrowhead positioning and angles
             const angleStart = getLineAngle(x - x1, y - y1);
             const angleEnd = getLineAngle(x2 - x, y2 - y);
             this._updateArrowHeads(
@@ -407,7 +396,7 @@ export class FabricRoughArrow extends fabric.Path {
 
     _generateHeadPath(x, y, angle, style) {
         const isFilled = [ArrowHeadStyle.FilledTriangle, ArrowHeadStyle.FilledDiamond, ArrowHeadStyle.FilledCircle].includes(style);
-        const headPath = this._calculateHeadPath(x, y, angle, 30, style);
+        const headPath = this._calculateHeadPath(x, y, angle, style);
         return this.roughGenerator.path(
             headPath + (isFilled ? "Z" : ""),
             {
@@ -428,43 +417,37 @@ export class FabricRoughArrow extends fabric.Path {
         }
     }
 
-    _calculateHeadPath(x, y, angle, headlen = 30, style) {
-        const x1 = x - headlen * Math.cos(angle - Math.PI / 6);
-        const y1 = y - headlen * Math.sin(angle - Math.PI / 6);
-        const x2 = x - headlen * Math.cos(angle + Math.PI / 6);
-        const y2 = y - headlen * Math.sin(angle + Math.PI / 6);
+    _calculateHeadPath(x, y, angle, style) {
+        const x1 = x - this.headlen * Math.cos(angle - Math.PI / 6);
+        const y1 = y - this.headlen * Math.sin(angle - Math.PI / 6);
+        const x2 = x - this.headlen * Math.cos(angle + Math.PI / 6);
+        const y2 = y - this.headlen * Math.sin(angle + Math.PI / 6);
 
-        // Default arrow path (V-shape, open at the back)
         let path = `M ${x1.toFixed(2)} ${y1.toFixed(2)} L ${x.toFixed(2)} ${y.toFixed(2)} L ${x2.toFixed(2)} ${y2.toFixed(2)}`;
-        // Handle different arrow head styles
         switch (style) {
             case ArrowHeadStyle.Arrow:
                 // Arrow is the default V-shape, already set above
                 break;
-
             case ArrowHeadStyle.Triangle:
             case ArrowHeadStyle.FilledTriangle:
-                // Triangle has the closing line at the back (smaller for ERD)
-                const triX1 = x - (headlen * 0.5) * Math.cos(angle - Math.PI / 7);
-                const triY1 = y - (headlen * 0.5) * Math.sin(angle - Math.PI / 7);
-                const triX2 = x - (headlen * 0.5) * Math.cos(angle + Math.PI / 7);
-                const triY2 = y - (headlen * 0.5) * Math.sin(angle + Math.PI / 7);
+                const triX1 = x - (this.headlen) * Math.cos(angle - Math.PI / 7);
+                const triY1 = y - (this.headlen) * Math.sin(angle - Math.PI / 7);
+                const triX2 = x - (this.headlen) * Math.cos(angle + Math.PI / 7);
+                const triY2 = y - (this.headlen) * Math.sin(angle + Math.PI / 7);
                 path = `M ${triX1.toFixed(2)} ${triY1.toFixed(2)} L ${x.toFixed(2)} ${y.toFixed(2)} L ${triX2.toFixed(2)} ${triY2.toFixed(2)} L ${triX1.toFixed(2)} ${triY1.toFixed(2)}`;
                 break;
 
             case ArrowHeadStyle.Bar:
-                // Perpendicular line at the arrow tip
-                const barX1 = x - (headlen / 2) * Math.cos(angle - Math.PI / 2);
-                const barY1 = y - (headlen / 2) * Math.sin(angle - Math.PI / 2);
-                const barX2 = x - (headlen / 2) * Math.cos(angle + Math.PI / 2);
-                const barY2 = y - (headlen / 2) * Math.sin(angle + Math.PI / 2);
+                const barX1 = x - (this.headlen) * Math.cos(angle - Math.PI / 2);
+                const barY1 = y - (this.headlen) * Math.sin(angle - Math.PI / 2);
+                const barX2 = x - (this.headlen) * Math.cos(angle + Math.PI / 2);
+                const barY2 = y - (this.headlen) * Math.sin(angle + Math.PI / 2);
                 path = `M ${barX1.toFixed(2)} ${barY1.toFixed(2)} L ${barX2.toFixed(2)} ${barY2.toFixed(2)}`;
                 break;
 
             case ArrowHeadStyle.Circle:
             case ArrowHeadStyle.FilledCircle:
-                // Circle at the arrow tip (smaller for ERD)
-                const radius = headlen / 4.5;
+                const radius = this.headlen / 2.5;
                 const circleX = x - radius * Math.cos(angle);
                 const circleY = y - radius * Math.sin(angle);
                 path = `M ${(circleX + radius).toFixed(2)} ${circleY.toFixed(2)} ` +
@@ -474,8 +457,8 @@ export class FabricRoughArrow extends fabric.Path {
 
             case ArrowHeadStyle.Diamond:
             case ArrowHeadStyle.FilledDiamond:
-                const diamondLen = headlen * 0.8;
-                const diamondWidth = headlen / 6;
+                const diamondLen = this.headlen * 2.5;
+                const diamondWidth = this.headlen / 2;
                 const tip = { x, y };
                 const back = {
                     x: x - diamondLen * Math.cos(angle),
@@ -497,24 +480,22 @@ export class FabricRoughArrow extends fabric.Path {
                 break;
 
             case ArrowHeadStyle.CrowFootOne:
-                // Short perpendicular line, positioned back from the tip (rotated T shape)
-                const cf1BaseX = x - (headlen * 0.5) * Math.cos(angle);
-                const cf1BaseY = y - (headlen * 0.5) * Math.sin(angle);
-                const cf1X1 = cf1BaseX - (headlen / 3) * Math.cos(angle - Math.PI / 2);
-                const cf1Y1 = cf1BaseY - (headlen / 3) * Math.sin(angle - Math.PI / 2);
-                const cf1X2 = cf1BaseX - (headlen / 3) * Math.cos(angle + Math.PI / 2);
-                const cf1Y2 = cf1BaseY - (headlen / 3) * Math.sin(angle + Math.PI / 2);
+                const cf1BaseX = x - (this.headlen * 1.5) * Math.cos(angle);
+                const cf1BaseY = y - (this.headlen * 1.5) * Math.sin(angle);
+                const cf1X1 = cf1BaseX - (this.headlen / 1.5) * Math.cos(angle - Math.PI / 2);
+                const cf1Y1 = cf1BaseY - (this.headlen / 1.5) * Math.sin(angle - Math.PI / 2);
+                const cf1X2 = cf1BaseX - (this.headlen / 1.5) * Math.cos(angle + Math.PI / 2);
+                const cf1Y2 = cf1BaseY - (this.headlen / 1.5) * Math.sin(angle + Math.PI / 2);
                 path = `M ${cf1X1.toFixed(2)} ${cf1Y1.toFixed(2)} L ${cf1X2.toFixed(2)} ${cf1Y2.toFixed(2)}`;
                 break;
 
             case ArrowHeadStyle.CrowFootMany:
-                // Three lines spreading from a point back along the shaft, pointing inward (toward the arrow shaft)
-                const cfmBaseX = x - (headlen * 0.6) * Math.cos(angle);
-                const cfmBaseY = y - (headlen * 0.6) * Math.sin(angle);
-                const cfmX1 = cfmBaseX + (headlen * 0.5) * Math.cos(angle - Math.PI / 6);
-                const cfmY1 = cfmBaseY + (headlen * 0.5) * Math.sin(angle - Math.PI / 6);
-                const cfmX2 = cfmBaseX + (headlen * 0.5) * Math.cos(angle + Math.PI / 6);
-                const cfmY2 = cfmBaseY + (headlen * 0.5) * Math.sin(angle + Math.PI / 6);
+                const cfmBaseX = x - (this.headlen * 1.2) * Math.cos(angle);
+                const cfmBaseY = y - (this.headlen * 1.2) * Math.sin(angle);
+                const cfmX1 = cfmBaseX + (this.headlen) * Math.cos(angle - Math.PI / 6);
+                const cfmY1 = cfmBaseY + (this.headlen) * Math.sin(angle - Math.PI / 6);
+                const cfmX2 = cfmBaseX + (this.headlen) * Math.cos(angle + Math.PI / 6);
+                const cfmY2 = cfmBaseY + (this.headlen) * Math.sin(angle + Math.PI / 6);
 
                 path = `M ${cfmX1.toFixed(2)} ${cfmY1.toFixed(2)} L ${cfmBaseX.toFixed(2)} ${cfmBaseY.toFixed(2)} ` +
                     `M ${cfmBaseX.toFixed(2)} ${cfmBaseY.toFixed(2)} L ${cfmX2.toFixed(2)} ${cfmY2.toFixed(2)} ` +
@@ -522,20 +503,17 @@ export class FabricRoughArrow extends fabric.Path {
                 break;
 
             case ArrowHeadStyle.CrowFootOneOrMany:
-                // Combination of CrowFootOne + CrowFootMany
-                // Two angled lines from the tip pointing inward (crow foot many part)
-                const cfomBaseX = x - (headlen * 0.6) * Math.cos(angle);
-                const cfomBaseY = y - (headlen * 0.6) * Math.sin(angle);
-                const cfomX1 = cfomBaseX + (headlen * 0.6) * Math.cos(angle - Math.PI / 6);
-                const cfomY1 = cfomBaseY + (headlen * 0.6) * Math.sin(angle - Math.PI / 6);
-                const cfomX2 = cfomBaseX + (headlen * 0.6) * Math.cos(angle + Math.PI / 6);
-                const cfomY2 = cfomBaseY + (headlen * 0.6) * Math.sin(angle + Math.PI / 6);
+                const cfomBaseX = x - (this.headlen * 1.2) * Math.cos(angle);
+                const cfomBaseY = y - (this.headlen * 1.2) * Math.sin(angle);
+                const cfomX1 = cfomBaseX + (this.headlen) * Math.cos(angle - Math.PI / 6);
+                const cfomY1 = cfomBaseY + (this.headlen) * Math.sin(angle - Math.PI / 6);
+                const cfomX2 = cfomBaseX + (this.headlen) * Math.cos(angle + Math.PI / 6);
+                const cfomY2 = cfomBaseY + (this.headlen) * Math.sin(angle + Math.PI / 6);
 
-                // Perpendicular line behind the crow foot (crow foot one part)
-                const cfomBarX1 = cfomBaseX - (headlen / 3) * Math.cos(angle - Math.PI / 2);
-                const cfomBarY1 = cfomBaseY - (headlen / 3) * Math.sin(angle - Math.PI / 2);
-                const cfomBarX2 = cfomBaseX - (headlen / 3) * Math.cos(angle + Math.PI / 2);
-                const cfomBarY2 = cfomBaseY - (headlen / 3) * Math.sin(angle + Math.PI / 2);
+                const cfomBarX1 = cfomBaseX - (this.headlen / 1.5) * Math.cos(angle - Math.PI / 2);
+                const cfomBarY1 = cfomBaseY - (this.headlen / 1.5) * Math.sin(angle - Math.PI / 2);
+                const cfomBarX2 = cfomBaseX - (this.headlen / 1.5) * Math.cos(angle + Math.PI / 2);
+                const cfomBarY2 = cfomBaseY - (this.headlen / 1.5) * Math.sin(angle + Math.PI / 2);
 
                 path = `M ${cfomX1.toFixed(2)} ${cfomY1.toFixed(2)} L ${cfomBaseX.toFixed(2)} ${cfomBaseY.toFixed(2)} ` +
                     `M ${cfomBaseX.toFixed(2)} ${cfomBaseY.toFixed(2)} L ${cfomX2.toFixed(2)} ${cfomY2.toFixed(2)} ` +

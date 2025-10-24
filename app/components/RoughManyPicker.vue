@@ -2,14 +2,15 @@
 <template>
   <div>
     <UPopover>
-      <UButton
-        :icon="
-          props.icons && props.options.indexOf(style) >= 0
-            ? props.icons[props.options.indexOf(style)]
-            : null
-        "
-        color="cyan"
-      />
+      <UButton color="cyan">
+        <template #leading>
+          <UIcon
+            v-if="props.icons && props.options.indexOf(style) >= 0"
+            :name="props.icons[props.options.indexOf(style)]"
+            :class="[props.iconsClass, 'w-5 h-5']"
+          />
+        </template>
+      </UButton>
 
       <template #panel="{ close }">
         <div class="p-2 flex flex-wrap gap-2 max-w-32">
@@ -35,6 +36,7 @@
               <Icon
                 v-if="props.icons && props.icons[index]"
                 :name="props.icons[index]"
+                :class="props.iconsClass"
               />
               <span v-if="!props.icons || !props.icons[index]">{{
                 option[0].toUpperCase()
@@ -57,6 +59,7 @@ const props = defineProps({
   default: { type: String, required: false },
   // eslint-disable-next-line vue/require-default-prop
   icons: { type: Array, required: false },
+  iconsClass: {type: String, required: false},
 });
 const style = ref(props.default);
 

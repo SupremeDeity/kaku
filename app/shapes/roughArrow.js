@@ -24,7 +24,7 @@ export class FabricRoughArrow extends fabric.Path {
             this.top !== null && this.top !== 0 ? this.top : options.points[1];
         this.startArrowHeadStyle =
             options.startArrowHeadStyle || ArrowHeadStyle.NoHead;
-        this.endArrowHeadStyle = options.endArrowHeadStyle || ArrowHeadStyle.Head;
+        this.endArrowHeadStyle = options.endArrowHeadStyle || ArrowHeadStyle.Arrow;
 
         // Initialize bindings if they exist in options
         if (options.startBinding) {
@@ -313,29 +313,27 @@ export class FabricRoughArrow extends fabric.Path {
         }
     }
 
+
+    _generateHeadPath(x, y, angle, style) {
+        const isFilled = [ArrowHeadStyle.FilledTriangle, ArrowHeadStyle.FilledDiamond, ArrowHeadStyle.FilledCircle].includes(style);
+        const headPath = this._calculateHeadPath(x, y, angle);
+        return this.roughGenerator.path(
+            headPath + (isFilled ? "Z" : ""),
+            {
+                ...this.roughOptions,
+                fill: isFilled ? this.roughOptions.stroke : "transparent",
+            }
+        );
+    }
+
     _updateArrowHeads(x1, y1, x2, y2, angleStart, angleEnd) {
         if (this.endArrowHeadStyle !== ArrowHeadStyle.NoHead) {
-            const isFilled = this.endArrowHeadStyle === ArrowHeadStyle.FilledHead;
-            const headPath = this._calculateHeadPath(x2, y2, angleEnd);
-            this.endArrowHead = this.roughGenerator.path(
-                headPath + (isFilled ? "Z" : ""),
-                {
-                    ...this.roughOptions,
-                    fill: isFilled ? this.roughOptions.stroke : "transparent",
-                }
-            );
+            this.endArrowHead = this._generateHeadPath(x2, y2, angleEnd, this.endArrowHeadStyle);
         }
 
         if (this.startArrowHeadStyle !== ArrowHeadStyle.NoHead) {
-            const isFilled = this.startArrowHeadStyle === ArrowHeadStyle.FilledHead;
-            const headPath = this._calculateHeadPath(x1, y1, angleStart + Math.PI);
-            this.startArrowHead = this.roughGenerator.path(
-                headPath + (isFilled ? "Z" : ""),
-                {
-                    ...this.roughOptions,
-                    fill: isFilled ? this.roughOptions.stroke : "transparent",
-                }
-            );
+            this.startArrowHead = this._generateHeadPath(x1, y1, angleStart + Math.PI, this.startArrowHeadStyle);
+
         }
     }
 

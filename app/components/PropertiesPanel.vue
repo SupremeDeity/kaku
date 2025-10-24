@@ -252,55 +252,80 @@
           <template v-if="props.selectedObjects[0] instanceof FabricRoughArrow">
             <div>
               <span class="font-bold uppercase text-xs text-cyan-200"
-                >End Arrowhead style</span
+                >Arrowheads</span
               >
-              <RoughMultiPicker
-                :default="
-                  ArrowHeadStyle[props.selectedObjects[0].endArrowHeadStyle]
+              <div class="flex gap-2">
+                <UTooltip text="Start Arrowhead Style">
+                  <RoughManyPicker
+                    :default="
+                      ArrowHeadStyle[
+                        props.selectedObjects[0].startArrowHeadStyle
+                      ]
+                    "
+                    :options="
+                      Object.keys(ArrowHeadStyle).filter((k) =>
+                        isNaN(Number(k))
+                      )
+                    "
+                    :icons="[
+                      'i-ph:line-vertical-bold', // 0: NoHead (no arrowhead)
+                      'i-ph:arrow-bend-right-up', // 1: Arrow (existing)
+                      'i-ph:arrow-bend-right-up-fill', // 2: FilledTriangle (existing)
+                      'i-ph:caret-right-bold', // 3: Triangle (outline version)
+                      'i-ph:minus-bold', // 4: Bar (perpendicular line)
+                      'i-ph:git-branch-bold', // 5: CrowFootOne (single branch)
+                      'i-ph:fork-knife-bold', // 6: CrowFootOneOrMany (fork shape)
+                      'i-ph:arrows-out-simple-bold', // 7: CrowFootMany (spread out)
+                      'i-ph:circle-fill', // 8: FilledCircle
+                      'i-ph:circle-bold', // 9: Circle
+                      'i-ph:diamond-fill', // 10: FilledDiamond
+                      'i-ph:diamond-bold',
+                    ]"
+                    @change="
+                    (value: any) =>
+                      updateProperty(
+                        props.selectedObjects![0]!,
+                        'startArrowHeadStyle',
+                        ArrowHeadStyle[value]
+                      )
+                  "
+                  />
+                </UTooltip>
+                <UTooltip text="End Arrowhead Style">
+                  <RoughManyPicker
+                    :default="
+                      ArrowHeadStyle[props.selectedObjects[0].endArrowHeadStyle]
+                    "
+                    :options="
+                      Object.keys(ArrowHeadStyle).filter((k) =>
+                        isNaN(Number(k))
+                      )
+                    "
+                    :icons="[
+                      'i-ph:line-vertical-bold', // 0: NoHead (no arrowhead)
+                      'i-ph:arrow-bend-right-up', // 1: Arrow (existing)
+                      'i-ph:arrow-bend-right-up-fill', // 2: FilledTriangle (existing)
+                      'i-ph:caret-right-bold', // 3: Triangle (outline version)
+                      'i-ph:minus-bold', // 4: Bar (perpendicular line)
+                      'i-ph:git-branch-bold', // 5: CrowFootOne (single branch)
+                      'i-ph:fork-knife-bold', // 6: CrowFootOneOrMany (fork shape)
+                      'i-ph:arrows-out-simple-bold', // 7: CrowFootMany (spread out)
+                      'i-ph:circle-fill', // 8: FilledCircle
+                      'i-ph:circle-bold', // 9: Circle
+                      'i-ph:diamond-fill', // 10: FilledDiamond
+                      'i-ph:diamond-bold',
+                    ]"
+                    @change="
+                  (value: any) =>
+                    updateProperty(
+                      props.selectedObjects![0]!,
+                      'endArrowHeadStyle',
+                      ArrowHeadStyle[value]
+                    )
                 "
-                :options="
-                  Object.keys(ArrowHeadStyle).filter((k) => isNaN(Number(k)))
-                "
-                :icons="[
-                  'i-ph:line-vertical-bold',
-                  'i-ph:arrow-bend-right-up',
-                  'i-ph:arrow-bend-right-up-fill',
-                ]"
-                @change="
-              (value: any) =>
-                updateProperty(
-                  props.selectedObjects![0]!,
-                  'endArrowHeadStyle',
-                  ArrowHeadStyle[value]
-                )
-            "
-              />
-            </div>
-            <div>
-              <span class="font-bold uppercase text-xs text-cyan-200"
-                >Start Arrowhead style</span
-              >
-              <RoughMultiPicker
-                :default="
-                  ArrowHeadStyle[props.selectedObjects[0].startArrowHeadStyle]
-                "
-                :options="
-                  Object.keys(ArrowHeadStyle).filter((k) => isNaN(Number(k)))
-                "
-                :icons="[
-                  'i-ph:line-vertical-bold',
-                  'i-ph:arrow-bend-right-up',
-                  'i-ph:arrow-bend-right-up-fill',
-                ]"
-                @change="
-                (value: number) =>
-                  updateProperty(
-                    props.selectedObjects![0]!,
-                    'startArrowHeadStyle',
-                    ArrowHeadStyle[value]
-                  )
-              "
-              />
+                  />
+                </UTooltip>
+              </div>
             </div>
           </template>
           <!-- ---------- </ARROW SPECIFIC THINGS> ---------- -->
@@ -542,13 +567,13 @@ function bringToBack(objs: fabric.FabricObject[]) {
   props.fabricCanvas.renderAll();
 }
 function bringBackward(objs: fabric.FabricObject[]) {
-  const rawObj = toRaw(objs);
+  const rawObj: fabric.FabricObject[] = toRaw(objs);
   rawObj.forEach((obj) => props.fabricCanvas.sendObjectBackwards(obj, true));
   props.fabricCanvas.renderAll();
 }
 
 function deleteObjects(objs: fabric.FabricObject[]) {
-  const rawObj = toRaw(objs);
+  const rawObj: fabric.FabricObject[] = toRaw(objs);
   // using this instead of just canvas.remove(obj) to get rid of annoying type error
   rawObj.forEach((obj) => props.fabricCanvas.remove(obj));
   props.fabricCanvas.discardActiveObject();

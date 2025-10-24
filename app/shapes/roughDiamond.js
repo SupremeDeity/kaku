@@ -11,11 +11,12 @@ export class FabricRoughDiamond extends fabric.FabricObject {
         this.name = "Diamond";
         this.points = options.points || [0, 0, 100, 100];
         this.minSize = options.minSize || 5;
+        this.roughOptions = this.roughOptions ?? options.roughOptions;
 
         this.id = options.id || generateUniqueId();
 
         this.roughOptions.seed = this.roughOptions.seed ?? Math.random() * 100;
-        this.roughGenerator = rough.generator();
+        this.roughGenerator = rough.generator(this.roughOptions);
         this.left = (this.left !== null && this.left !== 0) ? this.left : options.points[0];
         this.top = (this.top !== null && this.top !== 0) ? this.top : options.points[1];
         this._updateRoughDiamond();

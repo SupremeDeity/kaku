@@ -10,12 +10,12 @@ export class FabricRoughLine extends fabric.Path {
         super(path, options);
         this.name = "Line";
         this.points = options.points;
-        this.roughOptions = options.roughOptions;
+        this.roughOptions = this.roughOptions ?? options.roughOptions;
 
         this.id = options.id || generateUniqueId();
 
         this.roughOptions.seed = this.roughOptions?.seed ?? Math.random() * 100;
-        this.roughGenerator = rough.generator();
+        this.roughGenerator = rough.generator(this.roughOptions);
         this.left = (this.left !== null && this.left !== 0) ? this.left : options.points[0];
         this.top = (this.top !== null && this.top !== 0) ? this.top : options.points[1];
         this._updateRoughLine();

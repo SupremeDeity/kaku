@@ -11,6 +11,8 @@ export class FabricRoughEllipse extends fabric.Ellipse {
         this.name = "Ellipse"
         this.points = options.points;
         this.minSize = options.minSize || 5;
+        this.roughOptions = this.roughOptions ?? options.roughOptions;
+
 
         this.id = options.id || generateUniqueId();
 

@@ -43,8 +43,17 @@ export const defaultBrushSettings = {
 
 export enum ArrowHeadStyle {
   "NoHead",
-  "Head",
-  "FilledHead",
+  "Arrow",
+  "FilledTriangle",
+  "Triangle",
+  "Bar",
+  "CrowFootOne",
+  "CrowFootOneOrMany",
+  "CrowFootMany",
+  "FilledCircle",
+  "Circle",
+  "FilledDiamond",
+  "Diamond",
 }
 
 export interface roughShapeProps {
@@ -69,7 +78,7 @@ export const defaultShapeSettings: Partial<FabricObjectProps> &
   opacity: 1,
   // For the "Roundables"
   rounded: true,
-  endArrowHeadStyle: ArrowHeadStyle.Head,
+  endArrowHeadStyle: ArrowHeadStyle.Triangle,
   startArrowHeadStyle: ArrowHeadStyle.NoHead,
   cornerStyle: "circle",
   strokeLineCap: "round",
